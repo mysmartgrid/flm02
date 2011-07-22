@@ -290,8 +290,16 @@ local function set_meterconst(ctrl)
 
 			cmd[1] = string.format(SET_METERCONST, toc(i), math.floor(METERCONST_FACTOR * voltage * current))
 
-		elseif flukso[tostring(i)]['class'] == 'pulse'then
-			local real = tonumber(flukso[tostring(i)].constant or "0")
+		elseif flukso[tostring(i)]['class'] == 'pulse' then
+			local real = 0
+			if flukso[tostring(i)]['type'] == 'electricity' then
+					real = tonumber(flukso[tostring(i)].imppkwh or "0")
+			  if real ~= 0 then
+				real = 1000/real;
+			  end
+			else
+					real = tonumber(flukso[tostring(i)].lpimp or "0")
+			end
 			local meterconst = math.floor(real)
 			local fraction = math.floor((real % 1) * 1000)
 
