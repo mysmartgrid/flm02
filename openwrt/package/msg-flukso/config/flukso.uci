@@ -17,8 +17,8 @@ config settings daemon
 	option logmask info
 	option enable_wan_branch 1
 	option enable_lan_branch 0
-	option wan_base_url https://api.flukso.net/
-	option upgrade_url http://www.flukso.net/files/upgrade/
+	option wan_base_url https://dev1-api.mysmartgrid.de/
+	option upgrade_url http://dev1-www.mysmartgrid.de/files/upgrade/
 	option cacert /etc/ssl/certs/flukso.ca.crt
 
 ### sensor config options

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION=$(grep PKG_VERSION:= package/flukso/Makefile | sed 's/.*:=[0-9]\.//')
+VERSION=$(grep PKG_VERSION:= package/msg-flukso/Makefile | sed 's/.*:=[0-9]\.//')
 USAGE="Usage: . ./install /your/preferred/backfire/installation/path"
 
 if (( $# < 1 ))
@@ -27,9 +27,9 @@ mkdir -p $BACKFIRE_PATH
 svn co svn://svn.openwrt.org/openwrt/branches/backfire -r 27608 $BACKFIRE_PATH
 
 # add the specific flukso packages as a feed
-echo "src-link flukso $REPO_PATH/package" > $BACKFIRE_PATH/feeds.conf
+echo "src-link msgflukso $REPO_PATH/package" > $BACKFIRE_PATH/feeds.conf
 $BACKFIRE_PATH/scripts/feeds update
-$BACKFIRE_PATH/scripts/feeds install -a -p flukso
+$BACKFIRE_PATH/scripts/feeds install -a -p msgflukso
 
 # copy over the build config settings and the files directory
 cp .config $BACKFIRE_PATH

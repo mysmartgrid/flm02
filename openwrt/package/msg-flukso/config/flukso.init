@@ -5,7 +5,7 @@ START=98
 
 set_version()
 {
-	VERSION=$(opkg info flukso | grep -o -e '[0-9]*\.[0-9]*\.[0-9]*' | sed 's/\.//g')
+	VERSION=$(opkg info msg-flukso2 | grep -o -e '[0-9]*\.[0-9]*\.[0-9]*' | sed 's/\.//g')
 	uci set system.@system[0].version=$VERSION
 	uci commit
 

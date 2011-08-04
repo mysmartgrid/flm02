@@ -2,25 +2,25 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=flukso
-PKG_VERSION:=2.1.1
+PKG_NAME:=msg-flukso2
+PKG_VERSION:=0.1
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/flukso
+define Package/msg-flukso2
 	SECTION:=utils
 	CATEGORY:=Utilities
 	DEPENDS:=+libdaemon +ntpclient +liblua +luci-nixio +rrdtool1
 	TITLE:=Flukso - community metering
-	URL:=http://www.flukso.net
-	MAINTAINER:=Bart Van Der Meerssche <bart.vandermeerssche@flukso.net>
+	URL:=http://www.mysmartgrid.de
+	MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>
 endef
 
-define Package/flukso/description
-	This package contains the Flukso daemon code and support libraries.
+define Package/msg-flukso2/description
+	This package contains the Flukso daemon code and support libraries for the Flukso v2.
 endef
 
 define Build/Prepare
@@ -38,7 +38,7 @@ endef
 
 FLUKSO_COMMIT:=$(shell git rev-parse HEAD | awk '{print substr($$0,1,16)}')
 
-define Package/flukso/install
+define Package/msg-flukso2/install
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/etc/banner $(1)/etc/banner
 	
@@ -75,4 +75,4 @@ define Package/flukso/install
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/avr/*.{hex,eep} $(1)/usr/bin/avr/
 endef
 
-$(eval $(call BuildPackage,flukso))
+$(eval $(call BuildPackage,msg-flukso2))
