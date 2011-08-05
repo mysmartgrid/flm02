@@ -19,7 +19,7 @@ config settings daemon
 	option enable_lan_branch 0
 	option wan_base_url https://api.mysmartgrid.de/
 	option upgrade_url http://www.mysmartgrid.de/files/upgrade/
-	option cacert /etc/ssl/certs/flukso.ca.crt
+	option cacert /etc/ssl/certs/msg.ca.crt
 
 config mysmartgrid events
 	option brownouts 0
