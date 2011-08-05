@@ -21,6 +21,9 @@ config settings daemon
 	option upgrade_url http://www.mysmartgrid.de/files/upgrade/
 	option cacert /etc/ssl/certs/flukso.ca.crt
 
+config mysmartgrid events
+	option brownouts 0
+
 ### sensor config options
 # config sensor 1..6
 #	option id <uuid>
