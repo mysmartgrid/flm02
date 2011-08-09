@@ -40,4 +40,8 @@ div.di_sensor a {
 	background-image: url(icons/sensor.png);
 }
 
+div.di_reg a {
+	background-image: url(icons/registration.png);
+}
+
 }
