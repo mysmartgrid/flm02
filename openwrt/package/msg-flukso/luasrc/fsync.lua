@@ -446,6 +446,7 @@ local function phone_home()
 	local function json_config(i) -- type(i) --> "string"
 		local config = {}
 
+		config["device"]   = DEVICE
 		config["class"]    = flukso[i]["class"]
 		config["type"]     = flukso[i]["type"]
 		config["function"] = flukso[i]["function"]
@@ -484,8 +485,11 @@ local function phone_home()
 
 	local err = false
 
+	local data = {}
+	data.key = WAN_KEY
+
 	options.headers['Connection'] = 'keep-alive'
-	options.body = luci.json.encode{ key = { WAN_KEY } }
+	options.body = luci.json.encode( data )
 	options.headers['Content-Length'] = tostring(#options.body)
 	local hash = nixio.crypto.hmac('sha1', WAN_KEY)
 	hash:update(options.body)
