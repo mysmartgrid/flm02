@@ -109,8 +109,8 @@ options.rcvtimeo = 5
 -- Disabling validation does mean that the server has to include an hmac
 -- digest in the reply that the Fluksometer needs to verify, this to prevent
 -- man-in-the-middle attacks.
-options.tls_context_set_verify = 'none'
--- options.cacert = CACERT
+options.tls_context_set_verify = 'peer'
+ options.cacert = CACERT
 options.method  = 'POST'
 options.headers = headers
 options.body = luci.json.encode(monitor)

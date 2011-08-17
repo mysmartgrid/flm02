@@ -36,7 +36,7 @@ s = m:section(NamedSection, "fsync", "settings", "Status")
 s:option(DummyValue, "_systime", translate("m_i_systemtime")).value =
  os.date("%c")
 
-local home = string.match(FLUKSO.daemon.wan_base_url, "%a+://([%w%.]+)/")
+local home = string.match(FLUKSO.daemon.wan_base_url, "%a+://([%w%.-]+):?%d*/")
 s:option(DummyValue, "_pingtest", translate("flm_ping_test")).value =
  PING_STRING[luci.sys.net.pingtest(home)]
 

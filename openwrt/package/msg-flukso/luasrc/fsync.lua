@@ -72,8 +72,12 @@ local AVAHI_PATH	 = '/etc/avahi/services/flukso.service'
 
 -- WAN settings
 local WAN_BASE_URL	 = flukso.daemon.wan_base_url .. 'sensor/'
+local DEVICE_BASE_URL	 = flukso.daemon.wan_base_url .. 'device/'
 local WAN_KEY		 = '0123456789abcdef0123456789abcdef'
 uci:foreach('system', 'system', function(x) WAN_KEY = x.key end) -- quirky but it works
+
+local DEVICE		= '0123456789abcdef0123456789abcdef'
+uci:foreach('system', 'system', function(x) DEVICE = x.device end)
 
 -- https header helpers
 local FLUKSO_VERSION	 = '000'
@@ -442,6 +446,7 @@ local function phone_home()
 	local function json_config(i) -- type(i) --> "string"
 		local config = {}
 
+		config["device"]   = DEVICE
 		config["class"]    = flukso[i]["class"]
 		config["type"]     = flukso[i]["type"]
 		config["function"] = flukso[i]["function"]
@@ -479,6 +484,45 @@ local function phone_home()
 	local http_persist = httpclient.create_persistent()
 
 	local err = false
+
+	local data = {}
+	data.key = WAN_KEY
+
+	options.headers['Connection'] = 'keep-alive'
+	options.body = luci.json.encode( data )
+	options.headers['Content-Length'] = tostring(#options.body)
+	local hash = nixio.crypto.hmac('sha1', WAN_KEY)
+	hash:update(options.body)
+	options.headers['X-Digest'] = hash:final()
+
+	local url = DEVICE_BASE_URL .. DEVICE
+	local response, code, call_info = http_persist(url, options)
+
+	local level
+
+	if code == 200 or code == 204 then
+		level = 'info'
+	else
+		level = 'err'
+		err = true
+	end
+
+	nixio.syslog(level, string.format('%s %s: %s', options.method, url, code))
+
+	-- if available, send additional error info to the syslog
+	if type(call_info) == 'string' then
+		nixio.syslog('err', call_info)
+	elseif type(call_info) == 'table'  then
+		local auth_error = call_info.headers['WWW-Authenticate']
+
+		if auth_error then
+			nixio.syslog('err', string.format('WWW-Authenticate: %s', auth_error))
+		end
+	end
+
+	if err then
+		exit(7)
+	end
 
 	for i = 1, MAX_SENSORS do
 		if flukso[tostring(i)] ~= nil and flukso[tostring(i)].id then

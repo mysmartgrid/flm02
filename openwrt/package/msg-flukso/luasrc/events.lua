@@ -60,7 +60,8 @@ function brownout_event()
 	options.rcvtimeo = 5
 
 	
-	options.tls_context_set_verify = 'none'
+	options.tls_context_set_verify = 'peer'
+	options.cacert = CACERT
 
 	options.method  = 'POST'
 	options.headers = headers
