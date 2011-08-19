@@ -17,7 +17,7 @@ f = SimpleForm("msg_wizard", translate("wizard"), translate("m_n_wizard"))
 
 interface = f:field(ListValue, "interface", "Interface")
 interface.widget = "select"
-interface:value("wlan", "WLAN")
+interface:value("wlan", "WIFI")
 interface:value("lan", "LAN")
 
 function interface.write(self, section, value)
