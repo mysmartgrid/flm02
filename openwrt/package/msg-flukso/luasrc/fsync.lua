@@ -95,7 +95,7 @@ local EXIT_STRING	 = { [-1] = "no synchronisation",
                               [4] = "sensor board hardware compatibility check failed",
                               [5] = "analog sensor numbering error",
                               [6] = "port numbering error",
-                              [7] = "synchronisation with Flukso server failed" }
+                              [7] = "synchronisation with MySmartgrid server failed" }
 
 
 --- Convert from Lua-style to c-style index.
@@ -508,15 +508,18 @@ local function phone_home()
 	end
 
 	nixio.syslog(level, string.format('%s %s: %s', options.method, url, code))
+	print(string.format('%s %s: %s', options.method, url, code))
 
 	-- if available, send additional error info to the syslog
 	if type(call_info) == 'string' then
 		nixio.syslog('err', call_info)
+		print(call_info)
 	elseif type(call_info) == 'table'  then
 		local auth_error = call_info.headers['WWW-Authenticate']
 
 		if auth_error then
 			nixio.syslog('err', string.format('WWW-Authenticate: %s', auth_error))
+			print(string.format('WWW-Authenticate: %s', auth_error))
 		end
 	end
 
@@ -554,15 +557,18 @@ local function phone_home()
 			end
 
 			nixio.syslog(level, string.format('%s %s: %s', options.method, url, code))
+			print(string.format('%s %s: %s', options.method, url, code))
 
 			-- if available, send additional error info to the syslog
 			if type(call_info) == 'string' then
 				nixio.syslog('err', call_info)
+				print(call_info)
 			elseif type(call_info) == 'table'  then
 				local auth_error = call_info.headers['WWW-Authenticate']
 
 				if auth_error then
 					nixio.syslog('err', string.format('WWW-Authenticate: %s', auth_error))
+					print(string.format('WWW-Authenticate: %s', auth_error))
 				end
 			end
 		end
