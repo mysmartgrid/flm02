@@ -20,6 +20,10 @@ div.dashicon a {
 	font-weight: bold;
 }
 
+div.di_wizard a {
+	background-image: url(icons/wizard.png);
+}
+
 div.di_system a {
 	background-image: url(icons/system.png);
 }
