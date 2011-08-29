@@ -16,8 +16,8 @@ config settings main
 config settings daemon
 	option logmask info
 	option enable_wan_branch 1
-	option enable_lan_branch 0
 	option wan_base_url https://api.mysmartgrid.de/
+	option enable_lan_branch 1
 	option upgrade_url http://www.mysmartgrid.de/files/upgrade/
 	option cacert /etc/ssl/certs/msg.ca.crt
 
