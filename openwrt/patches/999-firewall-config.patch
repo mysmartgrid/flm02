@@ -1,0 +1,48 @@
+--- package/firewall/files/firewall.config	2011-08-08 11:26:36.527822358 +0200
++++ package/firewall/files/firewall.config	2011-08-31 17:54:07.860318492 +0200
+@@ -42,6 +42,34 @@
+ 	option icmp_type echo-request
+ 	option target ACCEPT
+ 
++#Allow access to local ssh server on the wan itf
++config rule
++	option src              wan
++	option proto            tcp
++	option dest_port        22
++	option target           ACCEPT
++
++#Allow access to luci interface on the wan itf
++config rule
++	option src              wan
++	option proto            tcp
++	option dest_port        80
++	option target           ACCEPT
++
++#Allow access to local REST API on the wan itf
++config rule
++	option src              wan
++	option proto            tcp
++	option dest_port        8080
++	option target           ACCEPT
++
++#Open up UDP port 5353 on the wan for avahi
++config rule
++	option src              wan
++	option proto            udp
++	option dest_port        5353
++	option target           ACCEPT
++
+ # include a file with users custom iptables rules
+ config include
+ 	option path /etc/firewall.user
+
+--- package/firewall/Makefile.old       2011-09-05 17:15:38.683102213 +0200
++++ package/firewall/Makefile   2011-09-05 17:25:35.151964577 +0200
+@@ -9,7 +9,7 @@
+ PKG_NAME:=firewall
+ 
+ PKG_VERSION:=2
+-PKG_RELEASE:=26
++PKG_RELEASE:=27
+ 
+ include $(INCLUDE_DIR)/package.mk

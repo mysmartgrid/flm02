@@ -64,6 +64,9 @@ patch -p0 < $REPO_PATH/patches/910-set_ttyS0_baud_to_115200.patch
 patch -p0 < $REPO_PATH/patches/920-add-make-flash-option.patch
 patch -p0 < $REPO_PATH/patches/921-add-make-publish-option.patch
 
+# patch firewall to allow ssh and luci via wifi
+patch -p0 < $REPO_PATH/patches/999-firewall-config.patch
+
 # we don't need rdate, relying on ntpclient instead
 rm $BACKFIRE_PATH/package/base-files/files/etc/hotplug.d/iface/40-rdate
 
