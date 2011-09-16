@@ -167,4 +167,9 @@ dns = w:option(Value, "dns", translate("dnsserver") .. translate("cbi_optional")
 dns:depends("proto", "")
 dns.rmempty = true
 
+-- Apply the config in tryit
+uci:set("flukso", "events", "apply", 1)
+uci:save("flukso")
+uci:commit("flukso")
+
 return m, n

@@ -54,4 +54,9 @@ uci:set("network", "wan", "proto", "none")
 uci:save("network")
 uci:commit("network")
 
+-- Apply the config in tryit
+uci:set("flukso", "events", "apply", 1)
+uci:save("flukso")
+uci:commit("flukso")
+
 return m

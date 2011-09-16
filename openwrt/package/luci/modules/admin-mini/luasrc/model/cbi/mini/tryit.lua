@@ -15,6 +15,34 @@ $Id: network.lua 4171 2009-01-27 20:50:28Z Cyrus $
 
 f = SimpleForm("tryit", "Test Connection", "Trying to connect to the MySmartgrid server")
 
+uci = luci.model.uci.cursor()
+
+-- Temporary fix for the connection loss on apply
+if uci:get("flukso", "events", "apply") == "1" then
+
+	-- Get wireless interface
+	wifidevs={}
+	uci:foreach("wireless", "wifi-device",
+	function(section)
+		table.insert(wifidevs, section[".name"])
+	end)
+
+	if uci:get("network", "wan", "proto") == "none" then
+		uci:set("wireless", wifidevs[1], "disabled", 1) -- Disable wireless interface
+	else
+		uci:delete("wireless", wifidevs[1], "disabled") -- Activate wireless interface
+	end
+	uci:save("wireless")
+	uci:commit("wireless")
+	uci:save("network")
+	uci:commit("network")
+	uci:apply({"wireless", "network"}) -- Apply changes
+	uci:set("flukso", "events", "apply", 0) -- Don't apply next time
+	uci:save("flukso")
+	uci:commit("flukso")
+end
+
+
 function fsync() --run fsync and parse output
 	local p = io.popen("/usr/bin/fsync")
 	local result = {}

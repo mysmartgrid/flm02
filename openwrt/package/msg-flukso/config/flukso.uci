@@ -23,6 +23,7 @@ config settings daemon
 
 config mysmartgrid events
 	option brownouts 0
+	option apply 0
 
 ### sensor config options
 # config sensor 1..6
