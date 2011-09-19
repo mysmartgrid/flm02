@@ -5,7 +5,7 @@ Description:
 Utilities for interaction with the Linux system
 
 FileId:
-$Id: sys.lua 6029 2010-04-05 17:46:20Z jow $
+$Id: sys.lua 7089 2011-05-21 16:30:07Z jow $
 
 License:
 Copyright 2008 Steven Barth <steven@midlink.org>
@@ -25,18 +25,19 @@ limitations under the License.
 ]]--
 
 
-local io    = require "io"
-local os    = require "os"
-local table = require "table"
-local nixio = require "nixio"
-local fs    = require "nixio.fs"
+local io     = require "io"
+local os     = require "os"
+local table  = require "table"
+local nixio  = require "nixio"
+local fs     = require "nixio.fs"
+local uci    = require "luci.model.uci"
 
 local luci  = {}
 luci.util   = require "luci.util"
 luci.ip     = require "luci.ip"
 
-local tonumber, ipairs, pairs, pcall, type, next =
-	tonumber, ipairs, pairs, pcall, type, next
+local tonumber, ipairs, pairs, pcall, type, next, setmetatable, require =
+	tonumber, ipairs, pairs, pcall, type, next, setmetatable, require
 
 
 --- LuCI Linux and POSIX system utilities.
@@ -57,20 +58,6 @@ end
 -- @param command	Command to call
 -- @return			String containg the return the output of the command
 exec = luci.util.exec
-
---- Invoke the luci-flash executable to write an image to the flash memory.
--- @param image		Local path or URL to image file
--- @param kpattern	Pattern of files to keep over flash process
--- @return			Return value of os.execute()
-function flash(image, kpattern)
-	local cmd = "luci-flash "
-	if kpattern then
-		cmd = cmd .. "-k '" .. kpattern:gsub("'", "") .. "' "
-	end
-	cmd = cmd .. "'" .. image:gsub("'", "") .. "' >/dev/null 2>&1"
-
-	return os.execute(cmd)
-end
 
 --- Retrieve information about currently mounted file systems.
 -- @return 	Table containing mount information
@@ -179,28 +166,30 @@ end
 -- @return	String containing the memory used for caching in kB
 -- @return	String containing the memory used for buffering in kB
 -- @return	String containing the free memory amount in kB
+-- @return	String containing the cpu bogomips (number)
 function sysinfo()
 	local cpuinfo = fs.readfile("/proc/cpuinfo")
 	local meminfo = fs.readfile("/proc/meminfo")
 
-	local system = cpuinfo:match("system typ.-:%s*([^\n]+)")
-	local model = ""
 	local memtotal = tonumber(meminfo:match("MemTotal:%s*(%d+)"))
 	local memcached = tonumber(meminfo:match("\nCached:%s*(%d+)"))
 	local memfree = tonumber(meminfo:match("MemFree:%s*(%d+)"))
 	local membuffers = tonumber(meminfo:match("Buffers:%s*(%d+)"))
+	local bogomips = tonumber(cpuinfo:match("[Bb]ogo[Mm][Ii][Pp][Ss].-: ([^\n]+)")) or 0
 
-	if not system then
-		system = nixio.uname().machine
-		model = cpuinfo:match("model name.-:%s*([^\n]+)")
-		if not model then
-			model = cpuinfo:match("Processor.-:%s*([^\n]+)")
-		end
-	else
-		model = cpuinfo:match("cpu model.-:%s*([^\n]+)")
-	end
+	local system =
+		cpuinfo:match("system type\t+: ([^\n]+)") or
+		cpuinfo:match("Processor\t+: ([^\n]+)") or
+		cpuinfo:match("model name\t+: ([^\n]+)")
 
-	return system, model, memtotal, memcached, membuffers, memfree
+	local model =
+		cpuinfo:match("machine\t+: ([^\n]+)") or
+		cpuinfo:match("Hardware\t+: ([^\n]+)") or
+		luci.util.pcdata(fs.readfile("/proc/diag/model")) or
+		nixio.uname().machine or
+		system
+
+	return system, model, memtotal, memcached, membuffers, memfree, bogomips
 end
 
 --- Retrieves the output of the "logread" command.
@@ -251,32 +240,36 @@ function net.conntrack(callback)
 		for line in io.lines("/proc/net/nf_conntrack") do
 			line = line:match "^(.-( [^ =]+=).-)%2"
 			local entry, flags = _parse_mixed_record(line, " +")
-			entry.layer3 = flags[1]
-			entry.layer4 = flags[3]
-			for i=1, #entry do
-				entry[i] = nil
-			end
+			if flags[6] ~= "TIME_WAIT" then
+				entry.layer3 = flags[1]
+				entry.layer4 = flags[3]
+				for i=1, #entry do
+					entry[i] = nil
+				end
 
-			if callback then
-				callback(entry)
-			else
-				connt[#connt+1] = entry
+				if callback then
+					callback(entry)
+				else
+					connt[#connt+1] = entry
+				end
 			end
 		end
 	elseif fs.access("/proc/net/ip_conntrack", "r") then
 		for line in io.lines("/proc/net/ip_conntrack") do
 			line = line:match "^(.-( [^ =]+=).-)%2"
 			local entry, flags = _parse_mixed_record(line, " +")
-			entry.layer3 = "ipv4"
-			entry.layer4 = flags[1]
-			for i=1, #entry do
-				entry[i] = nil
-			end
+			if flags[4] ~= "TIME_WAIT" then
+				entry.layer3 = "ipv4"
+				entry.layer4 = flags[1]
+				for i=1, #entry do
+					entry[i] = nil
+				end
 
-			if callback then
-				callback(entry)
-			else
-				connt[#connt+1] = entry
+				if callback then
+					callback(entry)
+				else
+					connt[#connt+1] = entry
+				end
 			end
 		end
 	else
@@ -313,10 +306,23 @@ function net.defaultroute6()
 	local route
 
 	net.routes6(function(rt)
-		if rt.dest:prefix() == 0 and (not route or route.metric > rt.metric) then
+		if rt.dest:prefix() == 0 and rt.device ~= "lo" and 
+		   (not route or route.metric > rt.metric)
+		then
 			route = rt
 		end
 	end)
+
+	if not route then
+		local global_unicast = luci.ip.IPv6("2000::/3")
+		net.routes6(function(rt)
+			if rt.dest:equal(global_unicast) and
+			   (not route or route.metric > rt.metric)
+			then
+				route = rt
+			end
+		end)
+	end
 
 	return route
 end
@@ -583,14 +589,26 @@ user = {}
 --				{ "uid", "gid", "name", "passwd", "dir", "shell", "gecos" }
 user.getuser = nixio.getpw
 
+--- Retrieve the current user password hash.
+-- @param username	String containing the username to retrieve the password for
+-- @return			String containing the hash or nil if no password is set.
+function user.getpasswd(username)
+	local pwe = nixio.getsp and nixio.getsp(username) or nixio.getpw(username)
+	local pwh = pwe and (pwe.pwdp or pwe.passwd)
+	if not pwh or #pwh < 1 or pwh == "!" or pwh == "x" then
+		return nil
+	else
+		return pwh
+	end
+end
+
 --- Test whether given string matches the password of a given system user.
 -- @param username	String containing the Unix user name
 -- @param pass		String containing the password to compare
 -- @return			Boolean indicating wheather the passwords are equal
 function user.checkpasswd(username, pass)
-	local pwe = nixio.getsp and nixio.getsp(username) or nixio.getpw(username)
-	local pwh = pwe and (pwe.pwdp or pwe.passwd)
-	if not pwh or #pwh < 1 or pwh ~= "!" and nixio.crypt(pass, pwh) ~= pwh then
+	local pwh = user.getpasswd(username)
+	if pwh and nixio.crypt(pass, pwh) ~= pwh then
 		return false
 	else
 		return true
@@ -603,16 +621,17 @@ end
 -- @return			Number containing 0 on success and >= 1 on error
 function user.setpasswd(username, password)
 	if password then
-		password = password:gsub("'", "")
+		password = password:gsub("'", [['"'"']])
 	end
 
 	if username then
-		username = username:gsub("'", "")
+		username = username:gsub("'", [['"'"']])
 	end
 
-	local cmd = "(echo '"..password.."';sleep 1;echo '"..password.."')|"
-	cmd = cmd .. "passwd '"..username.."' >/dev/null 2>&1"
-	return os.execute(cmd)
+	return os.execute(
+		"(echo '" .. password .. "'; sleep 1; echo '" .. password .. "') | " ..
+		"passwd '" .. username .. "' >/dev/null 2>&1"
+	)
 end
 
 
@@ -620,6 +639,52 @@ end
 -- @class	module
 -- @name	luci.sys.wifi
 wifi = {}
+
+--- Get wireless information for given interface.
+-- @param ifname        String containing the interface name
+-- @return              A wrapped iwinfo object instance
+function wifi.getiwinfo(ifname)
+	local stat, iwinfo = pcall(require, "iwinfo")
+
+	if ifname then
+		local c = 0
+		local u = uci.cursor_state()
+		local d, n = ifname:match("^(%w+)%.network(%d+)")
+		if d and n then
+			n = tonumber(n)
+			u:foreach("wireless", "wifi-iface",
+				function(s)
+					if s.device == d then
+						c = c + 1
+						if c == n then
+							ifname = s.ifname or s.device
+							return false
+						end
+					end
+				end)
+		elseif u:get("wireless", ifname) == "wifi-device" then
+			u:foreach("wireless", "wifi-iface",
+				function(s)
+					if s.device == ifname and s.ifname then
+						ifname = s.ifname
+						return false
+					end
+				end)
+		end
+
+		local t = stat and iwinfo.type(ifname)
+		local x = t and iwinfo[t] or { }
+		return setmetatable({}, {
+			__index = function(t, k)
+				if k == "ifname" then
+					return ifname
+				elseif x[k] then
+					return x[k](ifname)
+				end
+			end
+		})
+	end
+end
 
 --- Get iwconfig output for all wireless devices.
 -- @return	Table of tables containing the iwconfing output for each wifi device
@@ -675,27 +740,29 @@ end
 -- @param iface	Wireless interface (optional)
 -- @return		Table of available channels
 function wifi.channels(iface)
-	local cmd = "iwlist " .. ( iface or "" ) .. " freq 2>/dev/null"
-	local cns = { }
+	local stat, iwinfo = pcall(require, "iwinfo")
+	local cns
 
-	local fd = io.popen(cmd)
-	if fd then
-		local ln, c, f
-		while true do
-			ln = fd:read("*l")
-			if not ln then break end
-			c, f = ln:match("Channel (%d+) : (%d+%.%d+) GHz")
-			if c and f then
-				cns[tonumber(c)] = tonumber(f)
-			end
+	if stat then
+		local t = iwinfo.type(iface or "")
+		if iface and t and iwinfo[t] then
+			cns = iwinfo[t].freqlist(iface)
 		end
-		fd:close()
 	end
 
-	if not next(cns) then
+	if not cns or #cns == 0 then
 		cns = {
-			2.412, 2.417, 2.422, 2.427, 2.432, 2.437,
-			2.442, 2.447, 2.452, 2.457, 2.462
+			{channel =  1, mhz = 2412},
+			{channel =  2, mhz = 2417},
+			{channel =  3, mhz = 2422},
+			{channel =  4, mhz = 2427},
+			{channel =  5, mhz = 2432},
+			{channel =  6, mhz = 2437},
+			{channel =  7, mhz = 2442},
+			{channel =  8, mhz = 2447},
+			{channel =  9, mhz = 2452},
+			{channel = 10, mhz = 2457},
+			{channel = 11, mhz = 2462}
 		}
 	end
 
@@ -724,7 +791,7 @@ end
 -- @return		Boolean indicating whether init is enabled
 function init.enabled(name)
 	if fs.access(init.dir..name) then
-		return ( call(init.dir..name.." enabled") == 0 )
+		return ( call(init.dir..name.." enabled >/dev/null") == 0 )
 	end
 	return false
 end
@@ -734,7 +801,7 @@ end
 -- @return		Numeric index value
 function init.index(name)
 	if fs.access(init.dir..name) then
-		return call("source "..init.dir..name.." enabled; exit $START")
+		return call("source "..init.dir..name.." enabled >/dev/null; exit $START")
 	end
 end
 
@@ -743,7 +810,7 @@ end
 -- @return		Boolean indicating success
 function init.enable(name)
 	if fs.access(init.dir..name) then
-		return ( call(init.dir..name.." enable") == 1 )
+		return ( call(init.dir..name.." enable >/dev/null") == 1 )
 	end
 end
 
@@ -752,7 +819,7 @@ end
 -- @return		Boolean indicating success
 function init.disable(name)
 	if fs.access(init.dir..name) then
-		return ( call(init.dir..name.." disable") == 0 )
+		return ( call(init.dir..name.." disable >/dev/null") == 0 )
 	end
 end
 

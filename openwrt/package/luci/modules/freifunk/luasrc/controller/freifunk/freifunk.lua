@@ -9,13 +9,15 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: freifunk.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: freifunk.lua 7038 2011-05-09 23:04:26Z jow $
 ]]--
 module("luci.controller.freifunk.freifunk", package.seeall)
 
 function index()
 	local i18n = luci.i18n.translate
+	local uci = require "luci.model.uci".cursor()
 
+	-- Frontend
 	local page  = node()
 	page.lock   = true
 	page.target = alias("freifunk")
@@ -23,7 +25,7 @@ function index()
 	page.index = false
 
 	local page    = node("freifunk")
-	page.title    = "Freifunk"
+	page.title    = i18n("Freifunk")
 	page.target   = alias("freifunk", "index")
 	page.order    = 5
 	page.setuser  = "nobody"
@@ -33,47 +35,70 @@ function index()
 
 	local page  = node("freifunk", "index")
 	page.target = template("freifunk/index")
-	page.title  = "Übersicht"
+	page.title  = i18n("Overview")
 	page.order  = 10
 	page.indexignore = true
 
 	local page  = node("freifunk", "index", "contact")
 	page.target = template("freifunk/contact")
-	page.title  = "Kontakt"
+	page.title  = i18n("Contact")
+	page.order    = 10
 
-	entry({"freifunk", "status"}, alias("freifunk", "status", "status"), "Status", 20)
-
-	local page  = node("freifunk", "status", "status")
-	page.target = form("freifunk/public_status")
-	page.title  = i18n("overview")
+	local page  = node("freifunk", "status")
+	page.target = template("freifunk/public_status")
+	page.title  = i18n("Status")
 	page.order  = 20
-	page.i18n   = "admin-core"
+	page.i18n   = "base"
 	page.setuser  = false
-	page.setgroup = false
+        page.setgroup = false
 
 	entry({"freifunk", "status.json"}, call("jsonstatus"))
-	entry({"freifunk", "status", "zeroes"}, call("zeroes"), "Testdownload") 
+	entry({"freifunk", "status", "zeroes"}, call("zeroes"), "Testdownload")
+	entry({"freifunk", "status", "public_status_json"}, call("public_status_json")).leaf = true
 
-	assign({"freifunk", "olsr"}, {"admin", "status", "olsr"}, "OLSR", 30)
+	assign({"freifunk", "olsr"}, {"admin", "status", "olsr"}, i18n("OLSR"), 30)
 
 	if nixio.fs.access("/etc/config/luci_statistics") then
-		assign({"freifunk", "graph"}, {"admin", "statistics", "graph"}, i18n("stat_statistics", "Statistiken"), 40)
+		assign({"freifunk", "graph"}, {"admin", "statistics", "graph"}, i18n("Statistics"), 40)
 	end
 
-	assign({"mini", "freifunk"}, {"admin", "freifunk"}, "Freifunk", 15)
-	entry({"admin", "freifunk"}, alias("admin", "freifunk", "index"), "Freifunk", 15)
-	local page  = node("admin", "freifunk", "index")
-	page.target = cbi("freifunk/freifunk")
-	page.title  = "Freifunk"
-	page.order  = 30
+	-- backend
+	assign({"mini", "freifunk"}, {"admin", "freifunk"}, i18n("Freifunk"), 5)
+	entry({"admin", "freifunk"}, alias("admin", "freifunk", "index"), i18n("Freifunk"), 5)
+
+	local page  = node("admin", "freifunk")
+	page.target = template("freifunk/adminindex")
+	page.title  = i18n("Freifunk")
+	page.order  = 5
+
+	local page  = node("admin", "freifunk", "basics")
+	page.target = cbi("freifunk/basics")
+	page.title  = i18n("Basic Settings")
+	page.order  = 5
+	
+	local page  = node("admin", "freifunk", "basics", "profile")
+	page.target = cbi("freifunk/profile")
+	page.title  = i18n("Profile")
+	page.order  = 10
+
+	local page  = node("admin", "freifunk", "basics", "profile_expert")
+	page.target = cbi("freifunk/profile_expert")
+	page.title  = i18n("Profile (Expert)")
+	page.order  = 20
+
+	local page  = node("admin", "freifunk", "Index-Page")
+	page.target = cbi("freifunk/user_index")
+	page.title  = i18n("Index Page")
+	page.order  = 50
 
 	local page  = node("admin", "freifunk", "contact")
 	page.target = cbi("freifunk/contact")
-	page.title  = "Kontakt"
-	page.order  = 40
+	page.title  = i18n("Contact")
+	page.order  = 15
 
-	entry({"freifunk", "map"}, template("freifunk-map/frame"), i18n("freifunk_map", "Karte"), 50)
+	entry({"freifunk", "map"}, template("freifunk-map/frame"), i18n("Map"), 50)
 	entry({"freifunk", "map", "content"}, template("freifunk-map/map"), nil, 51)
+	entry({"admin", "freifunk", "profile_error"}, template("freifunk/profile_error"))
 end
 
 local function fetch_olsrd()
@@ -209,4 +234,75 @@ function jsonstatus()
 
 	http.prepare_content("application/json")
 	ltn12.pump.all(json.Encoder(root):source(), http.write)
+end
+
+function public_status_json()
+	local twa	= require "luci.tools.webadmin"
+	local sys	= require "luci.sys"
+	local i18n	= require "luci.i18n"
+	local path	= luci.dispatcher.context.requestpath
+	local rv 	= { }
+
+	local dev
+	for dev in path[#path]:gmatch("[%w%.%-]+") do
+		local j = { id = dev }
+		local iw = luci.sys.wifi.getiwinfo(dev)
+		if iw then
+			local f
+			for _, f in ipairs({
+				"channel", "txpower", "bitrate", "signal", "noise",
+				"quality", "quality_max", "mode", "ssid", "bssid", "encryption", "ifname"
+			}) do
+				j[f] = iw[f]
+			end
+		end
+		rv[#rv+1] = j
+	end
+
+	local load1, load5, load15 = sys.loadavg()
+
+	local  _, _, memtotal, memcached, membuffers, memfree = sys.sysinfo()
+	local mem = string.format("%.2f MB (%.2f %s, %.2f %s, %.2f %s, %.2f %s)",
+	tonumber(memtotal) / 1024,
+	tonumber(memtotal - memfree) / 1024,
+	tostring(i18n.translate("used")),
+	memfree / 1024,
+	tostring(i18n.translate("free")),
+	memcached / 1024,
+	tostring(i18n.translate("cached")),
+	membuffers / 1024,
+	tostring(i18n.translate("buffered"))
+	)
+
+	local dr4 = sys.net.defaultroute()
+	local dr6 = sys.net.defaultroute6()
+	
+	if dr6 then
+		def6 = { 
+		gateway = dr6.nexthop:string(),
+		dest = dr6.dest:string(),
+		dev = dr6.device,
+		metr = dr6.metric }
+	end   
+
+	if dr4 then
+		def4 = { 
+		gateway = dr4.gateway:string(),
+		dest = dr4.dest:string(),
+		dev = dr4.device,
+		metr = dr4.metric }
+	end
+	
+	rv[#rv+1] = {
+		time = os.date("%a, %d %b %Y, %H:%M:%S"),
+		uptime = twa.date_format(tonumber(sys.uptime())),
+		load = string.format("%.2f, %.2f, %.2f", load1, load5, load15),
+		mem = mem,
+		defroutev4 = def4,
+		defroutev6 = def6
+	}
+
+	luci.http.prepare_content("application/json")
+	luci.http.write_json(rv)
+	return
 end

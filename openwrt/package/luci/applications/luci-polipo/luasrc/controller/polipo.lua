@@ -9,7 +9,7 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: polipo.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: polipo.lua 6620 2010-12-05 16:42:36Z jow $
 ]]--
 module("luci.controller.polipo", package.seeall)
 
@@ -17,12 +17,12 @@ function index()
 	if not nixio.fs.access("/etc/config/polipo") then
 		return
 	end
-	
-	require("luci.i18n")
-	luci.i18n.loadc("polipo")
+
+	require("luci.i18n").loadc("polipo")
 	local i18n = luci.i18n.translate
-	
-	local p = entry({"admin", "services", "polipo"}, cbi("polipo"), i18n("polipo", "Polipo"))
-	p.dependent = true
-	p.i18n = "polipo"
+
+	entry({"admin", "services", "polipo"}, alias("admin", "services", "polipo", "config"), "Polipo").i18n = "polipo"
+	entry({"admin", "services", "polipo", "status"}, template("polipo_status"), i18n("Status"))
+	entry({"admin", "services", "polipo", "config"}, cbi("polipo"), i18n("Configuration"))
 end
+

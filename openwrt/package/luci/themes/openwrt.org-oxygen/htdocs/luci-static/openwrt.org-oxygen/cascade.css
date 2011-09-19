@@ -465,6 +465,12 @@ td input[type=password] {
 	width: 99%;
 }
 
+img.cbi-image-button {
+	cursor: pointer;
+	margin: 0 2px;
+	vertical-align: middle;
+}
+
 input.cbi-input-user {
 	background: url('../resources/cbi/user.gif') no-repeat scroll 1px center;
 	background-color: inherit;
@@ -769,35 +775,6 @@ td.cbi-value-error {
 	background-color: #ffffff;
 	color: #000000;
 	padding: 0.5em;
-}
-
-#memorybar {
-	width: 200px;
-	height: 8px;
-	border: 1px solid #bbb;
-	color: black;
-	background-color: red;
-}
-
-#memfree, #membuffers, #memcached {
-	float: right;
-	border: 1px solid #bbb;
-	height: 6px;
-}
-
-#memfree {
-	background-color: green;
-	color: black;
-}
-
-#membuffers {
-	background-color: yellow;
-	color: black;
-}
-
-#memcached {
-	background-color: #ffa500;
-	color: black;
 }
 
 }

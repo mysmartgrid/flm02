@@ -2,6 +2,7 @@
 LuCI - Lua Configuration Interface
 
 Copyright 2008 Steven Barth <steven@midlink.org>
+Copyright 2010 Jo-Philipp Wich <xm@subsignal.org>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -9,20 +10,26 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: hosts.lua 5745 2010-03-08 01:19:46Z jow $
+$Id: hosts.lua 7038 2011-05-09 23:04:26Z jow $
 ]]--
 
 require("luci.sys")
 require("luci.util")
-m = Map("dhcp", translate("hostnames"))
+m = Map("dhcp", translate("Hostnames"))
 
-s = m:section(TypedSection, "domain", translate("hostnames_entries"))
+s = m:section(TypedSection, "domain", translate("Host entries"))
 s.addremove = true
 s.anonymous = true
 s.template = "cbi/tblsection"
 
-hn = s:option(Value, "name", translate("hostnames_hostname"))
-ip = s:option(Value, "ip", translate("hostnames_address"))
+hn = s:option(Value, "name", translate("Hostname"))
+hn.datatype = "hostname"
+hn.rmempty  = true
+
+ip = s:option(Value, "ip", translate("IP address"))
+ip.datatype = "ipaddr"
+ip.rmempty  = true
+
 for i, dataset in ipairs(luci.sys.net.arptable()) do
 	ip:value(
 		dataset["IP address"],

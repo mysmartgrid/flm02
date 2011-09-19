@@ -9,7 +9,7 @@ You may obtain a copy of the License at
 
         http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: p910nd.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: p910nd.lua 5448 2009-10-31 15:54:11Z jow $
 
 ]]--
 
@@ -22,7 +22,7 @@ function index()
                return
        end
 
-       local page = entry({"admin", "services", "p910nd"}, cbi("p910nd"), luci.i18n.translate("p910nd", "Printer server"), 60)
+       local page = entry({"admin", "services", "p910nd"}, cbi("p910nd"), luci.i18n.translate("p910nd - Printer server"), 60)
        page.i18n = "p910nd"
        page.dependent = true
 end

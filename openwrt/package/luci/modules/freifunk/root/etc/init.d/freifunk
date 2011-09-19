@@ -1,6 +1,6 @@
 #!/bin/sh /etc/rc.common
 # Freifunk Init
-# $Id: freifunk 5529 2009-11-11 13:49:13Z jow $
+# $Id: freifunk 7291 2011-07-12 20:46:24Z jow $
 
 START=99
 
@@ -33,5 +33,5 @@ boot() {
 		done
 	}
 
-	( /usr/sbin/ff_rdate; /etc/init.d/cron restart ) &
+	( sleep 40; /usr/sbin/ff_rdate; /etc/init.d/cron restart ) &
 }

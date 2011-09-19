@@ -1,107 +1,116 @@
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-05-28 02:08+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2010-03-25 22:10+0100\n"
+"PO-Revision-Date: 2010-07-01 20:16+0200\n"
+"Last-Translator: Vasilis Tsiligiannis <b_tsiligiannis@silverton.gr>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Translate Toolkit 1.1.1\n"
+"X-Generator: Pootle 1.1.0\n"
 
-#. Quality of Service
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:1
-msgid "qos"
+msgid "Quality of Service"
+msgstr "Ποιότητα Υπηρεσίας"
+
+#, fuzzy
+msgid ""
+"With <abbr title=\"Quality of Service\">QoS</abbr> you can prioritize "
+"network traffic selected by addresses, ports or services."
+msgstr ""
+"Με το QoS μπορείτε να ορίσετε προτεραιότητες στην κίνηση του δικτύου με βάση "
+"διευθύνσεις, θύρες ή υπηρεσίες."
+
+msgid "Interfaces"
+msgstr "Διεπαφές"
+
+msgid "Enable"
 msgstr ""
 
-#. With QoS you can priorize network traffic selected by adresses, ports or services.
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:2
-msgid "qos_desc"
+#, fuzzy
+msgid "Classification group"
+msgstr "Κατηγοριοποίηση"
+
+msgid "default"
+msgstr "προεπιλογή"
+
+#, fuzzy
+msgid "Calculate overhead"
+msgstr "Υπολογισμός Overhead"
+
+#, fuzzy
+msgid "Half-duplex"
+msgstr "Μη-ταυτόχρονη αμφίδρομη επικοινωνία"
+
+msgid "Download speed (kbit/s)"
 msgstr ""
 
-#. Classification
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:3
-msgid "qos_interface_classgroup"
+msgid "Upload speed (kbit/s)"
 msgstr ""
 
-#. Calculate Overhead
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:4
-msgid "qos_interface_overhead"
+#, fuzzy
+msgid "Classification Rules"
+msgstr "Κατηγοριοποίηση"
+
+#, fuzzy
+msgid "Target"
+msgstr "Διεύθυνση στόχου"
+
+msgid "priority"
+msgstr "προτεραιότητα"
+
+msgid "express"
+msgstr "εξπρές"
+
+msgid "normal"
+msgstr "κανονική"
+
+msgid "low"
+msgstr "χαμηλή"
+
+#, fuzzy
+msgid "Source host"
+msgstr "Διεύθυνση πηγής"
+
+msgid "all"
 msgstr ""
 
-#. Half-Duplex
-msgid "qos_interface_halfduplex"
+msgid "Destination host"
 msgstr ""
 
-#. Downlink
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:5
-msgid "qos_interface_download"
+msgid "Service"
 msgstr ""
 
-#. Uplink
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:6
-msgid "qos_interface_upload"
+msgid "Protocol"
 msgstr ""
 
-#. Prioritization
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:7
-msgid "qos_classify"
+#, fuzzy
+msgid "Ports"
+msgstr "Προτεραιότητα"
+
+msgid "Number of bytes"
 msgstr ""
 
-#. Priority
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:8
-msgid "qos_classify_target"
-msgstr ""
+#, fuzzy
+#~ msgid "Downlink"
+#~ msgstr "Ταχύτητα κατεβάσματος"
 
-#. Source address
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:9
-msgid "qos_classify_srchost"
-msgstr ""
+#, fuzzy
+#~ msgid "Uplink"
+#~ msgstr "Ταχύτητα ανεβάσματος"
 
-#. source network / source host
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:10
-msgid "qos_classify_srchost_dest"
-msgstr ""
+#~ msgid "Prioritization"
+#~ msgstr "Προτεραιότητες"
 
-#. Target address
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:11
-msgid "qos_classify_dsthost"
-msgstr ""
+#~ msgid "source network / source host"
+#~ msgstr "πηγαίο δίκτυο / πηγαίος υπολογιστής"
 
-#. target network / target host
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:12
-msgid "qos_classify_dsthost_dest"
-msgstr ""
+#~ msgid "target network / target host"
+#~ msgstr "δίκτυο στόχος / υπολογιστής στόχος"
 
-#. portrange
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:13
-msgid "qos_classify_portrange"
-msgstr ""
+#~ msgid "portrange"
+#~ msgstr "εύρος θυρών"
 
-#. low
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:14
-msgid "qos_bulk"
-msgstr ""
-
-#. normal
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:15
-msgid "qos_normal"
-msgstr ""
-
-#. express
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:16
-msgid "qos_express"
-msgstr ""
-
-#. priority
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:17
-msgid "qos_priority"
-msgstr ""
-
-#. Bytes sent
-#: applications/luci-qos/luasrc/i18n/qos.en.lua:18
-msgid "qos_connbytes"
-msgstr ""
+#~ msgid "Bytes sent"
+#~ msgstr "Απεσταλμένα byte"

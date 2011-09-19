@@ -9,19 +9,27 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: contact.htm 3529 2008-10-07 13:10:24Z jow $
+$Id: contact.htm 6794 2011-01-26 16:25:15Z jow $
 
 -%>
 <%+header%>
-<% local contact = luci.model.uci.cursor():get_all("freifunk", "contact") %>
-<h2><a id="content" name="content"><%:contact%></a></h2>
+
+<% 
+local uci = require "luci.model.uci".cursor()
+local contact = uci:get_all("freifunk", "contact")
+local location = uci:get_first("system", "system", "location")
+local lon = uci:get_first("system", "system", "longitude")
+local lat = uci:get_first("system", "system", "latitude")
+%>
+
+<h2><a id="content" name="content"><%:Contact%></a></h2>
 <table cellspacing="0" cellpadding="6">
-	<tr><th><%:ff_nickname%>:</th><td><%=contact.nickname%></td></tr>
-	<tr><th><%:ff_name%>:</th><td><%=contact.name%></td></tr>
-	<tr><th><%:ff_mail%>:</th><td><%=contact.mail%></td></tr>
-	<tr><th><%:ff_phone%>:</th><td><%=contact.phone%></td></tr>
-	<tr><th><%:ff_location%>:</th><td><%=contact.location%></td></tr>
-	<tr><th><%:ff_geocoord%>:</th><td><%=contact.geo%></td></tr>
-	<tr><th><%:ff_note%>:</th><td><%=contact.note%></td></tr>
+	<tr><th><%:Nickname%>:</th><td><%=contact.nickname%></td></tr>
+	<tr><th><%:Realname%>:</th><td><%=contact.name%></td></tr>
+	<tr><th><%:E-Mail%>:</th><td><%=contact.mail%></td></tr>
+	<tr><th><%:Phone%>:</th><td><%=contact.phone%></td></tr>
+	<tr><th><%:Location%>:</th><td><%=location%></td></tr>
+	<tr><th><%:Coordinates%>:</th><td><%=lat%> <%=lon%></td></tr>
+	<tr><th><%:Notice%>:</th><td><%=contact.note%></td></tr>
 </table>
 <%+footer%>

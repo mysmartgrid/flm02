@@ -1,7 +1,7 @@
 /*
  * lmo - Lua Machine Objects - Base functions
  *
- *   Copyright (C) 2009 Jo-Philipp Wich <xm@subsignal.org>
+ *   Copyright (C) 2009-2010 Jo-Philipp Wich <xm@subsignal.org>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -93,6 +93,8 @@ lmo_archive_t * lmo_open(const char *file)
 	{
 		ar->fd     = in;
 		ar->length = idx_offset;
+
+		fcntl(ar->fd, F_SETFD, fcntl(ar->fd, F_GETFD) | FD_CLOEXEC);
 
 		for( i = idx_offset;
 		     i < (s.st_size - sizeof(uint32_t));
@@ -207,15 +209,20 @@ int lmo_lookup(lmo_archive_t *ar, const char *key, char *dest, int len)
 {
 	uint32_t look_key = sfh_hash(key, strlen(key));
 	int copy_len = -1;
+	lmo_entry_t *entry;
 
-	lmo_entry_t *entry = ar->index;
+	if( !ar )
+		return copy_len;
+
+	entry = ar->index;
 
 	while( entry != NULL )
 	{
 		if( entry->key_id == look_key )
 		{
-			copy_len = (len > entry->length) ? entry->length : len;
+			copy_len = ((len - 1) > entry->length) ? entry->length : (len - 1);
 			memcpy(dest, &ar->mmap[entry->offset], copy_len);
+			dest[copy_len] = '\0';
 
 			break;
 		}
@@ -225,4 +232,3 @@ int lmo_lookup(lmo_archive_t *ar, const char *key, char *dest, int len)
 
 	return copy_len;
 }
-

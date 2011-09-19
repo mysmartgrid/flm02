@@ -1,58 +1,50 @@
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-05-26 17:57+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2010-04-14 13:24+0200\n"
+"PO-Revision-Date: 2011-05-13 09:15+0200\n"
+"Last-Translator: Jo-Philipp <xm@subsignal.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Translate Toolkit 1.1.1\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 2.0.4\n"
 
-#. Time Synchronisation
-#: applications/luci-ntpc/luasrc/i18n/ntpc.en.lua:1
-msgid "ntpc"
+msgid "Time Synchronisation"
 msgstr "Zeitsynchronisation"
 
-#. Synchronizes the system time
-#: applications/luci-ntpc/luasrc/i18n/ntpc.en.lua:2
-msgid "ntpc_desc"
+msgid "Synchronizes the system time"
 msgstr "Synchronisiert die Systemzeit"
 
-#. Time Server
-#: applications/luci-ntpc/luasrc/i18n/ntpc.en.lua:3
-msgid "ntpc_timeserver"
-msgstr "Zeitserver"
+msgid "General"
+msgstr "Allgemein"
 
-#. Update Interval (in s)
-#: applications/luci-ntpc/luasrc/i18n/ntpc.en.lua:4
-msgid "ntpc_interval"
-msgstr "Aktualisierungsintervall (in s)"
+msgid "Current system time"
+msgstr "Aktuelle Systemzeit"
 
-#. Count of Time Measurements
-#: applications/luci-ntpc/luasrc/i18n/ntpc.en.lua:5
-msgid "ntpc_count"
+msgid "Update interval (in seconds)"
+msgstr "Aktualisierungsintervall (in Sekunden)"
+
+msgid "Count of time measurements"
 msgstr "Anzahl der Zeitmessungen"
 
-#. empty = infinite
-#: applications/luci-ntpc/luasrc/i18n/ntpc.en.lua:6
-msgid "ntpc_count_desc"
+msgid "empty = infinite"
 msgstr "leer = unendlich"
 
-#. Clock Adjustment
-#: applications/luci-ntpc/luasrc/i18n/ntpc.en.lua:7
-msgid "ntpc_drift"
+msgid "Clock Adjustment"
 msgstr "Zeitgeberjustierung"
 
-#. Offset Frequency
-#: applications/luci-ntpc/luasrc/i18n/ntpc.en.lua:8
-msgid "ntpc_drift_freq"
+msgid "Offset frequency"
 msgstr "Frequenzabweichung"
 
-#. Current system time
-#: applications/luci-ntpc/luasrc/i18n/ntpc.en.lua:9
-msgid "ntpc_current"
-msgstr "Aktuelle Systemzeit"
+msgid "Time Servers"
+msgstr "Zeitserver"
+
+msgid "Hostname"
+msgstr "Hostname"
+
+msgid "Port"
+msgstr "Port"

@@ -1,53 +1,83 @@
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-05-19 19:36+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2010-04-02 13:44+0100\n"
+"PO-Revision-Date: 2011-05-31 11:08+0200\n"
+"Last-Translator: Kentaro <kentaro.matsuyama@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Translate Toolkit 1.1.1\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Pootle 2.0.4\n"
 
-#. Dynamic DNS
-#: applications/luci-ddns/luasrc/i18n/ddns.en.lua:1
-msgid "ddns"
-msgstr ""
+msgid "Dynamic DNS"
+msgstr "ダイナミックDNS"
 
-#. Dynamic DNS allows that your router can be reached with a fixed hostname while having a dynamically changing IP-Address.
-#: applications/luci-ddns/luasrc/i18n/ddns.en.lua:2
-msgid "ddns_desc"
-msgstr ""
+msgid ""
+"Dynamic DNS allows that your router can be reached with a fixed hostname "
+"while having a dynamically changing IP address."
+msgstr "ダイナミックDNSを使用することで、IPアドレスが変更されても固定のホスト名を使ってルーターにアクセスすることができます。"
 
-#. Source of IP-Address
-#: applications/luci-ddns/luasrc/i18n/ddns.en.lua:3
-msgid "ddns_service_ipsource"
-msgstr ""
+msgid "Enable"
+msgstr "有効"
 
-#. Check for changed IP every
-#: applications/luci-ddns/luasrc/i18n/ddns.en.lua:4
-msgid "ddns_service_checkinterval"
-msgstr ""
+msgid "Service"
+msgstr "サービス"
 
-#. Check-Time unit
-#: applications/luci-ddns/luasrc/i18n/ddns.en.lua:5
-msgid "ddns_service_checkunit"
-msgstr ""
+msgid "custom"
+msgstr "手動設定"
 
-#. Force update every
-#: applications/luci-ddns/luasrc/i18n/ddns.en.lua:6
-msgid "ddns_service_forceinterval"
+msgid "Custom update-URL"
 msgstr ""
+"ダイナミックDNSを使用することで、IPアドレスが変更されても固定のホスト名を"
+"使ってルーターにアクセスすることができます。"
 
-#. Force-Time unit
-#: applications/luci-ddns/luasrc/i18n/ddns.en.lua:7
-msgid "ddns_service_forceunit"
-msgstr ""
+msgid "Hostname"
+msgstr "ホスト名"
 
-#. Custom Update-URL
-#: applications/luci-ddns/luasrc/i18n/ddns.en.lua:8
-msgid "ddns_service_updateurl"
-msgstr ""
+msgid "Username"
+msgstr "ユーザー名"
+
+msgid "Password"
+msgstr "パスワード"
+
+msgid "Source of IP address"
+msgstr "送信元IPアドレス"
+
+msgid "network"
+msgstr "ネットワーク"
+
+msgid "interface"
+msgstr "インターフェース"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Network"
+msgstr "ネットワーク"
+
+msgid "Interface"
+msgstr "インターフェース"
+
+msgid "Check for changed IP every"
+msgstr "IPアドレスが変化したかチェックを行う間隔"
+
+msgid "Check-time unit"
+msgstr "チェックの時間単位"
+
+# Minutes (not minimum)
+msgid "min"
+msgstr "分"
+
+# Hours
+msgid "h"
+msgstr "時"
+
+msgid "Force update every"
+msgstr "強制的にアップデートを行う間隔"
+
+msgid "Force-time unit"
+msgstr "アップデートの時間単位"

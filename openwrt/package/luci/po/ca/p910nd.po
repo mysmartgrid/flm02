@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-05-26 16:39+0200\n"
+"POT-Creation-Date: 2009-06-10 03:40+0200\n"
 "PO-Revision-Date: 2009-05-26 20:56+0200\n"
 "Last-Translator: Eduard Duran <iopahopa@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,19 +15,21 @@ msgstr ""
 
 #. p910nd - Printer server
 #: applications/luci-p910nd/luasrc/i18n/p910nd.en.lua:1
-msgid "p910nd"
+msgid "p910nd - Printer server"
 msgstr "p910nd - Servidor d'impressió"
 
 #. First you have to install the packages to get support for USB (kmod-usb-printer) or parallel port (kmod-lp).
 #: applications/luci-p910nd/luasrc/i18n/p910nd.en.lua:2
-msgid "p910nd_desc"
+msgid ""
+"First you have to install the packages to get support for USB (kmod-usb-"
+"printer) or parallel port (kmod-lp)."
 msgstr ""
 "Primer has d'instal·lar els paquets de suport USB (kmod-usb-printer) o de "
 "port paral·lel (kmod-lp)"
 
 #. Bidirectional mode
 #: applications/luci-p910nd/luasrc/i18n/p910nd.en.lua:3
-msgid "bidirectional"
+msgid "Bidirectional mode"
 msgstr "Mode bidireccional"
 
 #. p910nd listens on port 910+N. E.g. 9100 for the first printer.

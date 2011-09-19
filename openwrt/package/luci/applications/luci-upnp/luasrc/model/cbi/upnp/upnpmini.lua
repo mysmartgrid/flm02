@@ -10,15 +10,17 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: upnpmini.lua 5606 2009-12-04 23:17:09Z jow $
+$Id: upnpmini.lua 5605 2009-12-04 23:16:06Z jow $
 ]]--
-m = Map("upnpd", translate("upnpd"), translate("upnpd_desc"))
+m = Map("upnpd", translate("Universal Plug & Play"), translate("UPNP allows clients in the local network to automatically configure the router."))
 
 s = m:section(NamedSection, "config", "upnpd", "")
+s.addremove = false
+
 e = s:option(Flag, "enabled", translate("enable"))
 e.rmempty = false
 
-s:option(Value, "download", nil, "kByte/s").rmempty = true
-s:option(Value, "upload", nil, "kByte/s").rmempty = true
+s:option(Value, "download", translate("Downlink"), "kByte/s").rmempty = true
+s:option(Value, "upload", translate("Uplink"), "kByte/s").rmempty = true
 
 return m

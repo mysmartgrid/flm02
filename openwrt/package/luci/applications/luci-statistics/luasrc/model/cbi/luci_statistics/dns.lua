@@ -9,20 +9,25 @@ You may obtain a copy of the License at
 
         http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: dns.lua 3471 2008-09-30 18:44:34Z jow $
+$Id: dns.lua 6060 2010-04-13 20:42:26Z jow $
 
 ]]--
 
 require("luci.sys")
 
 
-m = Map("luci_statistics")
+m = Map("luci_statistics",
+	translate("DNS Plugin Configuration"),
+	translate(
+		"The dns plugin collects detailled statistics about dns " ..
+		"related traffic on selected interfaces."
+	))
 
 -- collectd_dns config section
 s = m:section( NamedSection, "collectd_dns", "luci_statistics" )
 
 -- collectd_dns.enable
-enable = s:option( Flag, "enable" )
+enable = s:option( Flag, "enable", translate("Enable this plugin") )
 enable.default = 0
 
 -- collectd_dns.interfaces (Interface)
@@ -36,7 +41,7 @@ for k, v in pairs(luci.sys.net.devices()) do
 end
          
 -- collectd_dns.ignoresources (IgnoreSource)
-ignoresources = s:option( Value, "IgnoreSources" )
+ignoresources = s:option( Value, "IgnoreSources", translate("Ignore source addresses") )
 ignoresources.default = "127.0.0.1"
 ignoresources:depends( "enable", 1 )
 

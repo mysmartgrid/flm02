@@ -5,7 +5,7 @@ Description:
 Main class
 
 FileId:
-$Id: init.lua 4537 2009-05-17 01:56:15Z jow $
+$Id: init.lua 5050 2009-07-10 16:39:30Z Cyrus $
 
 License:
 Copyright 2008 Steven Barth <steven@midlink.org>

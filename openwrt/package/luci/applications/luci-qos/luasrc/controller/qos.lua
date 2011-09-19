@@ -9,7 +9,7 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: qos.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: qos.lua 5104 2009-07-19 00:24:58Z jow $
 ]]--
 module("luci.controller.qos", package.seeall)
 

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-05-26 16:39+0200\n"
+"POT-Creation-Date: 2009-06-10 03:40+0200\n"
 "PO-Revision-Date: 2009-05-27 00:44+0200\n"
 "Last-Translator: Eduard Duran <iopahopa@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -13,17 +13,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Pootle 1.1.0\n"
 
-#. MMC/SD driver configuration
-#: applications/luci-mmc_over_gpio/luasrc/i18n/mmc_over_gpio.en.lua:1
-msgid "mmc_over_gpio"
-msgstr "Configuració del controlador MMC/SD"
-
-#. MMC/SD driver configuration
-#: applications/luci-mmc_over_gpio/luasrc/i18n/mmc_over_gpio.en.lua:2
-msgid "mmc_over_gpio_desc"
-msgstr "Configuració del controlador MMC/SD"
-
 #. Settings
 #: applications/luci-mmc_over_gpio/luasrc/i18n/mmc_over_gpio.en.lua:3
-msgid "settings"
+msgid "Settings"
 msgstr "Configuració"

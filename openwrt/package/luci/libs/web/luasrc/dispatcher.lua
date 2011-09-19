@@ -5,7 +5,7 @@ Description:
 The request dispatcher and module dispatcher generators
 
 FileId:
-$Id: dispatcher.lua 6082 2010-04-16 19:05:48Z jow $
+$Id: dispatcher.lua 7327 2011-07-21 10:40:57Z jow $
 
 License:
 Copyright 2008 Steven Barth <steven@midlink.org>
@@ -34,6 +34,9 @@ local nixio = require "nixio", require "nixio.util"
 
 module("luci.dispatcher", package.seeall)
 context = util.threadlocal()
+uci = require "luci.model.uci"
+i18n = require "luci.i18n"
+_M.fs = fs
 
 authenticator = {}
 
@@ -49,11 +52,25 @@ local fi
 -- @return 		Relative URL
 function build_url(...)
 	local path = {...}
-	local sn = http.getenv("SCRIPT_NAME") or ""
+	local url = { http.getenv("SCRIPT_NAME") or "" }
+
+	local k, v
 	for k, v in pairs(context.urltoken) do
-		sn = sn .. "/;" .. k .. "=" .. http.urlencode(v)
+		url[#url+1] = "/;"
+		url[#url+1] = http.urlencode(k)
+		url[#url+1] = "="
+		url[#url+1] = http.urlencode(v)
 	end
-	return sn .. ((#path > 0) and "/" .. table.concat(path, "/") or "")
+
+	local p
+	for _, p in ipairs(path) do
+		if p:match("^[a-zA-Z0-9_%-%.%%/,;]+$") then
+			url[#url+1] = "/"
+			url[#url+1] = p
+		end
+	end
+
+	return table.concat(url, "")
 end
 
 --- Send a 404 error code and render the "error404" template if available.
@@ -178,7 +195,7 @@ function dispatch(request)
 	for i, s in ipairs(request) do
 		local tkey, tval
 		if t then
-			tkey, tval = s:match(";(%w+)=(.*)")
+			tkey, tval = s:match(";(%w+)=([a-fA-F0-9]*)")
 		end
 
 		if tkey then
@@ -208,7 +225,7 @@ function dispatch(request)
 		end
 	end
 
-	ctx.requestpath = freq
+	ctx.requestpath = ctx.requestpath or freq
 	ctx.path = preq
 
 	if track.i18n then
@@ -234,7 +251,9 @@ function dispatch(request)
 		   write       = luci.http.write;
 		   include     = function(name) tpl.Template(name):render(getfenv(2)) end;
 		   translate   = function(...) return require("luci.i18n").translate(...) end;
+		   export      = function(k, v) if tpl.context.viewns[k] == nil then tpl.context.viewns[k] = v end end;
 		   striptags   = util.striptags;
+		   pcdata      = util.pcdata;
 		   media       = media;
 		   theme       = fs.basename(media);
 		   resource    = luci.config.main.resourcebase
@@ -250,7 +269,12 @@ function dispatch(request)
 	end
 
 	track.dependent = (track.dependent ~= false)
-	assert(not track.dependent or not track.auto, "Access Violation")
+	assert(not track.dependent or not track.auto,
+		"Access Violation\nThe page at '" .. table.concat(request, "/") .. "/' " ..
+		"has no parent node so the access to this location has been denied.\n" ..
+		"This is a software bug, please report this message at " ..
+		"http://luci.subsignal.org/trac/newticket"
+	)
 
 	if track.sysauth then
 		local sauth = require "luci.sauth"
@@ -306,6 +330,7 @@ function dispatch(request)
 					end
 					luci.http.header("Set-Cookie", "sysauth=" .. sid.."; path="..build_url())
 					ctx.authsession = sid
+					ctx.authuser = user
 				end
 			else
 				luci.http.status(403, "Forbidden")
@@ -313,6 +338,7 @@ function dispatch(request)
 			end
 		else
 			ctx.authsession = sess
+			ctx.authuser = user
 		end
 	end
 
@@ -359,13 +385,27 @@ function dispatch(request)
 			setfenv(target, env)
 		end)
 
+		local ok, err
 		if type(c.target) == "table" then
-			target(c.target, unpack(args))
+			ok, err = util.copcall(target, c.target, unpack(args))
 		else
-			target(unpack(args))
+			ok, err = util.copcall(target, unpack(args))
 		end
+		assert(ok,
+		       "Failed to execute " .. (type(c.target) == "function" and "function" or c.target.type or "unknown") ..
+		       " dispatcher target for entry '/" .. table.concat(request, "/") .. "'.\n" ..
+		       "The called action terminated with an exception:\n" .. tostring(err or "(unknown)"))
 	else
-		error404()
+		local root = node()
+		if not root or not root.target then
+			error404("No root node was registered, this usually happens if no module was installed.\n" ..
+			         "Install luci-admin-full and retry. " ..
+			         "If the module is already installed, try removing the /tmp/luci-indexcache file.")
+		else
+			error404("No page is registered at '/" .. table.concat(request, "/") .. "'.\n" ..
+			         "If this url belongs to an extension, make sure it is properly installed.\n" ..
+			         "If the extension was recently installed, try removing the /tmp/luci-indexcache file.")
+		end
 	end
 end
 
@@ -416,7 +456,7 @@ function createindex_plain(path, suffixes)
 		if cachedate then
 			local realdate = 0
 			for _, obj in ipairs(controllers) do
-				local omtime = fs.stat(path .. "/" .. obj, "mtime")
+				local omtime = fs.stat(obj, "mtime")
 				realdate = (omtime and omtime > realdate) and omtime or realdate
 			end
 
@@ -436,17 +476,26 @@ function createindex_plain(path, suffixes)
 	index = {}
 
 	for i,c in ipairs(controllers) do
-		local module = "luci.controller." .. c:sub(#path+1, #c):gsub("/", ".")
+		local modname = "luci.controller." .. c:sub(#path+1, #c):gsub("/", ".")
 		for _, suffix in ipairs(suffixes) do
-			module = module:gsub(suffix.."$", "")
+			modname = modname:gsub(suffix.."$", "")
 		end
 
-		local mod = require(module)
+		local mod = require(modname)
+		assert(mod ~= true,
+		       "Invalid controller file found\n" ..
+		       "The file '" .. c .. "' contains an invalid module line.\n" ..
+		       "Please verify whether the module name is set to '" .. modname ..
+		       "' - It must correspond to the file path!")
+		
 		local idx = mod.index
+		assert(type(idx) == "function",
+		       "Invalid controller file found\n" ..
+		       "The file '" .. c .. "' contains no index() function.\n" ..
+		       "Please make sure that the controller contains a valid " ..
+		       "index function and verify the spelling!")
 
-		if type(idx) == "function" then
-			index[module] = idx
-		end
+		index[modname] = idx
 	end
 
 	if indexcache then
@@ -472,7 +521,7 @@ function createtree()
 	ctx.modifiers = modi
 
 	-- Load default translation
-	require "luci.i18n".loadc("default")
+	require "luci.i18n".loadc("base")
 
 	local scope = setmetatable({}, {__index = luci.dispatcher})
 
@@ -697,19 +746,60 @@ local function _cbi(self, ...)
 		end
 	end
 
-	local pageaction = true
 	http.header("X-CBI-State", state or 0)
+
 	if not config.noheader then
 		tpl.render("cbi/header", {state = state})
 	end
+
+	local redirect
+	local messages
+	local applymap   = false
+	local pageaction = true
+	local parsechain = { }
+
 	for i, res in ipairs(maps) do
-		res:render()
+		if res.apply_needed and res.parsechain then
+			local c
+			for _, c in ipairs(res.parsechain) do
+				parsechain[#parsechain+1] = c
+			end
+			applymap = true
+		end
+
+		if res.redirect then
+			redirect = redirect or res.redirect
+		end
+
 		if res.pageaction == false then
 			pageaction = false
 		end
+
+		if res.message then
+			messages = messages or { }
+			messages[#messages+1] = res.message
+		end
 	end
+
+	for i, res in ipairs(maps) do
+		res:render({
+			firstmap   = (i == 1),
+			applymap   = applymap,
+			redirect   = redirect,
+			messages   = messages,
+			pageaction = pageaction,
+			parsechain = parsechain
+		})
+	end
+
 	if not config.nofooter then
-		tpl.render("cbi/footer", {flow = config, pageaction=pageaction, state = state, autoapply = config.autoapply})
+		tpl.render("cbi/footer", {
+			flow       = config,
+			pageaction = pageaction,
+			redirect   = redirect,
+			state      = state,
+			autoapply  = config.autoapply
+		})
 	end
 end
 

@@ -9,26 +9,26 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: contact.lua 3387 2008-09-20 22:44:58Z jow $
+$Id: contact.lua 6794 2011-01-26 16:25:15Z jow $
 ]]--
 
 luci.i18n.loadc("freifunk")
 
-m = Map("freifunk", translate("contact"), translate("contact1"))
+m = Map("freifunk", translate("Contact"), translate("Please fill in your contact details below."))
 
 c = m:section(NamedSection, "contact", "public", "")
 
-c:option(Value, "nickname", translate("ff_nickname"))
-c:option(Value, "name", translate("ff_name"))
-c:option(Value, "mail", translate("ff_mail"), translate("ff_mail1"))
-c:option(Value, "phone", translate("ff_phone"))
-c:option(Value, "location", translate("ff_location"))
-c:option(Value, "note", translate("ff_note"))
+local nick = c:option(Value, "nickname", translate("Nickname"))
+nick.rmempty = false
 
-m2 = Map("system", translate("geo"))
+name = c:option(Value, "name", translate("Realname"))
+name.rmempty = false
 
-s = m2:section(TypedSection, "system", "")
-s:option(Value, "latitude", translate("latitude", "Breite")).rmempty = true
-s:option(Value, "longitude", translate("longitude", "Länge")).rmempty = true
+mail = c:option(Value, "mail", translate("E-Mail"))
+mail.rmempty = false
 
-return m, m2
+c:option(Value, "phone", translate("Phone"))
+
+c:option(Value, "note", translate("Notice"))
+
+return m

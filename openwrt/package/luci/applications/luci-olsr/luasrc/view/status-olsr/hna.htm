@@ -9,22 +9,27 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: hna.htm 3529 2008-10-07 13:10:24Z jow $
+$Id: hna.htm 6619 2010-12-05 15:02:44Z soma $
 
 -%>
 <%+header%>
-<h2><a id="content" name="content"><%:olsrd_hna2%></a></h2>
-<p><%:olsrd_hna_desc%></p>
+<h2><a id="content" name="content"><%:Active host net announcements%></a></h2>
+<p><%:Overview of currently active OLSR host net announcements%></p>
 <br />
 <table class="smalltext" cellspacing="0" cellpadding="6">
 <tr>
-<th><%:olsrd_network%></th>
-<th><%:olsrd_gateway%></th>
+<th><%:Announced network%></th>
+<th><%:OLSR gateway%></th>
 </tr>
 <% for k, route in ipairs(routes) do %>
 <tr>
 <td><%=route.Destination%></td>
-<td><a href="http://<%=route.Gateway%>"><%=route.Gateway%></a></td>
+<td>
+<a href="http://<%=route.Gateway%>/cgi-bin-status.html"><%=route.Gateway%></a>
+<% if route.Hostname then %>
+        / <a href="http://<%=route.Hostname%>/cgi-bin-status.html"><%=route.Hostname%></a>
+<% end %>
+</td>
 </tr>
 <% end %>
 </table>

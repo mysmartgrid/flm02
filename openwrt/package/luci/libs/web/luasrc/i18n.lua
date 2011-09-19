@@ -5,7 +5,7 @@ Description:
 A very minimalistic but yet effective internationalisation module
 
 FileId:
-$Id: i18n.lua 5154 2009-07-26 23:59:58Z jow $
+$Id: i18n.lua 5446 2009-10-31 15:42:07Z jow $
 
 License:
 Copyright 2008 Steven Barth <steven@midlink.org>
@@ -93,42 +93,38 @@ function setlanguage(lang)
 end
 
 --- Return the translated value for a specific translation key.
--- @param key	Translation key
--- @param def	Default translation
+-- @param key	Default translation text
 -- @return		Translated string
-function translate(key, def)
+function translate(key)
 	return (table[context.lang] and table[context.lang][key])
 		or (table[context.parent] and table[context.parent][key])
 		or (table[default] and table[default][key])
-		or def
+		or key
 end
 
 --- Return the translated value for a specific translation key and use it as sprintf pattern.
--- @param key		Translation key
--- @param default	Default translation
+-- @param key		Default translation text
 -- @param ...		Format parameters
 -- @return			Translated and formatted string
-function translatef(key, default, ...)
-	return tostring(translate(key, default)):format(...)
+function translatef(key, ...)
+	return tostring(translate(key)):format(...)
 end
 
 --- Return the translated value for a specific translation key
 -- and ensure that the returned value is a Lua string value.
 -- This is the same as calling <code>tostring(translate(...))</code>
--- @param key		Translation key
--- @param default	Default translation
+-- @param key		Default translation text
 -- @return			Translated string
-function string(key, default)
-	return tostring(translate(key, default))
+function string(key)
+	return tostring(translate(key))
 end
 
 --- Return the translated value for a specific translation key and use it as sprintf pattern.
 -- Ensure that the returned value is a Lua string value.
 -- This is the same as calling <code>tostring(translatef(...))</code>
--- @param key		Translation key
--- @param default	Default translation
+-- @param key		Default translation text
 -- @param ...		Format parameters
 -- @return			Translated and formatted string
-function stringf(key, default, ...)
-	return tostring(translate(key, default)):format(...)
+function stringf(key, ...)
+	return tostring(translate(key)):format(...)
 end

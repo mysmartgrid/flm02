@@ -9,12 +9,12 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: graph.htm 5965 2010-03-27 22:20:14Z jow $
+$Id: graph.htm 6044 2010-04-12 13:55:17Z ben $
 
 -%>
 <%+header%>
 
-<h2><a id="content" name="content"><%:stat_statistics Statistics%></a></h2>
+<h2><a id="content" name="content"><%:Statistics%></a></h2>
 
 <form action="" method="get">
 	<select name="timespan">
@@ -22,7 +22,7 @@ $Id: graph.htm 5965 2010-03-27 22:20:14Z jow $
 			<option<% if span == current_timespan then %> selected="selected"<% end %>><%=span%></option>
 		<% end %>
 	</select>
-	<input type="submit" name="submit" value="<%:stat_showtimespan Display timespan &raquo;%>" />
+	<input type="submit" name="submit" value="<%:Display timespan »%>" />
 </form>
 
 <br />

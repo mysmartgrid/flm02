@@ -9,7 +9,7 @@ You may obtain a copy of the License at
 
         http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: ushare.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: ushare.lua 5448 2009-10-31 15:54:11Z jow $
 
 ]]--
 
@@ -22,7 +22,7 @@ function index()
                return
        end
 
-       local page = entry({"admin", "services", "ushare"}, cbi("ushare"), luci.i18n.translate("ushare", "uShare"), 60)
+       local page = entry({"admin", "services", "ushare"}, cbi("ushare"), luci.i18n.translate("uShare"), 60)
        page.i18n = "uvc_streamer"
        page.dependent = true
 end

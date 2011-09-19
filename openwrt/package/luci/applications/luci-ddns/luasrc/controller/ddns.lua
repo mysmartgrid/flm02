@@ -10,7 +10,7 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: ddns.lua 5990 2010-03-29 21:35:29Z jow $
+$Id: ddns.lua 5989 2010-03-29 21:34:45Z jow $
 ]]--
 module("luci.controller.ddns", package.seeall)
 
@@ -21,12 +21,12 @@ function index()
 		return
 	end
 	
-	local page = entry({"admin", "services", "ddns"}, cbi("ddns/ddns"), luci.i18n.translate("ddns"), 60)
+	local page = entry({"admin", "services", "ddns"}, cbi("ddns/ddns"), luci.i18n.translate("Dynamic DNS"), 60)
 	page.i18n = "ddns"
 	page.dependent = true
 	
 	
-	local page = entry({"mini", "network", "ddns"}, cbi("ddns/ddns", {autoapply=true}), luci.i18n.translate("ddns"), 60)
+	local page = entry({"mini", "network", "ddns"}, cbi("ddns/ddns", {autoapply=true}), luci.i18n.translate("Dynamic DNS"), 60)
 	page.i18n = "ddns"
 	page.dependent = true
 end

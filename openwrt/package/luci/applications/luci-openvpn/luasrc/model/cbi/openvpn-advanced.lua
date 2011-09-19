@@ -9,7 +9,7 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: openvpn-advanced.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: openvpn-advanced.lua 7482 2011-09-08 15:55:27Z soma $
 ]]--
 
 require("luci.ip")
@@ -58,6 +58,7 @@ local knownParams = {
 		{ Flag,			"client_disconnect",		0 },
 		{ Value,		"learn_address",			"/usr/bin/ovpn-learnaddress" },
 		{ Value,		"auth_user_pass_verify",	"/usr/bin/ovpn-userpass via-env" },
+		{ ListValue,		"script_security",		{ 0, 1, 2, 3 }, {mode="server" } },
 	} },
 
 	{ "networking", {
@@ -114,7 +115,8 @@ local knownParams = {
 		{ Value,		"management",			"127.0.0.1 31194 /etc/openvpn/mngmt-pwds" },
 		{ Flag,			"management_query_passwords",	0 },	-- management
 		{ Flag,			"management_hold",		0 },	-- management
-		{ Flag,			"management_log_cache",		100 },	-- management
+		{ Value,			"management_log_cache",		100 },	-- management
+		{ ListValue,		"topology",			{ "net30", "p2p", "subnet" }, {dev_type="tun" } },
 	} },
 
 	{ "vpn", {

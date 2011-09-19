@@ -9,7 +9,7 @@ You may obtain a copy of the License at
 
         http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: sauth.lua 5190 2009-07-31 23:36:15Z jow $
+$Id: sauth.lua 5185 2009-07-31 17:08:59Z Cyrus $
 
 ]]--
 

@@ -9,17 +9,17 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: mid.htm 3529 2008-10-07 13:10:24Z jow $
+$Id: mid.htm 5448 2009-10-31 15:54:11Z jow $
 
 -%>
 <%+header%>
-<h2><a id="content" name="content"><%:olsrd_mid%></a></h2>
-<p><%:olsrd_mid_desc%></p>
+<h2><a id="content" name="content"><%:Active MID announcements%></a></h2>
+<p><%:Overview of known multiple interface announcements%></p>
 <br />
 <table class="smalltext" cellspacing="0" cellpadding="6">
 <tr>
-<th><%:olsrd_node%></th>
-<th><%:olsrd_mid_aliases%></th>
+<th><%:OLSR node%></th>
+<th><%:Secondary OLSR interfaces%></th>
 </tr>
 <% for k, mid in ipairs(mids) do %>
 <tr>

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-05-19 19:36+0200\n"
+"POT-Creation-Date: 2009-06-10 03:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -12,17 +12,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Translate Toolkit 1.1.1\n"
 
-#. MMC/SD driver configuration
-#: applications/luci-mmc_over_gpio/luasrc/i18n/mmc_over_gpio.en.lua:1
-msgid "mmc_over_gpio"
-msgstr "Configuração do driver MMC/SD"
-
-#. MMC/SD driver configuration
-#: applications/luci-mmc_over_gpio/luasrc/i18n/mmc_over_gpio.en.lua:2
-msgid "mmc_over_gpio_desc"
-msgstr "Configuração do driver MMC/SD"
-
 #. Settings
 #: applications/luci-mmc_over_gpio/luasrc/i18n/mmc_over_gpio.en.lua:3
-msgid "settings"
+msgid "Settings"
 msgstr "Configurações"

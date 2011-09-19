@@ -10,7 +10,7 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: rpc.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: rpc.lua 6685 2011-01-02 19:55:21Z jow $
 ]]--
 
 local require = require
@@ -40,7 +40,6 @@ function index()
 	rpc.notemplate = true
 	
 	entry({"rpc", "uci"}, call("rpc_uci"))
-	entry({"rpc", "uvl"}, call("rpc_uvl"))
 	entry({"rpc", "fs"}, call("rpc_fs"))
 	entry({"rpc", "sys"}, call("rpc_sys"))
 	entry({"rpc", "ipkg"}, call("rpc_ipkg"))
@@ -98,20 +97,6 @@ function rpc_uci()
 	
 	http.prepare_content("application/json")
 	ltn12.pump.all(jsonrpc.handle(uci, http.source()), http.write)
-end
-
-function rpc_uvl()
-	if not pcall(require, "luci.uvl") then
-		luci.http.status(404, "Not Found")
-		return nil
-	end
-	local uvl     = require "luci.jsonrpcbind.uvl"
-	local jsonrpc = require "luci.jsonrpc"
-	local http    = require "luci.http"
-	local ltn12   = require "luci.ltn12"
-
-	http.prepare_content("application/json")
-	ltn12.pump.all(jsonrpc.handle(uvl, http.source()), http.write)
 end
 
 function rpc_fs()

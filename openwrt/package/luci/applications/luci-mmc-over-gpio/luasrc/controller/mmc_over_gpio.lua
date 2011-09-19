@@ -9,7 +9,7 @@ You may obtain a copy of the License at
 
         http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: mmc_over_gpio.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: mmc_over_gpio.lua 5448 2009-10-31 15:54:11Z jow $
 
 ]]--
 
@@ -22,7 +22,7 @@ function index()
                return
        end
 
-       local page = entry({"admin", "system", "mmc_over_gpio"}, cbi("mmc_over_gpio"), luci.i18n.translate("mmc_over_gpio", "mmc_over_gpio"), 60)
+       local page = entry({"admin", "system", "mmc_over_gpio"}, cbi("mmc_over_gpio"), luci.i18n.translate("MMC/SD driver configuration"), 60)
        page.i18n = "mmc_over_gpio"
        page.dependent = true
 end

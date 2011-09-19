@@ -11,7 +11,7 @@ You may obtain a copy of the License at
 
 		http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: stat-genconfig 4931 2009-06-27 14:36:04Z jow $
+$Id: stat-genconfig 6509 2010-11-18 18:08:23Z soma $
 
 ]]--
 
@@ -162,9 +162,9 @@ function config_network( c )
 
 				if host then
 					if port then
-						str = str .. "\t" .. key .. " " .. host .. " " .. port .. "\n"
+						str = str .. "\t" .. key .. " \"" .. host .. "\" \"" .. port .. "\"\n"
 					else
-						str = str .. "\t" .. key .. " " .. host .. "\n"
+						str = str .. "\t" .. key .. " \"" .. host .. "\"\n"
 					end
 				end
 						end
@@ -330,7 +330,7 @@ plugins = {
 	network	= config_network,
 
 	ping	= {
-		{ "TTL" },
+		{ "TTL", "Interval" },
 		{ },
 		{ "Hosts" }
 	},

@@ -10,13 +10,13 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: crontab.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: crontab.lua 5448 2009-10-31 15:54:11Z jow $
 ]]--
 
 local fs = require "nixio.fs"
 local cronfile = "/etc/crontabs/root" 
 
-f = SimpleForm("crontab", translate("a_s_crontab"), translate("a_s_crontab1"))
+f = SimpleForm("crontab", translate("Scheduled Tasks"), translate("This is the system crontab in which scheduled tasks can be defined."))
 
 t = f:field(TextValue, "crons")
 t.rmempty = true

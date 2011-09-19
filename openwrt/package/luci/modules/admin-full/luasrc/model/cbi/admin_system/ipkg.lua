@@ -10,11 +10,11 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: ipkg.lua 5118 2009-07-23 03:32:30Z jow $
+$Id: ipkg.lua 5448 2009-10-31 15:54:11Z jow $
 ]]--
 local ipkgfile = "/etc/opkg.conf" 
 
-f = SimpleForm("ipkgconf", translate("a_s_p_ipkg"))
+f = SimpleForm("ipkgconf", translate("OPKG-Configuration"))
 
 t = f:field(TextValue, "lines")
 t.rows = 10

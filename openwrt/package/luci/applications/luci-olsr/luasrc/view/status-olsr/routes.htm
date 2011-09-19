@@ -9,19 +9,19 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: routes.htm 3529 2008-10-07 13:10:24Z jow $
+$Id: routes.htm 6619 2010-12-05 15:02:44Z soma $
 
 -%>
 <%+header%>
-<h2><a id="content" name="content"><%:olsrd_routes%></a></h2>
-<p><%:olsrd_routes_desc%></p>
+<h2><a id="content" name="content"><%:Known OLSR routes%></a></h2>
+<p><%:Overview of currently known routes to other OLSR nodes%></p>
 <br />
 <table class="smalltext" cellspacing="0" cellpadding="6">
 <tr>
-<th><%:olsrd_network%></th>
-<th><%:olsrd_gateway%></th>
-<th><%:interface%></th>
-<th><%:metric%></th>
+<th><%:Announced network%></th>
+<th><%:OLSR gateway%></th>
+<th><%:Interface%></th>
+<th><%:Metric%></th>
 <th>ETX</th>
 </tr>
 <% for k, route in ipairs(routes) do
@@ -40,7 +40,12 @@ $Id: routes.htm 3529 2008-10-07 13:10:24Z jow $
 %>
 <tr>
 <td><%=route.Destination%></td>
-<td><%=route["Gateway IP"]%></td>
+<td>
+<a href="http://<%=route["Gateway IP"]%>/cgi-bin-status.html"><%=route["Gateway IP"]%></a>
+<% if route.Hostname then %>
+	/ <a href="http://<%=route.Hostname%>/cgi-bin-status.html"><%=route.Hostname%></a>  
+<% end %>
+</td>
 <td><%=route.Interface%></td>
 <td><%=route.Metric%></td>
 <td style="background-color:<%=color%>"><%=string.format("%.3f", tonumber(route.ETX) or 0)%></td>

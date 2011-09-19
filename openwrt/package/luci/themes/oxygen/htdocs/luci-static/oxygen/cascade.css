@@ -10,11 +10,12 @@ body {
 	font-family: Verdana, Arial, sans-serif;
 	font-size: 101%;
 	line-height: 100%;
-	background: #dddddd;
+	background: #557788 url(bg.png) no-repeat;
 }
 
 div#screen {
 	min-height: 100%;
+	background: url(footer.png) no-repeat bottom fixed;
 }
 
 * {
@@ -79,10 +80,10 @@ code {
 
 #header {
 	min-height: 98px;
-	background-image: url(flukso.png);
+	background-image: url(header.png);
 	background-repeat: no-repeat;
-	background-position: 12% center;
-	background-color: #dddddd;
+	background-position: left center;
+	background-color: #557788;
 	color: #ffffff;
 	text-align: right;
 }
@@ -104,21 +105,24 @@ code {
 }
 
 .menubar {
-	clear: both;
+	background: #000000;
+	background: rgba(0, 0, 0, 0.8);
+	color: #ffffff;
 	width: 80%;
-	margin: 0.7em auto;
-	padding: 0.5em;
-	background: #f5f5f5;
-	background: rgba(245, 245, 245, 0.9);
-	color: #000000;
-	border-width: 1px solid #444444;
-	font-size: 80%;
+	font-size: 0.8em;
 
-	border-radius: 1em;
-	-khtml-border-radius: 1em;
-	-moz-border-radius: 1em;
-	-webkit-border-radius: 1em;
-	-opera-border-radius: 1em;
+	margin: 0.5em auto;
+
+	padding: 0.25em;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+
+	border: 1px solid #000000;
+	border-radius: 0.8em;
+	-khtml-border-radius: 0.8em;
+	-moz-border-radius: 0.8em;
+	-webkit-border-radius:0.8em;
+	-opera-border-radius: 0.8em;
 }
 
 .menubar .warning {
@@ -128,7 +132,7 @@ code {
 
 html .menubar a:link,
 html .menubar a:visited {
-	color: #000000;
+	color: #ffffff;
 	text-decoration: none;
 	font-weight: bold;
 }
@@ -144,6 +148,8 @@ html .menubar a:link:active,
 html .menubar a:visited:active,
 .menubar a:link:focus,
 .menubar a:visited:focus {
+	background: #000000;
+	color: #ffff00;
 }
 
 html .menubar a:link.active,
@@ -173,7 +179,7 @@ html .menubar a:visited.warning {
 #maincontent {
 	clear: both;
 	width: 80%;
-	margin: 0.7em auto;
+	margin: 0 auto;
 	padding: 0.5em;
 	background: #f5f5f5;
 	background: rgba(245, 245, 245, 0.9);
@@ -314,6 +320,12 @@ td input[type=password] {
 	width: 99%;
 }
 
+img.cbi-image-button {
+	cursor: pointer;
+	margin: 0 2px;
+	vertical-align: middle;
+}
+
 input.cbi-input-user {
 	background: url('../resources/cbi/user.gif') no-repeat scroll 1px center;
 	background-color: inherit;
@@ -394,6 +406,14 @@ div.cbi-section-remove input {
 	color: #000000;
 	padding-left: 17px;
 	padding-right: 1px;
+}
+
+.cbi-input-invalid {
+	background-image: url('../resources/cbi/reset.gif');
+	background-repeat: no-repeat;
+	background-position: right;
+	color: #FF0000 !important;
+	border-color: #FF0000;
 }
 
 div.cbi-section-remove input {
@@ -600,36 +620,6 @@ td.cbi-value-error {
 	color: #000000;
 	padding: 0.5em;
 }
-
-#memorybar {
-	width: 200px;
-	height: 8px;
-	border: 1px solid #bbb;
-	color: black;
-	background-color: red;
-}
-
-#memfree, #membuffers, #memcached {
-	float: right;
-	border: 1px solid #bbb;
-	height: 6px;
-}
-
-#memfree {
-	background-color: green;
-	color: black;
-}
-
-#membuffers {
-	background-color: yellow;
-	color: black;
-}
-
-#memcached {
-	background-color: #ffa500;
-	color: black;
-}
-
 
 /* obligatory IE6 Voodoo Code */
 
