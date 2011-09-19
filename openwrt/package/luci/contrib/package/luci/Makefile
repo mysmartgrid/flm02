@@ -251,6 +251,7 @@ endef
 
 $(eval $(call module,admin-core,Web UI Core module,+luci-lib-web +luci-i18n-english))
 $(eval $(call module,admin-mini,LuCI Essentials - stripped down and user-friendly,+luci-mod-admin-core @BROKEN))
+$(eval $(call module,admin-flukso,LuCI Essentials - modified for mySmartGrid,+luci-mod-admin-core))
 $(eval $(call module,admin-full,LuCI Administration - full-featured for full control,+luci-mod-admin-core +luci-lib-ipkg))
 $(eval $(call module,rpc,LuCI RPC - JSON-RPC API,+luci-lib-json))
 $(eval $(call module,freifunk,LuCI Freifunk module,+luci-mod-admin-full +luci-lib-json +PACKAGE_luci-mod-freifunk:freifunk-firewall))
@@ -462,6 +463,7 @@ endef
 $(eval $(call theme,base,Common base for all themes,,+luci-lib-web))
 $(eval $(call theme,openwrt,OpenWrt.org (default),,,1))
 $(eval $(call theme,fledermaus,Fledermaus Theme))
+$(eval $(call theme,oxygen,Oxygen Theme (modified for mySmartgrid)))
 
 $(eval $(call theme,freifunk,alternative Freifunk Theme,\
 	Stefan Pirwitz <stefan-at-freifunk-bno-dot-de>))
