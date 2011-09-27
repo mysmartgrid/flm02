@@ -90,9 +90,9 @@ while true do
 	local msg
 	local poll = nixio.poll(fds, POLL_TIMEOUT_MS)
 
-	if poll == 0 then -- poll timed out, so time to 'poll' the spi bus
+	if poll == false then -- poll timed out, so time to 'poll' the spi bus
 		msg = spi.new_msg('', '')
-	elseif poll > 0 then
+	elseif poll == true then
 		if ctrl.revents == POLLIN then
 			msg = spi.new_msg('ctrl', ctrl.line())
 			msg:parse()
@@ -116,7 +116,7 @@ while true do
 		msg:wait(SPI_TX_RX_DELAY_NS, SPI_CT_DELAY_NS)
 	end
 
-	if poll >= 0 then
+	if poll == true then
 		msg:rx(spidev)
 		local dispatch = msg:decode()
 		if DEBUG then dbg.vardump(msg) end

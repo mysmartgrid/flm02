@@ -10,19 +10,20 @@ AXTLS_VERSION = 1.2.1
 AXTLS_DIR     = axTLS
 AXTLS_FILE    = $(AXTLS_DIR)-$(AXTLS_VERSION).tar.gz
 NIXIO_TLS    ?= openssl
-NIXIO_SHADOW ?= $(shell echo 'int main(void){ return !getspnam("root"); }' | $(CC) -include shadow.h -xc -o/dev/null - 2>/dev/null && echo yes)
+#NIXIO_SHADOW ?= $(shell echo 'int main(void){ return !getspnam("root"); }' | $(CC) -include shadow.h -xc -o/dev/null - 2>/dev/null && echo yes)
+NIXIO_LDFLAGS = -lcrypt
 NIXIO_SO      = nixio.so
 NIXIO_LDFLAGS =
 
-ifeq (,$(findstring Darwin,$(OS)))
-	NIXIO_LDFLAGS += -lcrypt
-else
-	EXTRA_CFLAGS += -D__DARWIN__
-endif
+#ifeq (,$(findstring Darwin,$(OS)))
+#	NIXIO_LDFLAGS += -lcrypt
+#else
+#	EXTRA_CFLAGS += -D__DARWIN__
+#endif
 
 NIXIO_OBJ = src/nixio.o src/socket.o src/sockopt.o src/bind.o src/address.o \
 	    src/protoent.o src/poll.o src/io.o src/file.o src/splice.o src/process.o \
-	    src/syslog.o src/bit.o src/binary.o src/fs.o src/user.o \
+	    src/syslog.o src/bit.o src/binary.o src/fs.o src/user.o src/spi.o \
 	    $(if $(NIXIO_TLS),src/tls-crypto.o src/tls-context.o src/tls-socket.o,)
 
 ifeq ($(NIXIO_TLS),axtls)

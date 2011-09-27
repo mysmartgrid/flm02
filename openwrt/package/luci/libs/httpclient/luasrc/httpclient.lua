@@ -18,6 +18,9 @@ local nixio = require "nixio"
 local ltn12 = require "luci.ltn12"
 local util = require "luci.util"
 local table = require "table"
+local coroutine = require "coroutine"
+local string = require "string"
+local os = require "os"
 local http = require "luci.http.protocol"
 local date = require "luci.http.protocol.date"
 
@@ -100,6 +103,66 @@ function request_to_source(uri, options)
 	else
 		return ltn12.source.cat(ltn12.source.string(buffer), sock:blocksource())
 	end
+end
+
+function create_persistent()
+	return coroutine.wrap(function(uri, options)
+		local function globe_on()
+			os.execute("gpioctl clear 5 > /dev/null")
+		end
+
+		local function globe_off()
+			os.execute("gpioctl set 5 > /dev/null")
+		end
+
+		local status, response, buffer, sock
+
+		local function yield(...)
+			if options.headers["Connection"] == "close" then
+				sock:close()
+			end
+
+			return coroutine.yield(...)
+		end
+	
+		while true do
+			local output = {}
+
+			globe_off()
+			status, response, buffer, sock = request_raw(uri, options, sock)
+
+			if not status then
+				uri, options = yield(nil, response or "", buffer)
+
+			elseif status ~= 200 and status ~= 206 then
+				if status == 204 then
+					globe_on()
+				end
+	
+				uri, options = yield(nil, status, response)
+
+			else
+				globe_on()
+
+				local content_length = tonumber(response.headers["Content-Length"])
+				local bytes_read = 0
+
+				if content_length > 0 then
+					local source = ltn12.source.cat(ltn12.source.string(buffer), sock:blocksource())
+					local sink = ltn12.sink.table(output)
+
+					while bytes_read < content_length do
+						ltn12.pump.step(source, sink)
+						bytes_read = bytes_read + output[#output]:len()
+					end
+
+					uri, options = yield(table.concat(output), status, response)
+				else
+					uri, options = yield("", status, response)
+				end
+			end
+		end
+	end)
 end
 
 --
