@@ -1,0 +1,35 @@
+#!/bin/sh /etc/rc.common
+
+SUPPORT_PORT=$(uci get flukso.support.port)
+SUPPORT_HOST=$(uci get flukso.support.host)
+SUPPORT_USER=$(uci get flukso.support.user)
+SUPPORT_TECHKEY=$(uci get flukso.support.techkey)
+SUPPORT_HOSTKEY=$(uci get flukso.support.hostkey)
+
+ID_FILE='/root/.ssh/id_dss'
+AUTH_FILE='/etc/dropbear/authorized_keys'
+HOST_FILE='/root/.ssh/known_hosts'
+PID_FILE='/var/run/reverse-ssh.pid'
+
+restart()
+{
+	stop
+	start
+}
+
+start()
+{
+	echo "$SUPPORT_TECHKEY" >> /etc/dropbear/authorized_keys
+	echo "$SUPPORT_HOSTKEY" >> /root/.ssh/known_hosts
+	echo "Starting ssh"
+	start-stop-daemon -S -x ssh -b -m -p "${PID_FILE}" -- -N -R "${SUPPORT_PORT}":localhost:22 "${SUPPORT_USER}"@"${SUPPORT_HOST}" -i "${ID_FILE}"
+}
+
+stop()
+{
+	echo "Stopping ssh"
+	start-stop-daemon -K -p "${PID_FILE}"
+	
+	sed -i "/$SUPPORT_HOST/d" /etc/dropbear/authorized_keys
+	sed -i "/$SUPPORT_HOST/d" /root/.ssh/known_hosts
+}
