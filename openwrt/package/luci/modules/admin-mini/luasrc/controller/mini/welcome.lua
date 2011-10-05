@@ -10,14 +10,14 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: network.lua 3674 2008-10-31 09:35:53Z Cyrus $
+$Id: system.lua 6029 2010-04-05 17:46:20Z jow $
 ]]--
 
-module("luci.controller.mini.lan", package.seeall)
+module("luci.controller.mini.welcome", package.seeall)
 
 function index()
 	luci.i18n.loadc("admin-core")
 	local i18n = luci.i18n.translate
 
-	entry({"lan"}, cbi("mini/lan", {on_success_to="tryit"}), i18n("wizard"), 1)
+	entry({"welcome"}, template("mini/welcome"), i18n("welcome"), 3)
 end
