@@ -44,6 +44,9 @@ require("luci.http").prepare_content("application/xhtml+xml")
 <link rel="stylesheet" type="text/css" media="screen" href="<%=media%>/dashboard.css" />
 <% if node and node.css then %><link rel="stylesheet" type="text/css" media="screen" href="<%=resource%>/<%=node.css%>" />
 <% end -%>
+
+<script type="text/javascript" src="/luci-static/js/json-rpc-api.js"></script>
+
 <title><%=striptags( hostname .. ( (node and node.title) and ' - ' .. node.title or '')) %> - LuCI</title>
 </head>
 <body class="lang_<%=luci.i18n.context.lang%>">
@@ -144,3 +147,4 @@ ucimenu("/" .. category .. "/uci/", tree.nodes[category].nodes["uci"], "changes"
 
 <div id="maincontent">
 <% if node.subindex then %><%+themes/oxygen/dashboard%><% end %>
+
