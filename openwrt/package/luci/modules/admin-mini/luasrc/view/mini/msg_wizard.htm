@@ -1,0 +1,190 @@
+<%+header%>
+
+<script type="text/javascript" src="http://localhost:8080/luci-static/resources/jquery-1.6.4.js"></script>
+<script type="text/javascript">
+	<!--//--><![CDATA[//><!--
+	step = "interface";
+	iface = "";
+
+	jsonRequest = function(url, method, params, id, callback)
+	{
+		var auth = new RegExp('(?:^|; )sysauth=([^;]*)').exec(document.cookie);
+		$.ajax({
+			'type': "POST",
+			'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + id + '}',
+			'url': url + "?auth=" + auth[1],
+			'success': callback
+		});
+	}
+
+	submit = function()
+	{
+		if ( step == "interface" )
+		{
+			jsonRequest("/luci/rpc/sys", "wifi.iwscan", '["wlan0"]', "99", function(data) { 
+				for ( var k = 0; k < data.result.length; k++ )
+				{
+					$('#essid').prepend('<option value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>');
+				}
+				$('#essid').val(data.result[0].ESSID);
+			});
+			if ( $('#msg_wizard_interface').val() == "wlan" )
+			{
+				step = "wifi";
+				iface = "wifi";
+				$("#cbi-msg_wizard").hide(20, function() { $("#cbi-msg_wifi").show(); } );
+			} else {
+				iface = "lan";
+				step = "network";
+				$("#cbi-msg_wizard").hide(20, function() { $("#cbi-network").show(); } );
+			}
+		}
+		else if ( step == "wifi" )
+		{
+			step = "network";
+			$("#cbi-msg_wifi").hide(20, function() { $("#cbi-network").show(); } );
+		}
+	}
+
+	reset = function()
+	{
+		step = "interface";
+		if ( step == "wifi" )
+		{
+			$("#cbi-msg_wifi").hide(20, function() { $("#cbi-msg_wizard").show(); } );
+		}
+		else if ( step == "network" )
+		{
+			$("#cbi-network").hide(20, function() { $("#cbi-msg_wizard").show(); } );
+		}
+	}
+	//--><!]]> 
+</script>
+
+<form method="get" action="javascript: submit()" onreset="reset()">
+	<div>
+		<noscript>
+			<div class="errorbox">
+				<strong>Java Script required!</strong>
+				<br/>
+				You must enable Java Script in your Browser for this wizard to work properly!
+			</div>
+		</noscript>
+	</div>
+
+	<div class="cbi-map" id="cbi-msg_wizard">
+		<h2><a id="content" name="content"></a></h2>
+		<div class="cbi-map-descr"></div>
+		<fieldset class="cbi-section">
+			<div class="cbi-section-node" id="cbi-msg_wizard-0x4e1e60">
+				<div class="cbi-value" id="cbi-msg_wizard-1-interface">
+					<label class="cbi-value-title" for="cbid.msg_wizard.1.interface">Interface</label>
+					<div class="cbi-value-field">
+						<select class="cbi-input-select" onchange="cbi_d_update(this.id)" id="msg_wizard_interface" name="msg_wizard_interface" size="1">
+							<option id="cbi-msg_wizard-1-interface-wlan" value="wlan" selected="selected">WIFI</option>
+							<option id="cbi-msg_wizard-1-interface-lan" value="lan">LAN</option>
+						</select>
+					</div>
+				</div>
+			</div>
+		</fieldset>
+	</div>
+
+	<div class="cbi-map" id="cbi-msg_wifi" style="display: none;">
+		<h2><a id="content" name="content">Wifi</a></h2>
+		<div class="cbi-map-descr">Please enter the name, encryption type and key/passphrase of your wifi network.</div>
+		<fieldset class="cbi-section" id="cbi-wireless-wifi-iface">
+			<div class="cbi-section-descr"></div>
+			<fieldset class="cbi-section-node" id="cbi-wireless-cfg03bd0e">
+				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-ssid">
+					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.ssid">
+						Network Name (<abbr title="Extended Service Set Identifier">ESSID</abbr>)
+					</label>
+					<div class="cbi-value-field">
+						<input type="text" class="cbi-input-text" onchange="cbi_d_update(this.id)" name="cbid.wireless.cfg03bd0e.ssid" id="cbid.wireless.cfg03bd0e.ssid" value="zwaluw" style="display: none;" />
+						<select id="essid" class="cbi-input-select">
+							<option value="">-- custom --</option>
+						</select>
+						<script type="text/javascript">
+							cbi_combobox_init('cbid.wireless.cfg03bd0e.ssid', {"GmW":"GmW"}, '', '-- custom --');
+						</script>
+					</div>
+				</div>
+				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-autoencr">
+					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.autoencr">
+						Auto-Encryption
+					</label>
+					<div class="cbi-value-field">
+						<input type="checkbox" class="cbi-input-checkbox" onclick="cbi_d_update(this.id)" onchange="cbi_d_update(this.id)" id="cbid.wireless.cfg03bd0e.autoencr" name="cbid.wireless.cfg03bd0e.autoencr" value="1" />
+						<div class="cbi-value-description">
+							<span class="cbi-value-helpicon">
+								<img src="wlan_files/help.gif" alt="" />
+							</span>
+							Automatically set encryption
+						</div>
+					</div>
+				</div>
+				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-encryption">
+					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.encryption">
+						Encryption
+					</label>
+					<div class="cbi-value-field">
+						<select class="cbi-input-select" onchange="cbi_d_update(this.id)" id="cbid.wireless.cfg03bd0e.encryption" name="cbid.wireless.cfg03bd0e.encryption" size="1">
+							<option id="cbi-wireless-cfg03bd0e-encryption-none" value="none">No Encryption</option>
+							<option id="cbi-wireless-cfg03bd0e-encryption-wep" value="wep" selected="selected">WEP</option>
+							<option id="cbi-wireless-cfg03bd0e-encryption-psk" value="psk">WPA-PSK</option>
+							<option id="cbi-wireless-cfg03bd0e-encryption-psk2" value="psk2">WPA2-PSK</option>
+						</select>
+					</div>
+				</div>
+				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-key">
+					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.key">
+						WEP-key or WPA-passphrase
+					</label>
+					<div class="cbi-value-field">
+						<input type="text" class="cbi-input-text" onchange="cbi_d_update(this.id)" name="cbid.wireless.cfg03bd0e.key" id="cbid.wireless.cfg03bd0e.key" value="4ae56b7820f6b6b3cba78da46b" />
+					</div>
+				</div>
+			</fieldset>
+			<br />
+		</fieldset>
+		<br />
+	</div>
+
+	<div class="cbi-map" id="cbi-network" style="display: none;">
+		<h2>
+			<a id="content" name="content">Network</a>
+		</h2>
+		<div class="cbi-map-descr">
+			These default settings should work just fine for most wifi networks.
+		</div>
+		<fieldset class="cbi-section" id="cbi-network-wan">
+			<legend>Local Network</legend>
+			<div class="cbi-section-node" id="cbi-network-wan">
+				<div class="cbi-value" id="cbi-network-wan-proto">
+					<label class="cbi-value-title" for="cbid.network.wan.proto">
+						DHCP
+					</label>
+					<div class="cbi-value-field">
+						<input type="checkbox" class="cbi-input-checkbox" onclick="cbi_d_update(this.id)" onchange="cbi_d_update(this.id)" id="cbid.network.wan.proto" name="cbid.network.wan.proto" checked="checked" value="1" />
+						<div class="cbi-value-description">
+							<span class="cbi-value-helpicon">
+								<img src="wlan_files/help.gif" alt="" />
+							</span>
+							Automatically set network settings
+						</div>
+					</div>
+				</div>
+			</div>
+			<br />
+		</fieldset>
+	</div>
+
+	<div>
+		<input type="submit" class="cbi-button-save" value="Submit" />
+		<input type="reset" class="cbi-button-reset" value="Reset" />
+		<script type="text/javascript">cbi_d_update();</script>
+	</div>
+</form>
+
+<%+footer%>
