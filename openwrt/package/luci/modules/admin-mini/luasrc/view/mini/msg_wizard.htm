@@ -95,7 +95,7 @@
 				<div class="cbi-value" id="cbi-msg_wizard-1-interface">
 					<label class="cbi-value-title" for="cbid.msg_wizard.1.interface">Interface</label>
 					<div class="cbi-value-field">
-						<select class="cbi-input-select" onchange="cbi_d_update(this.id)" id="msg_wizard_interface" name="msg_wizard_interface" size="1">
+						<select class="cbi-input-select" id="msg_wizard_interface" name="msg_wizard_interface" size="1">
 							<option id="cbi-msg_wizard-1-interface-wlan" value="wlan" selected="selected">WIFI</option>
 							<option id="cbi-msg_wizard-1-interface-lan" value="lan">LAN</option>
 						</select>
@@ -116,13 +116,10 @@
 						Network Name (<abbr title="Extended Service Set Identifier">ESSID</abbr>)
 					</label>
 					<div class="cbi-value-field">
-						<input type="text" class="cbi-input-text" onchange="cbi_d_update(this.id)" name="cbid.wireless.cfg03bd0e.ssid" id="cbid.wireless.cfg03bd0e.ssid" value="zwaluw" style="display: none;" />
+						<input type="text" class="cbi-input-text" name="cbid.wireless.cfg03bd0e.ssid" id="cbid.wireless.cfg03bd0e.ssid" value="zwaluw" style="display: none;" />
 						<select id="essid" class="cbi-input-select">
 							<option value="">-- custom --</option>
 						</select>
-						<script type="text/javascript">
-							cbi_combobox_init('cbid.wireless.cfg03bd0e.ssid', {"GmW":"GmW"}, '', '-- custom --');
-						</script>
 					</div>
 				</div>
 				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-autoencr">
@@ -130,11 +127,8 @@
 						Auto-Encryption
 					</label>
 					<div class="cbi-value-field">
-						<input type="checkbox" class="cbi-input-checkbox" onclick="cbi_d_update(this.id)" onchange="cbi_d_update(this.id)" id="cbid.wireless.cfg03bd0e.autoencr" name="cbid.wireless.cfg03bd0e.autoencr" value="1" />
+						<input type="checkbox" class="cbi-input-checkbox" id="cbid.wireless.cfg03bd0e.autoencr" name="cbid.wireless.cfg03bd0e.autoencr" value="1" />
 						<div class="cbi-value-description">
-							<span class="cbi-value-helpicon">
-								<img src="wlan_files/help.gif" alt="" />
-							</span>
 							Automatically set encryption
 						</div>
 					</div>
@@ -144,7 +138,7 @@
 						Encryption
 					</label>
 					<div class="cbi-value-field">
-						<select class="cbi-input-select" onchange="cbi_d_update(this.id)" id="cbid.wireless.cfg03bd0e.encryption" name="cbid.wireless.cfg03bd0e.encryption" size="1">
+						<select class="cbi-input-select" id="cbid.wireless.cfg03bd0e.encryption" name="cbid.wireless.cfg03bd0e.encryption" size="1">
 							<option id="cbi-wireless-cfg03bd0e-encryption-none" value="none">No Encryption</option>
 							<option id="cbi-wireless-cfg03bd0e-encryption-wep" value="wep" selected="selected">WEP</option>
 							<option id="cbi-wireless-cfg03bd0e-encryption-psk" value="psk">WPA-PSK</option>
@@ -157,7 +151,7 @@
 						WEP-key or WPA-passphrase
 					</label>
 					<div class="cbi-value-field">
-						<input type="text" class="cbi-input-text" onchange="cbi_d_update(this.id)" name="cbid.wireless.cfg03bd0e.key" id="cbid.wireless.cfg03bd0e.key" value="4ae56b7820f6b6b3cba78da46b" />
+						<input type="text" class="cbi-input-text" name="cbid.wireless.cfg03bd0e.key" id="cbid.wireless.cfg03bd0e.key" value="4ae56b7820f6b6b3cba78da46b" />
 					</div>
 				</div>
 			</fieldset>
@@ -181,11 +175,8 @@
 						DHCP
 					</label>
 					<div class="cbi-value-field">
-						<input type="checkbox" class="cbi-input-checkbox" onclick="cbi_d_update(this.id)" onchange="cbi_d_update(this.id)" id="cbid.network.wan.proto" name="cbid.network.wan.proto" checked="checked" value="1" />
+						<input type="checkbox" class="cbi-input-checkbox" id="cbid.network.wan.proto" name="cbid.network.wan.proto" checked="checked" value="1" />
 						<div class="cbi-value-description">
-							<span class="cbi-value-helpicon">
-								<img src="wlan_files/help.gif" alt="" />
-							</span>
 							Automatically set network settings
 						</div>
 					</div>
@@ -198,7 +189,6 @@
 	<div>
 		<input type="submit" class="cbi-button-save" value="Submit" />
 		<input type="reset" class="cbi-button-reset" value="Reset" />
-		<script type="text/javascript">cbi_d_update();</script>
 	</div>
 </form>
 
