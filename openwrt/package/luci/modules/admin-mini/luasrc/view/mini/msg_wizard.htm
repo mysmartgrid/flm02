@@ -31,12 +31,17 @@
 	{
 		if ( step == "interface" )
 		{
-			jsonRequest("/luci/rpc/sys", "wifi.iwscan", '["wlan0"]', "99", function(data) { 
+			login(function() {
+			jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
+				var options;
 				for ( var k = 0; k < data.result.length; k++ )
 				{
-					$('#essid').prepend('<option value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>');
+					if ( data.result[k].ESSID != "" )
+						options += '<option value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
 				}
+				$('#essid').prepend(options);
 				$('#essid').val(data.result[0].ESSID);
+			});
 			});
 			if ( $('#msg_wizard_interface').val() == "wlan" )
 			{
