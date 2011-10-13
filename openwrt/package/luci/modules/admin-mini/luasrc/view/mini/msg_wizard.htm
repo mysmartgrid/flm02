@@ -165,7 +165,7 @@
 						Encryption
 					</label>
 					<div class="cbi-value-field">
-						<select class="cbi-input-select" id="cbid.wireless.cfg03bd0e.encryption" name="cbid.wireless.cfg03bd0e.encryption" size="1">
+						<select onchange="if (this.value == 'none') { $('#wifi-key-input').attr('disabled', 'disabled')} else { $('#wifi-key-input').removeAttr('disabled')}" class="cbi-input-select" id="cbid.wireless.cfg03bd0e.encryption" name="cbid.wireless.cfg03bd0e.encryption" size="1">
 							<option id="cbi-wireless-cfg03bd0e-encryption-none" value="none">No Encryption</option>
 							<option id="cbi-wireless-cfg03bd0e-encryption-wep" value="wep" selected="selected">WEP</option>
 							<option id="cbi-wireless-cfg03bd0e-encryption-psk" value="psk">WPA-PSK</option>
@@ -178,7 +178,7 @@
 						WEP-key or WPA-passphrase
 					</label>
 					<div class="cbi-value-field">
-						<input type="text" class="cbi-input-text" name="cbid.wireless.cfg03bd0e.key" id="cbid.wireless.cfg03bd0e.key" value="" />
+						<input type="text" class="cbi-input-text" name="wifi-key-input" id="wifi-key-input" value="" />
 					</div>
 				</div>
 			</fieldset>
