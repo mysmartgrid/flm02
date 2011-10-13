@@ -10,23 +10,14 @@ You may obtain a copy of the License at
 
 	http://www.apache.org/licenses/LICENSE-2.0
 
-$Id: index.lua 5485 2009-11-01 14:24:04Z jow $
+$Id: system.lua 6029 2010-04-05 17:46:20Z jow $
 ]]--
 
-module("luci.controller.mini.index", package.seeall)
+module("luci.controller.mini.msg_wizard", package.seeall)
 
 function index()
-	luci.i18n.loadc("base")
+	luci.i18n.loadc("admin-core")
 	local i18n = luci.i18n.translate
 
-	local page   = node("msg_wizard")
-	page.target  = alias("msg_wizard")
-	page.title   = i18n("Wizard")
-	page.order   = 10
-	page.sysauth = "root"
-	page.sysauth_authenticator = "htmlauth"
-	page.ucidata = true
-	page.index = true
-
-	--entry({"msg_wizard"}, template("msg_wizard")).i18n="wizard"
+	entry({"msg_wizard"}, template("mini/msg_wizard"), i18n("wizard"), 3).sysauth = "root"
 end
