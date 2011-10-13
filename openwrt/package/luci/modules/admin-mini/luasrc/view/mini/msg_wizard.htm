@@ -61,9 +61,8 @@
 		}
 	}
 
-	reset = function()
+	wizard_reset = function()
 	{
-		step = "interface";
 		if ( step == "wifi" )
 		{
 			$("#cbi-msg_wifi").hide(20, function() { $("#cbi-msg_wizard").show(); } );
@@ -72,11 +71,31 @@
 		{
 			$("#cbi-network").hide(20, function() { $("#cbi-msg_wizard").show(); } );
 		}
+		step = "interface";
 	}
+	
+	toggle_dhcp = function()
+	{
+		if ( $('#dhcp').prop('checked') )
+		{
+			$('#cbi-network-wan-ipaddr').hide();
+			$('#cbi-network-wan-netmask').hide();
+			$('#cbi-network-wan-gateway').hide();
+			$('#cbi-network-wan-dns').hide();
+		}
+		else
+		{
+			$('#cbi-network-wan-ipaddr').show();
+			$('#cbi-network-wan-netmask').show();
+			$('#cbi-network-wan-gateway').show();
+			$('#cbi-network-wan-dns').show();
+		}
+	}
+	
 	//--><!]]> 
 </script>
 
-<form method="get" action="javascript: submit()" onreset="reset()">
+<form method="get" action="javascript: submit()" onreset="wizard_reset()">
 	<div>
 		<noscript>
 			<div class="errorbox">
