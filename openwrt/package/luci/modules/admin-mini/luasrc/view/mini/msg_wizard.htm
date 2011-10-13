@@ -5,10 +5,20 @@
 	<!--//--><![CDATA[//><!--
 	step = "interface";
 	iface = "";
+	legacy_auth = "";
+
+	//replace with proper authentication
+	login = function(jsonCall)
+	{
+		jsonRequest("/cgi-bin/luci/rpc/auth", "login", '["root", "root"]', 100, function(data) { legacy_auth = data.result[0]; jsonCall() });
+	}
 
 	jsonRequest = function(url, method, params, id, callback)
 	{
 		var auth = new RegExp('(?:^|; )sysauth=([^;]*)').exec(document.cookie);
+		if (!auth)
+			auth = legacy_auth;
+			
 		$.ajax({
 			'type': "POST",
 			'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + id + '}',
