@@ -39,8 +39,12 @@
 					if ( data.result[k].ESSID != "" )
 						options += '<option value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
 				}
-				$('#essid').prepend(options);
-				$('#essid').val(data.result[0].ESSID);
+				if ( data.result.length > 0 )
+				{
+					$('#essid').prepend(options);
+					$('#essid').val(data.result[0].ESSID);
+					$('#essid-input-div').hide();
+				}
 			});
 			});
 			if ( $('#msg_wizard_interface').val() == "wlan" )
@@ -135,10 +139,14 @@
 						Network Name (<abbr title="Extended Service Set Identifier">ESSID</abbr>)
 					</label>
 					<div class="cbi-value-field">
-						<input type="text" class="cbi-input-text" name="cbid.wireless.cfg03bd0e.ssid" id="cbid.wireless.cfg03bd0e.ssid" value="zwaluw" style="display: none;" />
-						<select id="essid" class="cbi-input-select">
-							<option value="">-- custom --</option>
-						</select>
+						<div>
+							<select onchange="if (this.value == '') { $('#essid-input-div').show() } else { $('#essid-input-div').hide() }" id="essid" class="cbi-input-select">
+								<option value="">-- custom --</option>
+							</select>
+						</div>
+						<div style="margin-top: 0.3em;" id="essid-input-div" >
+							<input type="text" class="cbi-input-text" name="essid-input" id="essid-input" value="" />
+						</div>
 					</div>
 				</div>
 				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-autoencr">
@@ -170,7 +178,7 @@
 						WEP-key or WPA-passphrase
 					</label>
 					<div class="cbi-value-field">
-						<input type="text" class="cbi-input-text" name="cbid.wireless.cfg03bd0e.key" id="cbid.wireless.cfg03bd0e.key" value="4ae56b7820f6b6b3cba78da46b" />
+						<input type="text" class="cbi-input-text" name="cbid.wireless.cfg03bd0e.key" id="cbid.wireless.cfg03bd0e.key" value="" />
 					</div>
 				</div>
 			</fieldset>
