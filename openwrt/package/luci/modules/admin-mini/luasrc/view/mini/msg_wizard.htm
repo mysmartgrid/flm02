@@ -32,20 +32,20 @@
 		if ( step == "interface" )
 		{
 			login(function() {
-			jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
-				var options;
-				for ( var k = 0; k < data.result.length; k++ )
-				{
-					if ( data.result[k].ESSID != "" )
-						options += '<option value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
-				}
-				if ( data.result.length > 0 )
-				{
-					$('#essid').prepend(options);
-					$('#essid').val(data.result[0].ESSID);
-					$('#essid-input-div').hide();
-				}
-			});
+				jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
+					var options;
+					for ( var k = 0; k < data.result.length; k++ )
+					{
+						if ( data.result[k].ESSID != "" )
+							options += '<option class="tmp_essid" value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
+					}
+					if ( data.result.length > 0 )
+					{
+						$('#essid').prepend(options);
+						$('#essid').val(data.result[0].ESSID);
+						$('#essid-input-div').hide();
+					}
+				});
 			});
 			if ( $('#msg_wizard_interface').val() == "wlan" )
 			{
