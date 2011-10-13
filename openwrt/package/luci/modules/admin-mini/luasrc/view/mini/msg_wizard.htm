@@ -154,13 +154,13 @@
 						Auto-Encryption
 					</label>
 					<div class="cbi-value-field">
-						<input type="checkbox" class="cbi-input-checkbox" id="cbid.wireless.cfg03bd0e.autoencr" name="cbid.wireless.cfg03bd0e.autoencr" value="1" />
+						<input type="checkbox" onchange="if ( this.checked ) { $('#wifi-enc').hide(); $('#wifi-key').hide(); } else { $('#wifi-enc').show(); $('#wifi-key').show(); }" class="cbi-input-checkbox" id="cbid.wireless.cfg03bd0e.autoencr" name="cbid.wireless.cfg03bd0e.autoencr" value="1" />
 						<div class="cbi-value-description">
 							Automatically set encryption
 						</div>
 					</div>
 				</div>
-				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-encryption">
+				<div class="cbi-value" id="wifi-enc" style="display: none;" >
 					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.encryption">
 						Encryption
 					</label>
@@ -173,7 +173,7 @@
 						</select>
 					</div>
 				</div>
-				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-key">
+				<div class="cbi-value" id="wifi-key" style="display: none;">
 					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.key">
 						WEP-key or WPA-passphrase
 					</label>
