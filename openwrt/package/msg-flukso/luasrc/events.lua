@@ -51,8 +51,10 @@ function brownout_event()
 	headers['User-Agent'] = USER_AGENT
 	headers['Connection'] = 'close'
 
-	local event = {}
-	event.id = 104
+	eventid = 104
+
+	local device = {}
+	device.id = DEVICE
 
 	local options = {}
 
@@ -65,18 +67,15 @@ function brownout_event()
 
 	options.method  = 'POST'
 	options.headers = headers
-	options.body = luci.json.encode(event)
+	options.body = luci.json.encode(device)
 
 	local hash = nixio.crypto.hmac('sha1', WAN_KEY)
 	hash:update(options.body)
 	options.headers['X-Digest'] = hash:final()
 
 	local http_persist = httpclient.create_persistent()
-	local url = WAN_BASE_URL .. DEVICE
+	local url = WAN_BASE_URL .. eventid
 	local response_json, code, call_info = http_persist(url, options)
-
-	print(url)
-	print(code)
 
 	if code == 200 then
 		nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
@@ -86,10 +85,8 @@ function brownout_event()
 		-- if available, send additional error info to the syslog
 		if type(call_info) == 'string' then
 			nixio.syslog('err', call_info)
-			print(call_info)
 		elseif type(call_info) == 'table'  then
 			local auth_error = call_info.headers['WWW-Authenticate']
-			print(auth_error)
 			if auth_error then
 				nixio.syslog('err', string.format('WWW-Authenticate: %s', auth_error))
 			end
@@ -108,7 +105,6 @@ ctrl.fdin:write('gb\n')
 
 local count
 for line in ctrl.fdout:linesource() do
-	print(line)
 	if line:find("gb") then
 		count = tonumber(line:sub(4))
 		break
@@ -117,7 +113,6 @@ end
 
 --local oldcount = uci:get("flukso", "main", "brownouts")
 local oldcount = FLUKSO.events.brownouts
-print(tonumber(oldcount))
 if oldcount == nil then
 	uci:set("flukso", "events", "brownouts", count) -- Set initial brownout count
 
@@ -135,4 +130,3 @@ elseif tonumber(oldcount) < count then
 end
 
 
-print(count)
