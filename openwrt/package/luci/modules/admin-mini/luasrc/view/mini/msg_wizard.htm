@@ -6,6 +6,8 @@
 	step = "interface";
 	iface = "";
 	legacy_auth = "";
+	wifi_section = "";
+	wifis = [];
 
 	//replace with proper authentication
 	login = function(jsonCall)
@@ -36,7 +38,10 @@
 				for ( var k = 0; k < data.result.length; k++ )
 				{
 					if ( data.result[k].ESSID != "" )
+					{
 						options += '<option class="tmp_essid" value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
+						wifis.push(data.result[k]);
+					}
 				}
 				if ( data.result.length > 0 )
 				{
@@ -52,6 +57,7 @@
 								ssid = data.result[tmpKey].ssid;
 								enc = data.result[tmpKey].encryption;
 								key = data.result[tmpKey].key;
+								wifi_section = tmpKey;
 							}
 						}
 						present = $('.tmp_essid');
@@ -124,6 +130,32 @@
 			}
 		}
 	}
+
+	save_wifi = function(callback)
+	{
+		var ssid, enc, key;
+		if ( $('#essid').val() == '' )
+			ssid = $('#essid-input').val();
+		else
+			ssid = $('#essid').val();
+
+		if ( $('#autoenc').prop('checked') == true )
+			enc = select_enc(ssid);
+		else
+			enc = $('#wifi-enc-select').val();
+
+		if ( enc == "none" )
+			key = "";
+		else
+			key = $('#wifi-key-input').val();
+
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"ssid": ssid , "encryption": enc, "key": key}) + ']', "104", function(data) {
+			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "105", function(data) {
+				callback();
+			});
+		});
+	}
+
 	submit = function()
 	{
 		if ( step == "interface" )
@@ -143,6 +175,7 @@
 		}
 		else if ( step == "wifi" )
 		{
+			save_wifi();
 			load_network();
 			step = "network";
 			$("#cbi-msg_wifi").hide(20, function() { $("#cbi-network").show(); } );
