@@ -156,6 +156,28 @@
 		});
 	}
 
+	save_network = function()
+	{
+		var section, config;
+		if ( iface == "wifi" )
+			section = "wan";
+		else
+			section = "lan";
+
+		if ( $('#dhcp').prop('checked') == true )
+			config = {'proto': 'dhcp'};
+		else
+		{
+			config = {'proto': 'static', 'ipaddr': $('#network-ipaddr').val(), 'netmask': $('#network-netmask').val(), 'gateway': $('#network-gateway').val(), 'dns': $('#network-dns').val()};
+		}
+
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", ' + JSON.stringify(section) + ', ' + JSON.stringify(config) + ']', "106", function(data) {
+			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "107", function(data) {
+				callback();
+			});
+		});
+	}
+
 	submit = function()
 	{
 		if ( step == "interface" )
@@ -179,6 +201,12 @@
 			load_network();
 			step = "network";
 			$("#cbi-msg_wifi").hide(20, function() { $("#cbi-network").show(); } );
+		}
+		else if ( step == "network" )
+		{
+			save_network();
+			alert("Wizard finised");
+			jsonRequest("/cgi-bin/luci/rpc/uci", "apply", '["network", "wireless"]', "108", function(data) {});
 		}
 	}
 
