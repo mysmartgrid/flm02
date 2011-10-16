@@ -107,6 +107,23 @@
 		);
 	}
 
+	select_enc = function(essid)
+	{
+		for (var k = 0; k < wifis.length; k++)
+		{
+			if (wifis[k].ESSID == essid)
+			{
+				if(wifis[k]['Encryption key'] != 'on')
+					return 'none';
+				else if (wifis[k]['IE'] == 'WPA Version 1')
+					return 'psk';
+				else if (wifis[k]['IE'] == 'IEEE 802.11i/WPA2 Version 1')
+					return 'psk2';
+				else
+					return 'wep';
+			}
+		}
+	}
 	submit = function()
 	{
 		if ( step == "interface" )
