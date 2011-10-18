@@ -299,7 +299,7 @@
 					</label>
 					<div class="cbi-value-field">
 						<div>
-							<select onchange="if (this.value == '') { $('#essid-input-div').show() } else { $('#essid-input-div').hide() }" id="essid" class="cbi-input-select">
+							<select onchange="if ($(this).val() == '') { $('#essid-input-div').show() } else { $('#essid-input-div').hide() }" id="essid" class="cbi-input-select">
 								<option value="">-- custom --</option>
 							</select>
 						</div>
