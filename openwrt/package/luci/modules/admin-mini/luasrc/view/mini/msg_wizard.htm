@@ -214,11 +214,11 @@
 	{
 		if ( step == "wifi" )
 		{
-			$("#cbi-msg_wifi").hide(20, function() { $("#cbi-msg_wizard").show(); } );
+			$("#cbi-msg_wifi").hide(20, function() { $("#msg_wizard").show(); } );
 		}
 		else if ( step == "network" )
 		{
-			$("#cbi-network").hide(20, function() { $("#cbi-msg_wizard").show(); } );
+			$("#cbi-network").hide(20, function() { $("#msg_wizard").show(); } );
 		}
 		step = "interface";
 		$('.tmp_essid').detach();
