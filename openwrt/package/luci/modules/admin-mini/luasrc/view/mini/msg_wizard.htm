@@ -277,6 +277,19 @@
 	<div class="cbi-map" id="cbi-msg_wifi" style="display: none;">
 		<h2><a id="content" name="content">Wifi</a></h2>
 		<div class="cbi-map-descr">Please enter the name, encryption type and key/passphrase of your wifi network.</div>
+		<fieldset class="cbi-section">
+			<div class="cbi-section-descr"></div>
+			<fieldset class="cbi-section-node">
+				<div class="cbi-value">
+					<img src="/resources/loading.gif" id="msg_wizard-wifi-config" />
+					Loading current wireless configuration.
+				</div>
+				<div class="cbi-value">
+					<img src="/resources/loading.gif" id="msg_wizard-wifi-list" />
+					Loading list of available wireless networks.
+				</div>
+			</fieldset>
+		</fieldset>
 		<fieldset class="cbi-section" id="cbi-wireless-wifi-iface">
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node" id="cbi-wireless-cfg03bd0e">
@@ -340,6 +353,19 @@
 		<div class="cbi-map-descr">
 			These default settings should work just fine for most wifi networks.
 		</div>
+		<fieldset class="cbi-section">
+			<div class="cbi-section-descr"></div>
+			<fieldset class="cbi-section-node">
+				<div class="cbi-value" id="msg_wizard-wifi-save-div">
+					<img src="/resources/loading.gif" id="msg_wizard-wifi-save" />
+					Saving wireless configuration.
+				</div>
+				<div class="cbi-value">
+					<img src="/resources/loading.gif" id="msg_wizard-net-config" />
+					Loading current network configuration.
+				</div>
+			</fieldset>
+		</fieldset>
 		<fieldset class="cbi-section" id="cbi-network-wan">
 			<legend>Local Network</legend>
 			<div class="cbi-section-node" id="cbi-network-wan">
@@ -394,8 +420,23 @@
 		</fieldset>
 	</div>
 
-	<div>
-		<input type="submit" class="cbi-button-save" value="Submit" />
+	<div class="cbi-map" id="msg_wizard-final" style="display: none;">
+		<h2><a id="content" name="content"></a></h2>
+		<div class="cbi-map-descr"></div>
+		<fieldset class="cbi-section">
+			<div class="cbi-value">
+				<img src="/resources/loading.gif" id="msg_wizard-net-save" />
+				Saving network configuration.
+			</div>
+			<div class="cbi-value">
+				<img src="/resources/loading.gif" id="msg_wizard-apply" />
+				Applying configuration. (Please be patient)
+			</div>
+		</fieldset>
+	</div>
+
+	<div id="form-buttons">
+		<input type="submit" class="cbi-button-save" value="Next" />
 		<input type="reset" class="cbi-button-reset" value="Reset" />
 	</div>
 </form>
