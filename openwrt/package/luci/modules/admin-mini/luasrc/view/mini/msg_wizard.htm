@@ -15,8 +15,10 @@
 		jsonRequest("/cgi-bin/luci/rpc/auth", "login", '["root", "root"]', 100, function(data) { legacy_auth = data.result[0]; jsonCall() });
 	}
 
-	jsonRequest = function(url, method, params, id, callback)
+	jsonRequest = function(url, method, params, id, callback, timeout)
 	{
+		if (!timeout)
+			timeout = 60000;
 		var auth = new RegExp('(?:^|; )sysauth=([^;]*)').exec(document.cookie);
 		if (!auth)
 			auth = legacy_auth;
@@ -26,71 +28,79 @@
 			'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + id + '}',
 			'dataType': 'json',
 			'url': url + "?auth=" + auth[1],
-			'success': callback
+			'success': callback,
+			'timeout': timeout
 		});
 	}
-	
+
 	load_wifi = function(callback)
 	{
+		$('#msg_wizard-wifi-config').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-wifi-list').attr('src', '/resources/loading.gif');
 		login(function() {
-			jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
-				var options;
-				for ( var k = 0; k < data.result.length; k++ )
-				{
-					if ( data.result[k].ESSID != "" )
+			$.when(
+				jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
+					var options;
+					for ( var k = 0; k < data.result.length; k++ )
 					{
-						options += '<option class="tmp_essid" value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
-						wifis.push(data.result[k]);
+						if ( data.result[k].ESSID != "" )
+						{
+							options += '<option class="tmp_essid" value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
+							wifis.push(data.result[k]);
+						}
 					}
-				}
-				if ( data.result.length > 0 )
-				{
-					$('#essid').prepend(options);
-				}
-				jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data)
+					if ( data.result.length > 0 )
 					{
-						var ssid, enc, key;
-						for ( tmpKey in data.result )
+						$('#essid').prepend(options);
+					}
+					$('#msg_wizard-wifi-list').attr('src', "/resources/ok.png");
+				}),
+				jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
+					var ssid, enc, key;
+					for ( tmpKey in data.result )
+					{
+						if (data.result[tmpKey].ssid)
 						{
-							if (data.result[tmpKey].ssid)
-							{
-								ssid = data.result[tmpKey].ssid;
-								enc = data.result[tmpKey].encryption;
-								key = data.result[tmpKey].key;
-								wifi_section = tmpKey;
-							}
+							ssid = data.result[tmpKey].ssid;
+							enc = data.result[tmpKey].encryption;
+							key = data.result[tmpKey].key;
+							wifi_section = tmpKey;
 						}
-						present = $('.tmp_essid');
-						var custom = true;
-						for ( var k = 0; k < present.length; k++ )
-						{
-							if ( present[k].value == ssid )
-								custom = false;
-						}
-						if ( custom )
-						{
-							$('#essid').val('');
-							$('#essid-input-div').show();
-							$('#essid-input').val(ssid);
-						} else {
-							$('#essid').val(ssid);
-							$('#essid-input-div').hide();
-						}
-						$('#wifi-enc-input').val(enc);
-						$('#wifi-key-input').val(key);
-						if ( callback )
-							callback();
+					}
+					present = $('.tmp_essid');
+					var custom = true;
+					for ( var k = 0; k < present.length; k++ )
+					{
+						if ( present[k].value == ssid )
+							custom = false;
+					}
+					if ( custom )
+					{
+						$('#essid').val('');
+						$('#essid-input-div').show();
+						$('#essid-input').val(ssid);
+					} else {
+						$('#essid').val(ssid);
+						$('#essid-input-div').hide();
+					}
+					$('#wifi-enc-input').val(enc);
+					$('#wifi-key-input').val(key);
+					$('#msg_wizard-wifi-config').attr('src', "/resources/ok.png");
+				})
+			)
+				.then(function() {
+						if (callback)
+							callback()
 					}
 				);
-			});
 		});
 	}
 
 	load_network = function(callback)
 	{
+		$('#msg_wizard-net-config').attr('src', '/resources/loading.gif');
 		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["network", "wan"]', "103", function(data)
 			{
-				alert(data.result.proto);
 				if ( data.result.proto == "dhcp" )
 				{
 					$('#dhcp').prop('checked', true);
@@ -193,26 +203,34 @@
 				load_wifi();
 				step = "wifi";
 				iface = "wifi";
-				$("#cbi-msg_wizard").hide(20, function() { $("#cbi-msg_wifi").show(); } );
+				$("#msg_wizard").hide(20, function() { $("#cbi-msg_wifi").show(); } );
 			} else {
 				load_network();
 				iface = "lan";
 				step = "network";
-				$("#cbi-msg_wizard").hide(20, function() { $("#cbi-network").show(); } );
+				$("#msg_wizard-wifi-save-div").hide();
+				$("#msg_wizard").hide(20, function() { $("#cbi-network").show(); } );
 			}
 		}
 		else if ( step == "wifi" )
 		{
-			save_wifi();
-			load_network();
+			save_wifi(),
+			load_network()
 			step = "network";
+				$("#msg_wizard-wifi-save-div").show();
 			$("#cbi-msg_wifi").hide(20, function() { $("#cbi-network").show(); } );
 		}
 		else if ( step == "network" )
 		{
-			save_network();
-			alert("Wizard finised");
-			jsonRequest("/cgi-bin/luci/rpc/uci", "apply", '["network", "wireless"]', "108", function(data) {});
+			save_network(
+				function() {
+					jsonRequest("/cgi-bin/luci/rpc/uci", "apply", '["network", "wireless"]', "108", function(data) {});
+					window.setTimeout(poll_device(), 10000);
+				}
+			);
+			$("#form-buttons").hide();
+			$("#cbi-network").hide();
+			$("#msg_wizard-final").show();
 		}
 	}
 
@@ -246,6 +264,23 @@
 			$('#cbi-network-wan-gateway').show();
 			$('#cbi-network-wan-dns').show();
 		}
+	}
+
+	poll_device = function()
+	{
+		$('#msg_wizard-apply').attr('src', '/resources/loading.gif');
+		$.ajax({
+			'type': "POST",
+			'data': '{"method": "login", "params": "["root", "root"]", "id": "200"}',
+			'dataType': 'json',
+			'url': "/cgi-bin/luci/rpc/auth",
+			'success': function(data) {$('#msg_wizard-apply').attr('src', '/resources/ok.png'); },
+			'timeout': 5000,
+			'error': function(jqXHR, textStatus, errorThrown) {
+					if (textStatus == "timeout")
+						poll_device();
+				}
+		});
 	}
 	
 	//--><!]]> 
