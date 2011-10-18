@@ -107,6 +107,7 @@
 					$('#cbi-network-wan-gateway').show();
 					$('#cbi-network-wan-dns').show();
 				}
+				$('#msg_wizard-net-config').attr('src', '/resources/ok.png');
 				if ( callback )
 					callback();
 			}
@@ -133,6 +134,7 @@
 
 	save_wifi = function(callback)
 	{
+		$('#msg_wizard-wifi-save').attr('src', '/resources/loading.gif');
 		var ssid, enc, key;
 		if ( $('#essid').val() == '' )
 			ssid = $('#essid-input').val();
@@ -151,13 +153,15 @@
 
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"ssid": ssid , "encryption": enc, "key": key}) + ']', "104", function(data) {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "105", function(data) {
+				$('#msg_wizard-wifi-save').attr('src', '/resources/ok.png');
 				callback();
 			});
 		});
 	}
 
-	save_network = function()
+	save_network = function(callback)
 	{
+		$('#msg_wizard-net-save').attr('src', '/resources/loading.gif');
 		var section, config;
 		if ( iface == "wifi" )
 			section = "wan";
@@ -173,7 +177,9 @@
 
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", ' + JSON.stringify(section) + ', ' + JSON.stringify(config) + ']', "106", function(data) {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "107", function(data) {
-				callback();
+				$('#msg_wizard-net-save').attr('src', '/resources/ok.png');
+				if(callback)
+					callback();
 			});
 		});
 	}
