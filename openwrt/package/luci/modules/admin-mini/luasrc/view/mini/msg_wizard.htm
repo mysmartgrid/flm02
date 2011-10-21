@@ -15,7 +15,7 @@
 		jsonRequest("/cgi-bin/luci/rpc/auth", "login", '["root", "root"]', 100, function(data) { legacy_auth = data.result[0]; jsonCall() });
 	}
 
-	jsonRequest = function(url, method, params, id, callback, timeout)
+	jsonRequest = function(url, method, params, id, callback, error, timeout)
 	{
 		if (!timeout)
 			timeout = 60000;
@@ -29,6 +29,7 @@
 			'dataType': 'json',
 			'url': url + "?auth=" + auth[1],
 			'success': callback,
+			'error': error,
 			'timeout': timeout
 		});
 	}
@@ -54,6 +55,9 @@
 						$('#essid').prepend(options);
 					}
 					$('#msg_wizard-wifi-list').attr('src', "/resources/ok.png");
+				}, function(jqXHR, textStatus, errorThrown) {
+					$('#msg_wizard-wifi-list').attr('src', "/resources/fail.png");
+					$('#msg_wizard-wifi-list').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
 				}),
 				jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
 					var ssid, enc, key;
@@ -86,6 +90,9 @@
 					$('#wifi-enc-input').val(enc);
 					$('#wifi-key-input').val(key);
 					$('#msg_wizard-wifi-config').attr('src', "/resources/ok.png");
+				}, function(jqXHR, textStatus, errorThrown) {
+					$('#msg_wizard-wifi-config').attr('src', "/resources/fail.png");
+					$('#msg_wizard-wifi-config').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
 				})
 			)
 				.then(function() {
@@ -124,6 +131,9 @@
 				$('#msg_wizard-net-config').attr('src', '/resources/ok.png');
 				if ( callback )
 					callback();
+			}, function(jqXHR, textStatus, errorThrown) {
+				$('#msg_wizard-net-config').attr('src', "/resources/fail.png");
+				$('#msg_wizard-net-config').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
 			}
 		);
 	}
@@ -169,7 +179,13 @@
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "105", function(data) {
 				$('#msg_wizard-wifi-save').attr('src', '/resources/ok.png');
 				callback();
+			}, function(jqXHR, textStatus, errorThrown) {
+				$('#msg_wizard-wifi-save').attr('src', "/resources/fail.png");
+				$('#msg_wizard-wifi-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
 			});
+		}, function(jqXHR, textStatus, errorThrown) {
+			$('#msg_wizard-wifi-save').attr('src', "/resources/fail.png");
+			$('#msg_wizard-wifi-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
 
@@ -194,7 +210,13 @@
 				$('#msg_wizard-net-save').attr('src', '/resources/ok.png');
 				if(callback)
 					callback();
+			}, function(jqXHR, textStatus, errorThrown) {
+				$('#msg_wizard-net-save').attr('src', "/resources/fail.png");
+				$('#msg_wizard-net-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
 			});
+		}, function(jqXHR, textStatus, errorThrown) {
+			$('#msg_wizard-net-save').attr('src', "/resources/fail.png");
+			$('#msg_wizard-net-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
 
