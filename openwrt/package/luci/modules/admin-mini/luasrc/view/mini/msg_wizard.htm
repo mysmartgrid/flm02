@@ -8,11 +8,48 @@
 	legacy_auth = "";
 	wifi_section = "";
 	wifis = [];
+	task = null;
 
-	//replace with proper authentication
+	login_callback = function(data, username, password) {
+		if (data["result"] != null && data["error"] == null)
+		{
+			legacy_auth = data.result[0];
+			if ( task != null )
+			{
+				task();
+				task = null;
+			}
+		}
+		else
+		{
+			if (username != null && password != null)
+			{
+				jsonRequest(
+					"/cgi-bin/luci/rpc/auth",
+					"login",
+					'["' + username + '", "' + password + '"]',
+					100,
+					function(data) {
+						login_callback(data);
+					}
+				);
+			} else {
+			}
+		}
+	}
+
 	login = function(jsonCall)
 	{
-		jsonRequest("/cgi-bin/luci/rpc/auth", "login", '["root", "root"]', 100, function(data) { legacy_auth = data.result[0]; jsonCall() });
+		jsonRequest(
+			"/cgi-bin/luci/rpc/auth",
+			"login",
+			'["root", "root"]',
+			100,
+			function(data) {
+				task = jsonCall;
+				login_callback(data);
+			}
+		);
 	}
 
 	jsonRequest = function(url, method, params, id, callback, error, timeout)
