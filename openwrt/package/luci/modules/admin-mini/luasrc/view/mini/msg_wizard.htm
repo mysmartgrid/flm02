@@ -1,6 +1,7 @@
 <%+header%>
 
 <script type="text/javascript" src="/resources/jquery-1.6.4.js"></script>
+<script type="text/javascript" src="/resources/jquery.tools.min.js"></script>
 <script type="text/javascript">
 	<!--//--><![CDATA[//><!--
 	step = "interface";
@@ -16,6 +17,7 @@
 			legacy_auth = data.result[0];
 			if ( task != null )
 			{
+				$('#login_form_div').overlay().close();
 				task();
 				task = null;
 			}
@@ -34,6 +36,7 @@
 					}
 				);
 			} else {
+				show_login_form();
 			}
 		}
 	}
@@ -571,5 +574,25 @@
 		<input type="reset" class="cbi-button-reset" value="Back" />
 	</div>
 </form>
+
+<div id="login_form_div" style="display: none; border: 1px solid #888; padding: 10px; z-index: 9999; background: #fff;" >
+	<form id="login_form" action="javascript: login_callback([], $('#username').val(), $('#password').val());" onreset="wizard_reset(); " >
+		<fieldset class="cbi-section">
+			<fieldset class="cbi-section-node">
+				<div class="cbi-value">
+					<input type="text" id="username" />
+				</div>
+				<div class="cbi-value">
+					<input type="password" id="password" />
+				</div>
+			</fieldset>
+		</fieldset>
+
+		<div id="form-buttons">
+			<input type="submit" class="cbi-button-save" value="Login" />
+			<input type="reset" class="cbi-button-reset close" value="Cancel" />
+		</div>
+	</form>
+</div>
 
 <%+footer%>
