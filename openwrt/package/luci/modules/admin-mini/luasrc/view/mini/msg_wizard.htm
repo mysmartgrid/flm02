@@ -357,11 +357,24 @@
 				}
 		});
 	}
-	
+
+	show_login_form = function()
+	{
+		$('#login_form_div').overlay({
+			mask: {
+				color: '#fff',
+				loadSpeed: 200,
+				opacity: 0.5
+			},
+			closeOnClick: false,
+			load: true //load overlay on first call
+		}).load(); //load overlay on every call except the first one
+	}
+
 	//--><!]]> 
 </script>
 
-<form method="get" action="javascript: submit()" onreset="wizard_reset()">
+<form id="wizard_form" method="get" action="javascript: submit()" onreset="wizard_reset()">
 	<div>
 		<noscript>
 			<div class="errorbox">
@@ -555,7 +568,7 @@
 
 	<div id="form-buttons">
 		<input type="submit" class="cbi-button-save" value="Next" />
-		<input type="reset" class="cbi-button-reset" value="Reset" />
+		<input type="reset" class="cbi-button-reset" value="Back" />
 	</div>
 </form>
 
