@@ -94,7 +94,7 @@
 					$('#msg_wizard-wifi-list').attr('src', "/resources/ok.png");
 				}, function(jqXHR, textStatus, errorThrown) {
 					$('#msg_wizard-wifi-list').attr('src', "/resources/fail.png");
-					$('#msg_wizard-wifi-list').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+					$('#msg_wizard-wifi-list').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 				}),
 				jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
 					var ssid, enc, key;
@@ -129,7 +129,7 @@
 					$('#msg_wizard-wifi-config').attr('src', "/resources/ok.png");
 				}, function(jqXHR, textStatus, errorThrown) {
 					$('#msg_wizard-wifi-config').attr('src', "/resources/fail.png");
-					$('#msg_wizard-wifi-config').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+					$('#msg_wizard-wifi-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 				})
 			)
 				.then(function() {
@@ -170,7 +170,7 @@
 					callback();
 			}, function(jqXHR, textStatus, errorThrown) {
 				$('#msg_wizard-net-config').attr('src', "/resources/fail.png");
-				$('#msg_wizard-net-config').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+				$('#msg_wizard-net-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			}
 		);
 	}
@@ -218,11 +218,11 @@
 				callback();
 			}, function(jqXHR, textStatus, errorThrown) {
 				$('#msg_wizard-wifi-save').attr('src', "/resources/fail.png");
-				$('#msg_wizard-wifi-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+				$('#msg_wizard-wifi-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			});
 		}, function(jqXHR, textStatus, errorThrown) {
 			$('#msg_wizard-wifi-save').attr('src', "/resources/fail.png");
-			$('#msg_wizard-wifi-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+			$('#msg_wizard-wifi-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
 
@@ -249,16 +249,17 @@
 					callback();
 			}, function(jqXHR, textStatus, errorThrown) {
 				$('#msg_wizard-net-save').attr('src', "/resources/fail.png");
-				$('#msg_wizard-net-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+				$('#msg_wizard-net-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			});
 		}, function(jqXHR, textStatus, errorThrown) {
 			$('#msg_wizard-net-save').attr('src', "/resources/fail.png");
-			$('#msg_wizard-net-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+			$('#msg_wizard-net-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
 
 	submit = function()
 	{
+		$('.apiError').detach();
 		if ( step == "interface" )
 		{
 			if ( $('#msg_wizard_interface').val() == "wlan" )
@@ -299,16 +300,27 @@
 
 	wizard_reset = function()
 	{
+		$('.apiError').detach();
+		$('.tmp_essid').detach();
 		if ( step == "wifi" )
 		{
 			$("#msg_wifi").hide(20, function() { $("#msg_wizard").show(); } );
+			step = "interface";
 		}
 		else if ( step == "network" )
 		{
-			$("#network").hide(20, function() { $("#msg_wizard").show(); } );
+			if ( iface == "wifi" )
+			{
+				load_wifi();
+				$("#network").hide(20, function() { $("#msg_wifi").show(); } );
+				step = "wifi";
+			}
+			else
+			{
+				$("#network").hide(20, function() { $("#msg_wizard").show(); } );
+				step = "interface";
+			}
 		}
-		step = "interface";
-		$('.tmp_essid').detach();
 	}
 	
 	toggle_dhcp = function()
