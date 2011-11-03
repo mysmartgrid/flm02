@@ -446,7 +446,23 @@
 	{
 		if ( $(config).prop('checked') )
 		{
+			var name = $(config).parent().parent().parent().attr('id');
+			var k = name[name.length - 1];
+			if ( $('#cbi-flukso-' + k + '-class').find('input').val() == "pulse" )
+			{
+				if ( $('#cbi-flukso-' + k + '-type').find('select').val() == "electricity" )
+				{
+					$(config).parent().parent().nextUntil('fieldset').not('#cbi-flukso-' + k + '-lpimp').show();
+				} else {
+					$(config).parent().parent().nextUntil('fieldset').not('#cbi-flukso-' + k + '-imppkwh').show();
+				}
+			} else {
+				$(config).parent().parent().nextUntil('fieldset').show();
+			}
+		} else {
 			$(config).parent().parent().nextUntil('fieldset').hide();
+		}
+	}
 		} else {
 			$(config).parent().parent().nextUntil('fieldset').show();
 		}
