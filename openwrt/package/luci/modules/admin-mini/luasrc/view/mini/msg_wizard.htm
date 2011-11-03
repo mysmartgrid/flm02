@@ -169,11 +169,11 @@
 					$('#network-wan-gateway').show();
 					$('#network-wan-dns').show();
 				}
-				$('#msg_wizard-net-config').attr('src', '/resources/ok.png');
+				$('#msg_wizard-net-config').attr('src', '/luci-static/resources/ok.png');
 				if ( callback )
 					callback();
 			}, function(jqXHR, textStatus, errorThrown) {
-				$('#msg_wizard-net-config').attr('src', "/resources/fail.png");
+				$('#msg_wizard-net-config').attr('src', "/luci-static/resources/fail.png");
 				$('#msg_wizard-net-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			}
 		);
