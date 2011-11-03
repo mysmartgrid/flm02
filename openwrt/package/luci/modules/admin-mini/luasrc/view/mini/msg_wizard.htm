@@ -6,7 +6,7 @@
 	<!--//--><![CDATA[//><!--
 	step = "interface";
 	iface = "";
-	legacy_auth = "";
+	auth = "";
 	wifi_section = "";
 	wifis = [];
 	task = null;
@@ -14,12 +14,12 @@
 	login_callback = function(data, username, password) {
 		if (data["result"] != null && data["error"] == null)
 		{
-			legacy_auth = data.result[0];
+			auth = data["result"];
 			if ( task != null )
 			{
-				$('#login_form_div').overlay().close();
 				task();
 				task = null;
+				$('#login_form_div').overlay().close();
 			}
 		}
 		else
@@ -59,15 +59,16 @@
 	{
 		if (!timeout)
 			timeout = 60000;
-		var auth = new RegExp('(?:^|; )sysauth=([^;]*)').exec(document.cookie);
-		if (!auth)
-			auth = legacy_auth;
+		// the following does not work due to invalid cookies
+		//var auth = new RegExp('(?:^|; )sysauth=([^;]*)').exec(document.cookie);
+		//if (!auth)
+		//	auth = legacy_auth;
 			
 		$.ajax({
 			'type': "POST",
 			'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + id + '}',
 			'dataType': 'json',
-			'url': url + "?auth=" + auth[1],
+			'url': url + "?auth=" + auth,
 			'success': callback,
 			'error': error,
 			'timeout': timeout
@@ -372,6 +373,7 @@
 			closeOnClick: false,
 			load: true //load overlay on first call
 		}).load(); //load overlay on every call except the first one
+		$('#password').focus();
 	}
 
 	//--><!]]> 
@@ -580,7 +582,7 @@
 		<fieldset class="cbi-section">
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value">
-					<input type="text" id="username" />
+					<input type="text" id="username" value="root" />
 				</div>
 				<div class="cbi-value">
 					<input type="password" id="password" />
