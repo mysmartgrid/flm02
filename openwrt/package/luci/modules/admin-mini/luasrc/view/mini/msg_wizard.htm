@@ -185,12 +185,61 @@
 
 	load_sensor_config = function(callback)
 	{
+		$('.sensor-value').empty();
 		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["flukso"]', "110", function(data)
 		{
-			for(var k = 1; k <= 6; k++)
+			$('#sensor-phases').find('select').val(data["result"]["main"]["phase"]);
+			for(var k = 1; k <= data["result"]["main"]["max_sensors"]; k++)
 			{
+				if ( data["result"][k]["enable"] == "1" )
+				{
+					$('#cbi-flukso-' + k + '-enable').find('input').prop('checked', true);
+					toggle_sensor_config($('#cbi-flukso-' + k + '-enable').find('input'));
+				} else {
+					$('#cbi-flukso-' + k + '-enable').find('input').prop('checked', false);
+					toggle_sensor_config($('#cbi-flukso-' + k + '-enable').find('input'));
+				}
+				//set sensor id
 				$('#cbi-flukso-' + k + '-id').find('input').val(data["result"][k]["id"]);
 				$('#cbi-flukso-' + k + '-id').find('div.sensor-value').append(data["result"][k]["id"]);
+				//set sensor class
+				$('#cbi-flukso-' + k + '-class').find('input').val(data["result"][k]["class"]);
+				$('#cbi-flukso-' + k + '-class').find('div.sensor-value').append(data["result"][k]["class"]);
+				if ( data["result"][k]["class"] != "uart" )
+				{
+					//set sensor type
+					$('#cbi-flukso-' + k + '-type').find('select').val(data["result"][k]["type"]);
+					$('#cbi-flukso-' + k + '-type').find('div.sensor-value').append(data["result"][k]["type"]);
+					//set sensor function
+					$('#cbi-flukso-' + k + '-function').find('input').val(data["result"][k]["function"]);
+
+					if ( data["result"][k]["class"] == "analog" )
+					{
+						//set sensor voltage
+						$('#cbi-flukso-' + k + '-voltage').find('input').val(data["result"][k]["voltage"]);
+						//set sensor current
+						$('#cbi-flukso-' + k + '-current').find('input').val(data["result"][k]["current"]);
+					} else {
+						if ( data["result"][k]["type"] == "electricity" )
+						{
+							//set sensor imppkwh
+							$('#cbi-flukso-' + k + '-imppkwh').find('input').val(data["result"][k]["imppkwh"]);
+							if ( data["result"][k]["enable"] == "1" )
+							{
+								$('#cbi-flukso-' + k + '-lpimp').hide();
+								$('#cbi-flukso-' + k + '-imppkwh').show();
+							}
+						} else {
+							//set sensor lpimp
+							$('#cbi-flukso-' + k + '-lpimp').find('input').val(data["result"][k]["lpimp"]);
+							if ( data["result"][k]["enable"] == "1" )
+							{
+								$('#cbi-flukso-' + k + '-imppkwh').hide();
+								$('#cbi-flukso-' + k + '-lpimp').show();
+							}
+						}
+					}
+				}
 			};
 		});
 	}
