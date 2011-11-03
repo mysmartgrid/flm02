@@ -342,6 +342,56 @@
 		});
 	}
 
+	save_sensors = function(callback)
+	{
+		config = {};
+		$('.sensor-config').each(function(index, element) {
+			var k = index + 1;
+			var sensor = {};
+			sensor['.name'] = k;
+			sensor['id'] = $(element).find('#flukso-' + k + '-id').val();
+			sensor['enable'] = $(element).find('#flukso-' + k + '-enable').prop('checked') ? "1" : "0";
+			sensor['class'] = $(element).find('#flukso-' + k + '-class').val();
+			if ( $(element).find('#flukso-' + k + '-class').val() != 'uart' )
+			{
+				sensor['type'] = $(element).find('#flukso-' + k + '-type').val();
+				sensor['function'] = $(element).find('#flukso-' + k + '-function').val();
+				if ( $(element).find('#flukso-' + k + '-class').val() == 'analog' )
+				{
+					sensor['voltage'] = $(element).find('#flukso-' + k + '-voltage').val();
+					sensor['current'] = $(element).find('#flukso-' + k + '-current').val();
+				} else {
+					if ( $(element).find('#flukso-' + k + '-type').val() == 'electricity' )
+					{
+						sensor['imppkwh'] = $(element).find('#flukso-' + k + '-imppkwh').val();
+					} else {
+						sensor['lpimp'] = $(element).find('#flukso-' + k + '-lpimp').val();
+					}
+				}
+			}
+			config[k] = sensor;
+		});
+
+		sync(6);
+		task = function() {
+			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["flukso"]', "109", function(data) {
+				//$('#msg_wizard-net-save').attr('src', '/luci-static/resources/ok.png');
+				if(callback)
+					callback();
+			}, function(jqXHR, textStatus, errorThrown) {
+				//$('#msg_wizard-net-save').attr('src', "/luci-static/resources/fail.png");
+				//$('#msg_wizard-net-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+			});
+		};
+
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "1", ' + JSON.stringify(config[1]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "2", ' + JSON.stringify(config[2]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "3", ' + JSON.stringify(config[3]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "4", ' + JSON.stringify(config[4]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "5", ' + JSON.stringify(config[5]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "6", ' + JSON.stringify(config[6]) + ']', "108", function(data) { sync(); });
+	}
+
 	submit = function()
 	{
 		$('.apiError').detach();
