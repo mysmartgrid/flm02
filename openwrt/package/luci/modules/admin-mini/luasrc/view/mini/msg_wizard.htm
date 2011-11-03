@@ -463,8 +463,18 @@
 			$(config).parent().parent().nextUntil('fieldset').hide();
 		}
 	}
+
+	toggle_sensor_type = function(config)
+	{
+		var name = $(config).parent().parent().parent().attr('id');
+		var k = name[name.length - 1];
+		if ( $('#cbi-flukso-' + k + '-type').find('select').val() == "electricity" )
+		{
+			$('#cbi-flukso-' + k + '-lpimp').hide();
+			$('#cbi-flukso-' + k + '-imppkwh').show();
 		} else {
-			$(config).parent().parent().nextUntil('fieldset').show();
+			$('#cbi-flukso-' + k + '-imppkwh').hide();
+			$('#cbi-flukso-' + k + '-lpimp').show();
 		}
 	}
 
