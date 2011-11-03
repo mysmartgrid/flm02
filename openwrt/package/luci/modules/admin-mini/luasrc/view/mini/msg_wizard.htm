@@ -11,6 +11,10 @@
 	wifis = [];
 	task = null;
 
+	$(function() {
+		$('#msg_wizard-final').find('input[type="checkbox"]').bind('change', function() {toggle_sensor_config(this);});
+	});
+
 	login_callback = function(data, username, password) {
 		if (data["result"] != null && data["error"] == null)
 		{
@@ -179,6 +183,18 @@
 		);
 	}
 
+	load_sensor_config = function(callback)
+	{
+		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["flukso"]', "110", function(data)
+		{
+			for(var k = 1; k <= 6; k++)
+			{
+				$('#cbi-flukso-' + k + '-id').find('input').val(data["result"][k]["id"]);
+				$('#cbi-flukso-' + k + '-id').find('div.sensor-value').append(data["result"][k]["id"]);
+			};
+		});
+	}
+
 	select_enc = function(essid)
 	{
 		for (var k = 0; k < wifis.length; k++)
@@ -290,13 +306,14 @@
 		}
 		else if ( step == "network" )
 		{
+			load_sensor_config();
 			save_network(
 				function() {
 					jsonRequest("/cgi-bin/luci/rpc/uci", "apply", '["network", "wireless"]', "108", function(data) {});
 					window.setTimeout(poll_device(), 10000);
 				}
 			);
-			$("#form-buttons").hide();
+			//$("#form-buttons").hide();
 			$("#network").hide();
 			$("#msg_wizard-final").show();
 		}
@@ -374,6 +391,16 @@
 			load: true //load overlay on first call
 		}).load(); //load overlay on every call except the first one
 		$('#password').focus();
+	}
+
+	toggle_sensor_config = function(config)
+	{
+		if ( $(config).prop('checked') )
+		{
+			$(config).parent().parent().nextUntil('fieldset').hide();
+		} else {
+			$(config).parent().parent().nextUntil('fieldset').show();
+		}
 	}
 
 	//--><!]]> 
@@ -560,13 +587,334 @@
 		<fieldset class="cbi-section">
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-net-save" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-save" />
 					Saving network configuration.
 				</div>
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-apply" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-apply" />
 					Applying configuration. (Please be patient)
 				</div>
+			</fieldset>
+			<fieldset class="cbi-section">
+				<legend>Sensor configuration</legend>
+				<div class="cbi-section-node" id="sensors">
+					<div class="cbi-value" id="sensor-phases">
+						<label class="cbi-value-title">
+							Number of phases
+						</label>
+						<div class="cbi-value-field">
+							<select>
+								<option value="1">1</option>
+								<option value="3">3</option>
+							</select>
+							<br />
+							<div class="cbi-value-description">
+								<span class="cbi-value-helpicon"><img src="/luci-static/resources/cbi/help.gif" alt="" /></span>
+								When selecting 3 phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When selecting 1 phase, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively.
+							</div>
+						</div>
+					</div>
+				</div>
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-1">
+				<legend>Sensor #1</legend>
+				<div class="cbi-section-node" id="cbi-flukso-1">
+					<div class="cbi-value" id="cbi-flukso-1-enable">
+						<label class="cbi-value-title" for="flukso-1-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-1-enable" name="flukso-1-enable" value="1" checked="checked" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-id">
+						<label class="cbi-value-title" for="flukso-1-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-1-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-class">
+						<label class="cbi-value-title" for="flukso-1-class">Class</label>
+						<div class="cbi-value-field">
+							analog
+							<input type="hidden" id="flukso-1-class" value="analog" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-type">
+						<label class="cbi-value-title" for="flukso-1-type">Type</label>
+						<div class="cbi-value-field">
+							electricity
+							<input type="hidden" id="flukso-1-type" value="electricity" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-function">
+						<label class="cbi-value-title" for="flukso-1-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-1-function" id="flukso-1-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-voltage">
+						<label class="cbi-value-title" for="flukso-1-voltage">Voltage</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-1-voltage" id="flukso-1-voltage" value="230" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-current">
+						<label class="cbi-value-title" for="flukso-1-current">Current</label>
+						<div class="cbi-value-field">
+							<select class="cbi-input-select" id="flukso-1-current" name="flukso-1-current" size="1">
+								<option id="cbi-flukso-1-current-50" value="50" selected="selected">50</option>
+								<option id="cbi-flukso-1-current-100" value="100">100</option>
+								<option id="cbi-flukso-1-current-250" value="250">250</option>
+								<option id="cbi-flukso-1-current-500" value="500">500</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-2">
+				<legend>Sensor #2</legend>
+				<div class="cbi-section-node" id="cbi-flukso-2">
+					<div class="cbi-value" id="cbi-flukso-2-enable">
+						<label class="cbi-value-title" for="flukso-2-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-2-enable" name="flukso-2-enable" value="1" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-id">
+						<label class="cbi-value-title" for="flukso-2-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-2-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-class">
+						<label class="cbi-value-title" for="flukso-2-class">Class</label>
+						<div class="cbi-value-field">
+							analog
+							<input type="hidden" id="flukso-2-class" value="analog" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-type">
+						<label class="cbi-value-title" for="flukso-2-type">Type</label>
+						<div class="cbi-value-field">
+							electricity
+							<input type="hidden" id="flukso-2-type" value="electricity" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-function">
+						<label class="cbi-value-title" for="flukso-2-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-2-function" id="flukso-2-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-voltage">
+						<label class="cbi-value-title" for="flukso-2-voltage">Voltage</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-2-voltage" id="flukso-2-voltage" value="230" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-current">
+						<label class="cbi-value-title" for="flukso-2-current">Current</label>
+						<div class="cbi-value-field">
+							<select class="cbi-input-select" id="flukso-2-current" name="flukso-2-current" size="1">
+								<option id="cbi-flukso-2-current-50" value="50" selected="selected">50</option>
+								<option id="cbi-flukso-2-current-100" value="100">100</option>
+								<option id="cbi-flukso-2-current-250" value="250">250</option>
+								<option id="cbi-flukso-2-current-500" value="500">500</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-3">
+				<legend>Sensor #3</legend>
+				<div class="cbi-section-node" id="cbi-flukso-3">
+					<div class="cbi-value" id="cbi-flukso-3-enable">
+						<label class="cbi-value-title" for="flukso-3-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-3-enable" name="flukso-3-enable" value="1" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-id">
+						<label class="cbi-value-title" for="flukso-3-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-3-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-class">
+						<label class="cbi-value-title" for="flukso-3-class">Class</label>
+						<div class="cbi-value-field">
+							analog
+							<input type="hidden" id="flukso-3-class" value="analog" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-type">
+						<label class="cbi-value-title" for="flukso-3-type">Type</label>
+						<div class="cbi-value-field">
+							electricity
+							<input type="hidden" id="flukso-3-type" value="electricity" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-function">
+						<label class="cbi-value-title" for="flukso-3-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-3-function" id="flukso-3-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-voltage">
+						<label class="cbi-value-title" for="flukso-3-voltage">Voltage</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-3-voltage" id="flukso-3-voltage" value="230" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-current">
+						<label class="cbi-value-title" for="flukso-3-current">Current</label>
+						<div class="cbi-value-field">
+							<select class="cbi-input-select" id="flukso-3-current" name="flukso-3-current" size="1">
+								<option id="cbi-flukso-3-current-50" value="50" selected="selected">50</option>
+								<option id="cbi-flukso-3-current-100" value="100">100</option>
+								<option id="cbi-flukso-3-current-250" value="250">250</option>
+								<option id="cbi-flukso-3-current-500" value="500">500</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-4">
+				<legend>Sensor #4</legend>
+				<div class="cbi-section-node" id="cbi-flukso-4">
+					<div class="cbi-value" id="cbi-flukso-4-enable">
+						<label class="cbi-value-title" for="flukso-4-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-4-enable" name="flukso-4-enable" value="1" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-id">
+						<label class="cbi-value-title" for="flukso-4-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-4-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-class">
+						<label class="cbi-value-title" for="flukso-4-class">Class</label>
+						<div class="cbi-value-field">
+							pulse
+							<input type="hidden" id="flukso-4-class" value="pulse" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-type">
+						<label class="cbi-value-title" for="flukso-4-type">Type</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-4-type" id="flukso-4-type" value="electricity" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-function">
+						<label class="cbi-value-title" for="flukso-4-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-4-function" id="flukso-4-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-imppkwh">
+						<label class="cbi-value-title" for="flukso-4-imppkwh">pulses/kWh</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-4-imppkwh" id="flukso-4-imppkwh" value="1000" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-lpimp">
+						<label class="cbi-value-title" for="flukso-4-lpimp">L/pulse</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-4-lpimp" id="flukso-4-lpimp" value="" />
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-5">
+				<legend>Sensor #5</legend>
+				<div class="cbi-section-node" id="cbi-flukso-5">
+					<div class="cbi-value" id="cbi-flukso-5-enable">
+						<label class="cbi-value-title" for="flukso-5-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-5-enable" name="flukso-5-enable" value="1" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-id">
+						<label class="cbi-value-title" for="flukso-5-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-5-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-class">
+						<label class="cbi-value-title" for="flukso-5-class">Class</label>
+						<div class="cbi-value-field">
+							pulse
+							<input type="hidden" id="flukso-5-class" value="pulse" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-type">
+						<label class="cbi-value-title" for="flukso-5-type">Type</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-5-type" id="flukso-5-type" value="electricity" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-function">
+						<label class="cbi-value-title" for="flukso-5-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-5-function" id="flukso-5-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-imppkwh">
+						<label class="cbi-value-title" for="flukso-5-imppkwh">pulses/kWh</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-5-imppkwh" id="flukso-5-imppkwh" value="1000" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-lpimp">
+						<label class="cbi-value-title" for="flukso-5-lpimp">L/pulse</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-5-lpimp" id="flukso-5-lpimp" value="" />
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-6">
+				<legend>Sensor #6</legend>
+				<div class="cbi-section-node" id="cbi-flukso-6">
+					<div class="cbi-value" id="cbi-flukso-6-enable">
+						<label class="cbi-value-title" for="flukso-6-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-6-enable" name="flukso-6-enable" value="1" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-6-id">
+						<label class="cbi-value-title" for="flukso-6-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-6-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-6-class">
+						<label class="cbi-value-title" for="flukso-6-class">Class</label>
+						<div class="cbi-value-field">
+							uart
+							<input type="hidden" id="flukso-6-class" value="uart" />
+						</div>
+					</div>
+				</div>
+				<br />
 			</fieldset>
 		</fieldset>
 	</div>
