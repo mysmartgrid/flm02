@@ -10,6 +10,7 @@
 	wifi_section = "";
 	wifis = [];
 	task = null;
+	counter = 0;
 
 	$(function() {
 		$('#msg_wizard-sensor').find('input[type="checkbox"]').bind('change', function() {toggle_sensor_config(this);});
@@ -57,6 +58,18 @@
 				login_callback(data);
 			}
 		);
+	}
+
+	sync = function(init)
+	{
+		if ( init )
+		{
+			counter = init;
+		} else {
+			counter--;
+			if ( counter == 0 )
+				task();
+		}
 	}
 
 	jsonRequest = function(url, method, params, id, callback, error, timeout)
