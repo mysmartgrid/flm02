@@ -1,7 +1,7 @@
 <%+header%>
 
-<script type="text/javascript" src="/resources/jquery-1.6.4.js"></script>
-<script type="text/javascript" src="/resources/jquery.tools.min.js"></script>
+<script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"></script>
+<script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"></script>
 <script type="text/javascript">
 	<!--//--><![CDATA[//><!--
 	step = "interface";
@@ -76,8 +76,8 @@
 
 	load_wifi = function(callback)
 	{
-		$('#msg_wizard-wifi-config').attr('src', '/resources/loading.gif');
-		$('#msg_wizard-wifi-list').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-wifi-config').attr('src', '/luci-static/resources/loading.gif');
+		$('#msg_wizard-wifi-list').attr('src', '/luci-static/resources/loading.gif');
 		login(function() {
 			$.when(
 				jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
@@ -94,9 +94,9 @@
 					{
 						$('#essid').prepend(options);
 					}
-					$('#msg_wizard-wifi-list').attr('src', "/resources/ok.png");
+					$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/ok.png");
 				}, function(jqXHR, textStatus, errorThrown) {
-					$('#msg_wizard-wifi-list').attr('src', "/resources/fail.png");
+					$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/fail.png");
 					$('#msg_wizard-wifi-list').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 				}),
 				jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
@@ -129,9 +129,9 @@
 					}
 					$('#wifi-enc-input').val(enc);
 					$('#wifi-key-input').val(key);
-					$('#msg_wizard-wifi-config').attr('src', "/resources/ok.png");
+					$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/ok.png");
 				}, function(jqXHR, textStatus, errorThrown) {
-					$('#msg_wizard-wifi-config').attr('src', "/resources/fail.png");
+					$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/fail.png");
 					$('#msg_wizard-wifi-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 				})
 			)
@@ -145,7 +145,7 @@
 
 	load_network = function(callback)
 	{
-		$('#msg_wizard-net-config').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-net-config').attr('src', '/luci-static/resources/loading.gif');
 		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["network", "wan"]', "103", function(data)
 			{
 				$('#network-ipaddr').val(data.result.ipaddr);
@@ -198,7 +198,7 @@
 
 	save_wifi = function(callback)
 	{
-		$('#msg_wizard-wifi-save').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-wifi-save').attr('src', '/luci-static/resources/loading.gif');
 		var ssid, enc, key;
 		if ( $('#essid').val() == '' )
 			ssid = $('#essid-input').val();
@@ -217,21 +217,21 @@
 
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"ssid": ssid , "encryption": enc, "key": key}) + ']', "104", function(data) {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "105", function(data) {
-				$('#msg_wizard-wifi-save').attr('src', '/resources/ok.png');
+				$('#msg_wizard-wifi-save').attr('src', '/luci-static/resources/ok.png');
 				callback();
 			}, function(jqXHR, textStatus, errorThrown) {
-				$('#msg_wizard-wifi-save').attr('src', "/resources/fail.png");
+				$('#msg_wizard-wifi-save').attr('src', "/luci-static/resources/fail.png");
 				$('#msg_wizard-wifi-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			});
 		}, function(jqXHR, textStatus, errorThrown) {
-			$('#msg_wizard-wifi-save').attr('src', "/resources/fail.png");
+			$('#msg_wizard-wifi-save').attr('src', "/luci-static/resources/fail.png");
 			$('#msg_wizard-wifi-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
 
 	save_network = function(callback)
 	{
-		$('#msg_wizard-net-save').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-net-save').attr('src', '/luci-static/resources/loading.gif');
 		var section, config;
 		if ( iface == "wifi" )
 			section = "wan";
@@ -247,15 +247,15 @@
 
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", ' + JSON.stringify(section) + ', ' + JSON.stringify(config) + ']', "106", function(data) {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "107", function(data) {
-				$('#msg_wizard-net-save').attr('src', '/resources/ok.png');
+				$('#msg_wizard-net-save').attr('src', '/luci-static/resources/ok.png');
 				if(callback)
 					callback();
 			}, function(jqXHR, textStatus, errorThrown) {
-				$('#msg_wizard-net-save').attr('src', "/resources/fail.png");
+				$('#msg_wizard-net-save').attr('src', "/luci-static/resources/fail.png");
 				$('#msg_wizard-net-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			});
 		}, function(jqXHR, textStatus, errorThrown) {
-			$('#msg_wizard-net-save').attr('src', "/resources/fail.png");
+			$('#msg_wizard-net-save').attr('src', "/luci-static/resources/fail.png");
 			$('#msg_wizard-net-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
@@ -346,13 +346,13 @@
 
 	poll_device = function()
 	{
-		$('#msg_wizard-apply').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-apply').attr('src', '/luci-static/resources/loading.gif');
 		$.ajax({
 			'type': "POST",
 			'data': '{"method": "login", "params": "["root", "root"]", "id": "200"}',
 			'dataType': 'json',
 			'url': "/cgi-bin/luci/rpc/auth",
-			'success': function(data) {$('#msg_wizard-apply').attr('src', '/resources/ok.png'); },
+			'success': function(data) {$('#msg_wizard-apply').attr('src', '/luci-static/resources/ok.png'); },
 			'timeout': 5000,
 			'error': function(jqXHR, textStatus, errorThrown) {
 					if (textStatus == "timeout")
@@ -413,11 +413,11 @@
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-wifi-config" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-config" />
 					Loading current wireless configuration.
 				</div>
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-wifi-list" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-list" />
 					Loading list of available wireless networks.
 				</div>
 			</fieldset>
@@ -489,11 +489,11 @@
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value" id="msg_wizard-wifi-save-div">
-					<img src="/resources/loading.gif" id="msg_wizard-wifi-save" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-save" />
 					Saving wireless configuration.
 				</div>
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-net-config" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-config" />
 					Loading current network configuration.
 				</div>
 			</fieldset>
