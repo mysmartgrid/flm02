@@ -12,7 +12,7 @@
 	task = null;
 
 	$(function() {
-		$('#msg_wizard-final').find('input[type="checkbox"]').bind('change', function() {toggle_sensor_config(this);});
+		$('#msg_wizard-sensor').find('input[type="checkbox"]').bind('change', function() {toggle_sensor_config(this);});
 	});
 
 	login_callback = function(data, username, password) {
@@ -315,7 +315,7 @@
 			);
 			//$("#form-buttons").hide();
 			$("#network").hide();
-			$("#msg_wizard-final").show();
+			$("#msg_wizard-sensor").show();
 		}
 	}
 
@@ -581,7 +581,7 @@
 		</fieldset>
 	</div>
 
-	<div class="cbi-map" id="msg_wizard-final" style="display: none;">
+	<div class="cbi-map" id="msg_wizard-sensor" style="display: none;">
 		<h2><a id="content" name="content"></a></h2>
 		<div class="cbi-map-descr"></div>
 		<fieldset class="cbi-section">
