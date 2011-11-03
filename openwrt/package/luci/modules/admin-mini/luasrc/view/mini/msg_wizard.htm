@@ -220,19 +220,21 @@
 				$('#cbi-flukso-' + k + '-class').find('div.sensor-value').append(data["result"][k]["class"]);
 				if ( data["result"][k]["class"] != "uart" )
 				{
-					//set sensor type
-					$('#cbi-flukso-' + k + '-type').find('select').val(data["result"][k]["type"]);
-					$('#cbi-flukso-' + k + '-type').find('div.sensor-value').append(data["result"][k]["type"]);
 					//set sensor function
 					$('#cbi-flukso-' + k + '-function').find('input').val(data["result"][k]["function"]);
 
 					if ( data["result"][k]["class"] == "analog" )
 					{
+						//set sensor type
+						$('#cbi-flukso-' + k + '-type').find('input').val(data["result"][k]["type"]);
+						$('#cbi-flukso-' + k + '-type').find('div.sensor-value').append(data["result"][k]["type"]);
 						//set sensor voltage
 						$('#cbi-flukso-' + k + '-voltage').find('input').val(data["result"][k]["voltage"]);
 						//set sensor current
 						$('#cbi-flukso-' + k + '-current').find('input').val(data["result"][k]["current"]);
 					} else {
+						//set sensor type
+						$('#cbi-flukso-' + k + '-type').find('select').val(data["result"][k]["type"]);
 						if ( data["result"][k]["type"] == "electricity" )
 						{
 							//set sensor imppkwh
