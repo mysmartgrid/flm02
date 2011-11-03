@@ -371,6 +371,7 @@
 		}
 		else if ( step == "network" )
 		{
+			step = "sensor";
 			load_sensor_config();
 			save_network(
 				function() {
@@ -406,6 +407,11 @@
 				$("#network").hide(20, function() { $("#msg_wizard").show(); } );
 				step = "interface";
 			}
+		}
+		else if ( step == "sensor" )
+		{
+			$('#msg_wizard-sensor').hide(20, function() { $("#network").show(); } );
+			step = "network";
 		}
 	}
 	
