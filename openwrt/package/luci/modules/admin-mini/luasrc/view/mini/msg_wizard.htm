@@ -313,6 +313,7 @@
 	save_network = function(callback)
 	{
 		$('#msg_wizard-net-save').attr('src', '/luci-static/resources/loading.gif');
+		$('#msg_wizard-apply').attr('src', '/luci-static/resources/loading.gif');
 		var section, config;
 		if ( iface == "wifi" )
 			section = "wan";
