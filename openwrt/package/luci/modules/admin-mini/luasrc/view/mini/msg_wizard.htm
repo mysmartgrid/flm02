@@ -441,6 +441,13 @@
 			$("#network").hide();
 			$("#msg_wizard-sensor").show();
 		}
+		else if ( step == "sensor" )
+		{
+			step = "registration";
+			save_sensors();
+			$("#msg_wizard-sensor").hide();
+			$("#msg_wizard-registration").show();
+		}
 	}
 
 	wizard_reset = function()
@@ -470,6 +477,11 @@
 		{
 			$('#msg_wizard-sensor').hide(20, function() { $("#network").show(); } );
 			step = "network";
+		}
+		else if ( step == "registration" )
+		{
+			$('#msg_wizard-registration').hide(20, function() { $("#msg_wizard-sensor").show(); } );
+			step = "sensor";
 		}
 	}
 	
@@ -1080,6 +1092,68 @@
 					</div>
 				</div>
 				<br />
+			</fieldset>
+		</fieldset>
+	</div>
+
+	<div class="cbi-map" id="msg_wizard-registration" style="display: none;">
+		<h2><a id="content" name="content"></a></h2>
+		<div class="cbi-map-descr"></div>
+		<fieldset class="cbi-section">
+			<fieldset class="cbi-section-node">
+				<div class="cbi-value">
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-sensor-save" />
+					Saving sensor configuration.
+				</div>
+				<div class="cbi-value">
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-sensor-apply" />
+					Applying sensor configuration.
+				</div>
+			</fieldset>
+			<fieldset class="cbi-section">
+				<legend>Registration</legend>
+					<div class="cbi-value">
+						Bitte führen Sie die folgenden Schritte durch um ihren Flukso zu aktivieren:
+					</div>
+
+					<div style="padding: 0.5em 1em; background-color: white; border-width: 1px; border-style: dotted; border-color: #555;">
+						<ol style="margin: 0.5em 1em 0.5em 1.5em">
+							<li style="margin-bottom: 0.5em">
+								Besuchen Sie mit Ihrem Webbrowser die Webseite <a href="http://www.mysmartgrid.de">http://www.mysmartgrid.de</a>. Falls Sie bereits ein Benutzerkonto angelegt haben springen Sie zu Schritt 3.
+							</li>
+							<li style="margin-bottom: 0.5em">
+								Bitte legen Sie sich ein Benutzerkonto an. Dazu klicken Sie bitte auf "Registrieren". Sie finden diesen Link auf der linken Seite unten, um Kasten "Benutzeranmeldung". Auf der folgenden Seite geben Sie einen Benutzernamen und eine gültige eMail-Adresse ein. Das System schickt Ihnen daraufhin eine eMail. Darin finden Sie einen Link, mit dem das Anlegen eines Benutzerkontos abgeschlossen wird. Folgen Sie dazu einfach den Hinweisen.
+							</li>
+							<li style="margin-bottom: 0.5em">
+								Bitte loggen Sie sich auf der Webseite ein. Dazu geben Sie ihren Benutzernamen und ihr Passwort im Kasten "Benutzeranmeldung" ein. Das System zeigt Ihnen nun ihr Dashboard an - hier können Sie in Zukunft Ihren Stromverbrauch beobachten. Im Moment ist der Graph allerdings noch leer, da Ihr Flukso noch nicht mit dem System verknüpft ist.
+							</li>
+							<li style="margin-bottom: 0.5em">
+								Um den Flukso zu verknüpfen klicken Sie bitte auf "Mein Konto" auf der linken Seite, danach auf "Geräte". Hier können Sie nun Ihren persönlichen Aktivierungscode eingeben. Für Ihr Gerät geben sie nun bitte folgenden Aktivierungscode ein:
+								<div style="margin: 0.5em 1em; font-weight: bold">
+									<%
+										local uci = require "luci.model.uci".cursor()
+
+										local DEVICE = '0123456789abcdef0123456789abcdef'
+										uci:foreach('system', 'system', function(x) if x.device ~= nil then DEVICE = x.device end end)
+
+										print(string.sub(DEVICE, 1, 10))
+									%>
+								</div>
+								Klicken Sie anschließend auf "Gerät hinzufügen", um das Gerät anzumelden
+							 </li>
+							 <li style="margin-bottom: 0.5em">
+								Fertig! Wenn die Installation des Geräts korrekt funktioniert, sollten Sie nach max. 15 Minuten erste Werte auf Ihrem Dashboard sehen. In der Spalte "Last heartbeat" ("Mein Konto" -> "Geräte") sehen Sie zudem, wann sich das Gerät das letzte Mal gemeldet hat.
+							 </li>
+							 <li style="margin-bottom: 0.5em">
+								Falls Sie Hilfe benötigen kontaktieren Sie uns bitte via eMail. Die Adresse hierfür ist:
+								<div>
+									<a href="mailto:msg-support@itwm.fraunhofer.de">msg-support@itwm.fraunhofer.de</a>
+								</div>
+								Telefonisch können wir die Anfragen leider nicht bewältigen.
+							 </li>
+						</ol>
+					</div>
+					Sie können nun ihren Stromverbrauch direkt beobachten. Wenn Sie weitere Vorschläge oder Anregungen haben, benutzen Sie bitte das Forum auf <a href="http://www.mysmartgrid.de">www.mysmartgrid.de</a>. Dort können Sie sich auch mit anderen Projektteilnehmern austauschen.
 			</fieldset>
 		</fieldset>
 	</div>
