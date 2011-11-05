@@ -344,6 +344,8 @@
 
 	save_sensors = function(callback)
 	{
+		$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/loading.gif');
+		$('#msg_wizard-sensor-apply').attr('src', '/luci-static/resources/loading.gif');
 		config = {};
 		$('.sensor-config').each(function(index, element) {
 			var k = index + 1;
@@ -375,12 +377,18 @@
 		sync(6);
 		task = function() {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["flukso"]', "109", function(data) {
-				//$('#msg_wizard-net-save').attr('src', '/luci-static/resources/ok.png');
-				if(callback)
-					callback();
+				$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/ok.png');
+				jsonRequest("/cgi-bin/luci/rpc/sys", "exec", '["fsync"]', "109", function(data) {
+					$('#msg_wizard-sensor-apply').attr('src', '/luci-static/resources/ok.png');
+					if(callback)
+						callback();
+				}, function(jqXHR, textStatus, errorThrown) {
+					$('#msg_wizard-sensor-apply').attr('src', "/luci-static/resources/fail.png");
+					$('#msg_wizard-sensor-apply').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+				})
 			}, function(jqXHR, textStatus, errorThrown) {
-				//$('#msg_wizard-net-save').attr('src', "/luci-static/resources/fail.png");
-				//$('#msg_wizard-net-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+				$('#msg_wizard-sensor-save').attr('src', "/luci-static/resources/fail.png");
+				$('#msg_wizard-sensor-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			});
 		};
 
