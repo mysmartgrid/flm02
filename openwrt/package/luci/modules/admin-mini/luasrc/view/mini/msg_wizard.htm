@@ -313,7 +313,7 @@
 	save_network = function(callback)
 	{
 		$('#msg_wizard-net-save').attr('src', '/luci-static/resources/loading.gif');
-		$('#msg_wizard-apply').attr('src', '/luci-static/resources/loading.gif');
+		$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/loading.gif');
 		var section, config;
 		if ( iface == "wifi" )
 			section = "wan";
@@ -485,13 +485,13 @@
 
 	poll_device = function()
 	{
-		$('#msg_wizard-apply').attr('src', '/luci-static/resources/loading.gif');
+		$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/loading.gif');
 		$.ajax({
 			'type': "POST",
 			'data': '{"method": "login", "params": "["root", "root"]", "id": "200"}',
 			'dataType': 'json',
 			'url': "/cgi-bin/luci/rpc/auth",
-			'success': function(data) {$('#msg_wizard-apply').attr('src', '/luci-static/resources/ok.png'); },
+			'success': function(data) {$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/ok.png'); },
 			'timeout': 5000,
 			'error': function(jqXHR, textStatus, errorThrown) {
 					if (textStatus == "timeout")
@@ -738,7 +738,7 @@
 					Saving network configuration.
 				</div>
 				<div class="cbi-value">
-					<img src="/luci-static/resources/loading.gif" id="msg_wizard-apply" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-apply" />
 					Applying configuration. (Please be patient)
 				</div>
 			</fieldset>
