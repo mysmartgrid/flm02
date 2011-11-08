@@ -201,7 +201,15 @@
 		$('.sensor-value').empty();
 		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["flukso"]', "110", function(data)
 		{
-			$('#sensor-phases').find('select').val(data["result"]["main"]["phase"]);
+			$('#flukso-sensor-phases').val(data["result"]["main"]["phase"]);
+			if ( data["result"]["main"]["phase"] == "3" )
+			{
+				$('#cbi-flukso-2').hide();
+				$('#cbi-flukso-3').hide();
+			} else {
+				$('#cbi-flukso-2').show();
+				$('#cbi-flukso-3').show();
+			}
 			for(var k = 1; k <= data["result"]["main"]["max_sensors"]; k++)
 			{
 				if ( data["result"][k]["enable"] == "1" )
@@ -373,8 +381,22 @@
 			}
 			config[k] = sensor;
 		});
+		if ( $('#flukso-sensor-phases').val() == 1 )
+		{
+			config[1]['port'] = ["1"];
+			config[2]['port'] = ["2"];
+			config[3]['port'] = ["3"];
+			config['main'] = {'phase': "1"};
+		} else {
+			config[1]['port'] = ["1", "2", "3"];
+			config[2]['port'] = "";
+			config[2]['enable'] = "0"; //make sure to disable sensor 2
+			config[3]['port'] = "";
+			config[3]['enable'] = "0"; //make sure to disable sensor 3
+			config['main'] = {'phase': "3"};
+		}
 
-		sync(6);
+		sync(7);
 		task = function() {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["flukso"]', "109", function(data) {
 				$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/ok.png');
@@ -398,6 +420,7 @@
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "4", ' + JSON.stringify(config[4]) + ']', "108", function(data) { sync(); });
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "5", ' + JSON.stringify(config[5]) + ']', "108", function(data) { sync(); });
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "6", ' + JSON.stringify(config[6]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "main", ' + JSON.stringify(config['main']) + ']', "108", function(data) { sync(); });
 	}
 
 	submit = function()
@@ -480,6 +503,7 @@
 		}
 		else if ( step == "registration" )
 		{
+			load_sensor_config();
 			$('#msg_wizard-registration').hide(20, function() { $("#msg_wizard-sensor").show(); } );
 			step = "sensor";
 		}
@@ -567,6 +591,63 @@
 		} else {
 			$('#cbi-flukso-' + k + '-imppkwh').hide();
 			$('#cbi-flukso-' + k + '-lpimp').show();
+		}
+	}
+
+	toggle_phase_setting = function(config)
+	{
+		var setting = $(config).val();
+		if ( setting == 1 )
+		{
+			//$('#flukso-1-enable').prop('checked', true);
+			toggle_sensor_config($('#flukso-1-enable'));
+			//$('#flukso-2-enable').prop('checked', true);
+			toggle_sensor_config($('#flukso-2-enable'));
+			//$('#flukso-3-enable').prop('checked', true);
+			toggle_sensor_config($('#flukso-3-enable'));
+			$('#cbi-flukso-2').show();
+			$('#cbi-flukso-3').show();
+		} else {
+			//$('#flukso-1-enable').prop('checked', true);
+			toggle_sensor_config($('#flukso-1-enable'));
+			//$('#flukso-2-enable').prop('checked', false);
+			toggle_sensor_config($('#flukso-2-enable'));
+			//$('#flukso-3-enable').prop('checked', false);
+			toggle_sensor_config($('#flukso-3-enable'));
+			$('#cbi-flukso-2').hide();
+			$('#cbi-flukso-3').hide();
+		}
+	}
+
+	change_wifi = function()
+	{
+		if ($('#essid').val() == '')
+		{
+			$('#essid-input-div').show();
+			$('#autoenc').removeAttr('checked');
+			$('#wifi-enc').show();
+			$('#wifi-key').show();
+		} else {
+			$('#essid-input-div').hide();
+
+			if ($('#autoenc').prop('checked'))
+			{
+				$('#wifi-enc').hide();
+				if (select_enc($('#essid').val()) != 'none')
+				{
+					$('#wifi-key').show();
+				} else {
+					$('#wifi-key').hide();
+				}
+			} else {
+				$('#wifi-enc').show();
+				if ($('#wifi-enc-select').val() == 'none')
+				{
+					$('wifi-key').hide();
+				} else {
+					$('#wifi-key').show();
+				}
+			}
 		}
 	}
 
@@ -770,7 +851,7 @@
 							Number of phases
 						</label>
 						<div class="cbi-value-field">
-							<select>
+							<select id="flukso-sensor-phases" onchange="toggle_phase_setting(this);">
 								<option value="1">1</option>
 								<option value="3">3</option>
 							</select>
