@@ -199,6 +199,7 @@
 	load_sensor_config = function(callback)
 	{
 		$('.sensor-value').empty();
+		$('#msg_wizard-sensor-load').attr('src', "/luci-static/resources/loading.gif");
 		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["flukso"]', "110", function(data)
 		{
 			$('#flukso-sensor-phases').val(data["result"]["main"]["phase"]);
@@ -264,6 +265,12 @@
 					}
 				}
 			};
+			$('#msg_wizard-sensor-load').attr('src', '/luci-static/resources/ok.png');
+			if(callback)
+				callback();
+		}, function(jqXHR, textStatus, errorThrown) {
+			$('#msg_wizard-sensor-load').attr('src', "/luci-static/resources/fail.png");
+			$('#msg_wizard-sensor-load').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
 
@@ -841,6 +848,10 @@
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-apply" />
 					Applying network configuration. (Please be patient)
+				</div>
+				<div class="cbi-value">
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-sensor-load" />
+					Loading current sensor configuration.
 				</div>
 			</fieldset>
 			<fieldset class="cbi-section">
