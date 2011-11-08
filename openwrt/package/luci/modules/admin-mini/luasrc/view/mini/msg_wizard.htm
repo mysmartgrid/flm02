@@ -702,13 +702,13 @@
 		<fieldset class="cbi-section" id="cbi-wireless-wifi-iface">
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node" id="cbi-wireless-cfg03bd0e">
-				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-ssid">
+				<div class="cbi-value" id="wifi-ssid">
 					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.ssid">
 						Network Name (<abbr title="Extended Service Set Identifier">ESSID</abbr>)
 					</label>
 					<div class="cbi-value-field">
 						<div>
-							<select onchange="if ($(this).val() == '') { $('#essid-input-div').show() } else { $('#essid-input-div').hide() }" id="essid" class="cbi-input-select">
+							<select onchange="change_wifi()" id="essid" class="cbi-input-select">
 								<option value="">-- custom --</option>
 							</select>
 						</div>
@@ -717,23 +717,23 @@
 						</div>
 					</div>
 				</div>
-				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-autoencr">
-					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.autoencr">
+				<div class="cbi-value" id="wifi-autoenc">
+					<label class="cbi-value-title" for="autoenc">
 						Auto-Encryption
 					</label>
 					<div class="cbi-value-field">
-						<input type="checkbox" onchange="if ( this.checked ) { $('#wifi-enc').hide(); $('#wifi-key-input').removeAttr('disabled'); } else { $('#wifi-enc').show() }" class="cbi-input-checkbox" id="autoenc" name="autoenc" value="1" checked="checked" />
+						<input type="checkbox" onchange="change_wifi()" class="cbi-input-checkbox" id="autoenc" name="autoenc" value="1" checked="checked" />
 						<div class="cbi-value-description">
 							Automatically set encryption
 						</div>
 					</div>
 				</div>
 				<div class="cbi-value" id="wifi-enc" style="display: none;" >
-					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.encryption">
+					<label class="cbi-value-title" for="wifi-enc-select">
 						Encryption
 					</label>
 					<div class="cbi-value-field">
-						<select onchange="if (this.value == 'none') { $('#wifi-key-input').attr('disabled', 'disabled')} else { $('#wifi-key-input').removeAttr('disabled')}" class="cbi-input-select" id="cbid.wireless.cfg03bd0e.encryption" name="cbid.wireless.cfg03bd0e.encryption" size="1">
+						<select onchange="change-wifi()" class="cbi-input-select" id="wifi-enc-select" name="wifi-enc-select" size="1">
 							<option id="cbi-wireless-cfg03bd0e-encryption-none" value="none">No Encryption</option>
 							<option id="cbi-wireless-cfg03bd0e-encryption-wep" value="wep" selected="selected">WEP</option>
 							<option id="cbi-wireless-cfg03bd0e-encryption-psk" value="psk">WPA-PSK</option>
