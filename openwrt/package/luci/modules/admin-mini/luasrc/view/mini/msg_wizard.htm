@@ -1,33 +1,202 @@
 <%+header%>
 
-<script type="text/javascript" src="/resources/jquery-1.6.4.js"></script>
+<script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"></script>
+<script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"></script>
+<script src="/luci-static/resources/jquery.validate.min.js" type="text/javascript"></script>
+<script id="test" type="text/javascript">
+	<!--//--><![CDATA[//><!--
+		$(document).ready(function() {
+			var validator = $("#wizard_form").validate({
+
+				rules: {
+					'wifi-key-input': {
+						wep: {
+							depends: function(element) {return ($('#wifi-enc-select').val() == 'wep');},
+						},
+						'wep-hex': {
+							depends: function(element)
+							{
+								return (($('#wifi-enc-select').val() == 'wep') && ($('#wifi-key-input').val().length == 10 || $('#wifi-key-input').val().length == 26));
+							}
+						},
+						wpa: {
+							depends: function(element)
+							{
+								return ($('#wifi-enc-select').val() == 'psk' || $('#wifi-enc-select').val() == 'psk2');
+							}
+						}
+
+					},
+					'network-ipaddr': {
+					ip: {
+						depends: function(element)
+						{
+							return !$('#dhcp').prop('checked');
+						},
+					}
+					},
+					'network-netmask': {
+					ip: {
+						depends: function(element)
+						{
+							return (!$('#dhcp').prop('checked'));
+						}
+					}
+					},
+					'network-gateway': {
+					ip: {
+						depends: function(element)
+						{
+							return $('#network-gateway').val() != '';
+						}
+					}
+					},
+					'network-dns': {
+					ip: {
+						depends: function(element)
+						{
+							return $('#network-dns').val() != '';
+						}
+					}
+					}
+				},
+				messages: {
+				}
+			});
+		});
+		jQuery.validator.addMethod("wep", function(value, element) {
+			return (value.length == 5 || value.length == 13 || value.length == 10 || value.length == 26);
+		}, "WEP-Schlüssel falsch");
+		jQuery.validator.addMethod("wep-hex", function(value, element) {
+			return value.match(/^([0-9]|[a-f]|[A-F])+$/);
+		}, "Hex falsch");
+		jQuery.validator.addMethod("wpa", function(value, element) {
+			if ( value.length < 7 || value.length > 64 ) {
+				return false;
+			}
+			else {
+				return true;
+			}
+		}, "WPA-Schlüssel falsch");
+/*
+jQuery.validator.addMethod("keylength", function(value, element)
+{
+var enc = $('#enc').val();
+if ( enc == 'psk' || enc == 'psk2' ) {
+if ( value.length < 7 || value.length > 64 ) {
+return false;
+}
+else {
+return true;
+}
+}
+else if ( enc == 'wep' ) {
+if ( value.length == 5 || value.length == 13 ) {
+return true;
+}
+else if ( value.length == 10 || value.length == 26 ) {
+return value.match(/^([0-9]|[a-f]|[A-F])+$/);
+}
+else {
+return false;
+}
+}
+else {
+return true;
+}
+
+}, "Schlüssel falsch");
+*/
+		jQuery.validator.addMethod("ip", function(value, element) {
+			return value.match(/^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})$/);
+		}, "Keine IP-Adresse");
+	//--><!]]> 
+</script>
+
 <script type="text/javascript">
 	<!--//--><![CDATA[//><!--
 	step = "interface";
 	iface = "";
-	legacy_auth = "";
+	auth = "";
 	wifi_section = "";
 	wifis = [];
+	task = null;
+	counter = 0;
 
-	//replace with proper authentication
+	$(function() {
+		$('#msg_wizard-sensor').find('input[type="checkbox"]').bind('change', function() {toggle_sensor_config(this);});
+	});
+
+	login_callback = function(data, username, password) {
+		if (data["result"] != null && data["error"] == null)
+		{
+			auth = data["result"];
+			if ( task != null )
+			{
+				task();
+				task = null;
+				$('#login_form_div').overlay().close();
+			}
+		}
+		else
+		{
+			if (username != null && password != null)
+			{
+				jsonRequest(
+					"/cgi-bin/luci/rpc/auth",
+					"login",
+					'["' + username + '", "' + password + '"]',
+					100,
+					function(data) {
+						login_callback(data);
+					}
+				);
+			} else {
+				show_login_form();
+			}
+		}
+	}
+
 	login = function(jsonCall)
 	{
-		jsonRequest("/cgi-bin/luci/rpc/auth", "login", '["root", "root"]', 100, function(data) { legacy_auth = data.result[0]; jsonCall() });
+		jsonRequest(
+			"/cgi-bin/luci/rpc/auth",
+			"login",
+			'["root", "root"]',
+			100,
+			function(data) {
+				task = jsonCall;
+				login_callback(data);
+			}
+		);
+	}
+
+	sync = function(init)
+	{
+		if ( init )
+		{
+			counter = init;
+		} else {
+			counter--;
+			if ( counter == 0 )
+				task();
+		}
 	}
 
 	jsonRequest = function(url, method, params, id, callback, error, timeout)
 	{
 		if (!timeout)
 			timeout = 60000;
-		var auth = new RegExp('(?:^|; )sysauth=([^;]*)').exec(document.cookie);
-		if (!auth)
-			auth = legacy_auth;
+		// the following does not work due to invalid cookies
+		//var auth = new RegExp('(?:^|; )sysauth=([^;]*)').exec(document.cookie);
+		//if (!auth)
+		//	auth = legacy_auth;
 			
 		$.ajax({
 			'type': "POST",
 			'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + id + '}',
 			'dataType': 'json',
-			'url': url + "?auth=" + auth[1],
+			'url': url + "?auth=" + auth,
 			'success': callback,
 			'error': error,
 			'timeout': timeout
@@ -36,8 +205,8 @@
 
 	load_wifi = function(callback)
 	{
-		$('#msg_wizard-wifi-config').attr('src', '/resources/loading.gif');
-		$('#msg_wizard-wifi-list').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-wifi-config').attr('src', '/luci-static/resources/loading.gif');
+		$('#msg_wizard-wifi-list').attr('src', '/luci-static/resources/loading.gif');
 		login(function() {
 			$.when(
 				jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
@@ -54,10 +223,10 @@
 					{
 						$('#essid').prepend(options);
 					}
-					$('#msg_wizard-wifi-list').attr('src', "/resources/ok.png");
+					$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/ok.png");
 				}, function(jqXHR, textStatus, errorThrown) {
-					$('#msg_wizard-wifi-list').attr('src', "/resources/fail.png");
-					$('#msg_wizard-wifi-list').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+					$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/fail.png");
+					$('#msg_wizard-wifi-list').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 				}),
 				jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
 					var ssid, enc, key;
@@ -89,10 +258,10 @@
 					}
 					$('#wifi-enc-input').val(enc);
 					$('#wifi-key-input').val(key);
-					$('#msg_wizard-wifi-config').attr('src', "/resources/ok.png");
+					$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/ok.png");
 				}, function(jqXHR, textStatus, errorThrown) {
-					$('#msg_wizard-wifi-config').attr('src', "/resources/fail.png");
-					$('#msg_wizard-wifi-config').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+					$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/fail.png");
+					$('#msg_wizard-wifi-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 				})
 			)
 				.then(function() {
@@ -105,7 +274,7 @@
 
 	load_network = function(callback)
 	{
-		$('#msg_wizard-net-config').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-net-config').attr('src', '/luci-static/resources/loading.gif');
 		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["network", "wan"]', "103", function(data)
 			{
 				$('#network-ipaddr').val(data.result.ipaddr);
@@ -128,14 +297,77 @@
 					$('#network-wan-gateway').show();
 					$('#network-wan-dns').show();
 				}
-				$('#msg_wizard-net-config').attr('src', '/resources/ok.png');
+				$('#msg_wizard-net-config').attr('src', '/luci-static/resources/ok.png');
 				if ( callback )
 					callback();
 			}, function(jqXHR, textStatus, errorThrown) {
-				$('#msg_wizard-net-config').attr('src', "/resources/fail.png");
-				$('#msg_wizard-net-config').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+				$('#msg_wizard-net-config').attr('src', "/luci-static/resources/fail.png");
+				$('#msg_wizard-net-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			}
 		);
+	}
+
+	load_sensor_config = function(callback)
+	{
+		$('.sensor-value').empty();
+		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["flukso"]', "110", function(data)
+		{
+			$('#sensor-phases').find('select').val(data["result"]["main"]["phase"]);
+			for(var k = 1; k <= data["result"]["main"]["max_sensors"]; k++)
+			{
+				if ( data["result"][k]["enable"] == "1" )
+				{
+					$('#cbi-flukso-' + k + '-enable').find('input').prop('checked', true);
+					toggle_sensor_config($('#cbi-flukso-' + k + '-enable').find('input'));
+				} else {
+					$('#cbi-flukso-' + k + '-enable').find('input').prop('checked', false);
+					toggle_sensor_config($('#cbi-flukso-' + k + '-enable').find('input'));
+				}
+				//set sensor id
+				$('#cbi-flukso-' + k + '-id').find('input').val(data["result"][k]["id"]);
+				$('#cbi-flukso-' + k + '-id').find('div.sensor-value').append(data["result"][k]["id"]);
+				//set sensor class
+				$('#cbi-flukso-' + k + '-class').find('input').val(data["result"][k]["class"]);
+				$('#cbi-flukso-' + k + '-class').find('div.sensor-value').append(data["result"][k]["class"]);
+				if ( data["result"][k]["class"] != "uart" )
+				{
+					//set sensor function
+					$('#cbi-flukso-' + k + '-function').find('input').val(data["result"][k]["function"]);
+
+					if ( data["result"][k]["class"] == "analog" )
+					{
+						//set sensor type
+						$('#cbi-flukso-' + k + '-type').find('input').val(data["result"][k]["type"]);
+						$('#cbi-flukso-' + k + '-type').find('div.sensor-value').append(data["result"][k]["type"]);
+						//set sensor voltage
+						$('#cbi-flukso-' + k + '-voltage').find('input').val(data["result"][k]["voltage"]);
+						//set sensor current
+						$('#cbi-flukso-' + k + '-current').find('input').val(data["result"][k]["current"]);
+					} else {
+						//set sensor type
+						$('#cbi-flukso-' + k + '-type').find('select').val(data["result"][k]["type"]);
+						if ( data["result"][k]["type"] == "electricity" )
+						{
+							//set sensor imppkwh
+							$('#cbi-flukso-' + k + '-imppkwh').find('input').val(data["result"][k]["imppkwh"]);
+							if ( data["result"][k]["enable"] == "1" )
+							{
+								$('#cbi-flukso-' + k + '-lpimp').hide();
+								$('#cbi-flukso-' + k + '-imppkwh').show();
+							}
+						} else {
+							//set sensor lpimp
+							$('#cbi-flukso-' + k + '-lpimp').find('input').val(data["result"][k]["lpimp"]);
+							if ( data["result"][k]["enable"] == "1" )
+							{
+								$('#cbi-flukso-' + k + '-imppkwh').hide();
+								$('#cbi-flukso-' + k + '-lpimp').show();
+							}
+						}
+					}
+				}
+			};
+		});
 	}
 
 	select_enc = function(essid)
@@ -158,7 +390,7 @@
 
 	save_wifi = function(callback)
 	{
-		$('#msg_wizard-wifi-save').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-wifi-save').attr('src', '/luci-static/resources/loading.gif');
 		var ssid, enc, key;
 		if ( $('#essid').val() == '' )
 			ssid = $('#essid-input').val();
@@ -177,21 +409,22 @@
 
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"ssid": ssid , "encryption": enc, "key": key}) + ']', "104", function(data) {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "105", function(data) {
-				$('#msg_wizard-wifi-save').attr('src', '/resources/ok.png');
+				$('#msg_wizard-wifi-save').attr('src', '/luci-static/resources/ok.png');
 				callback();
 			}, function(jqXHR, textStatus, errorThrown) {
-				$('#msg_wizard-wifi-save').attr('src', "/resources/fail.png");
-				$('#msg_wizard-wifi-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+				$('#msg_wizard-wifi-save').attr('src', "/luci-static/resources/fail.png");
+				$('#msg_wizard-wifi-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			});
 		}, function(jqXHR, textStatus, errorThrown) {
-			$('#msg_wizard-wifi-save').attr('src', "/resources/fail.png");
-			$('#msg_wizard-wifi-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+			$('#msg_wizard-wifi-save').attr('src', "/luci-static/resources/fail.png");
+			$('#msg_wizard-wifi-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
 
 	save_network = function(callback)
 	{
-		$('#msg_wizard-net-save').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-net-save').attr('src', '/luci-static/resources/loading.gif');
+		$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/loading.gif');
 		var section, config;
 		if ( iface == "wifi" )
 			section = "wan";
@@ -207,21 +440,80 @@
 
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", ' + JSON.stringify(section) + ', ' + JSON.stringify(config) + ']', "106", function(data) {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "107", function(data) {
-				$('#msg_wizard-net-save').attr('src', '/resources/ok.png');
+				$('#msg_wizard-net-save').attr('src', '/luci-static/resources/ok.png');
 				if(callback)
 					callback();
 			}, function(jqXHR, textStatus, errorThrown) {
-				$('#msg_wizard-net-save').attr('src', "/resources/fail.png");
-				$('#msg_wizard-net-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+				$('#msg_wizard-net-save').attr('src', "/luci-static/resources/fail.png");
+				$('#msg_wizard-net-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			});
 		}, function(jqXHR, textStatus, errorThrown) {
-			$('#msg_wizard-net-save').attr('src', "/resources/fail.png");
-			$('#msg_wizard-net-save').parent().append('<div class="errorbox">' + textStatus + ': ' + errorThrown + '</div>');
+			$('#msg_wizard-net-save').attr('src', "/luci-static/resources/fail.png");
+			$('#msg_wizard-net-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		});
+	}
+
+	save_sensors = function(callback)
+	{
+		$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/loading.gif');
+		$('#msg_wizard-sensor-apply').attr('src', '/luci-static/resources/loading.gif');
+		config = {};
+		$('.sensor-config').each(function(index, element) {
+			var k = index + 1;
+			var sensor = {};
+			sensor['.name'] = k;
+			sensor['id'] = $(element).find('#flukso-' + k + '-id').val();
+			sensor['enable'] = $(element).find('#flukso-' + k + '-enable').prop('checked') ? "1" : "0";
+			sensor['class'] = $(element).find('#flukso-' + k + '-class').val();
+			if ( $(element).find('#flukso-' + k + '-class').val() != 'uart' )
+			{
+				sensor['type'] = $(element).find('#flukso-' + k + '-type').val();
+				sensor['function'] = $(element).find('#flukso-' + k + '-function').val();
+				if ( $(element).find('#flukso-' + k + '-class').val() == 'analog' )
+				{
+					sensor['voltage'] = $(element).find('#flukso-' + k + '-voltage').val();
+					sensor['current'] = $(element).find('#flukso-' + k + '-current').val();
+				} else {
+					if ( $(element).find('#flukso-' + k + '-type').val() == 'electricity' )
+					{
+						sensor['imppkwh'] = $(element).find('#flukso-' + k + '-imppkwh').val();
+					} else {
+						sensor['lpimp'] = $(element).find('#flukso-' + k + '-lpimp').val();
+					}
+				}
+			}
+			config[k] = sensor;
+		});
+
+		sync(6);
+		task = function() {
+			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["flukso"]', "109", function(data) {
+				$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/ok.png');
+				jsonRequest("/cgi-bin/luci/rpc/sys", "exec", '["fsync"]', "109", function(data) {
+					$('#msg_wizard-sensor-apply').attr('src', '/luci-static/resources/ok.png');
+					if(callback)
+						callback();
+				}, function(jqXHR, textStatus, errorThrown) {
+					$('#msg_wizard-sensor-apply').attr('src', "/luci-static/resources/fail.png");
+					$('#msg_wizard-sensor-apply').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+				})
+			}, function(jqXHR, textStatus, errorThrown) {
+				$('#msg_wizard-sensor-save').attr('src', "/luci-static/resources/fail.png");
+				$('#msg_wizard-sensor-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+			});
+		};
+
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "1", ' + JSON.stringify(config[1]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "2", ' + JSON.stringify(config[2]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "3", ' + JSON.stringify(config[3]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "4", ' + JSON.stringify(config[4]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "5", ' + JSON.stringify(config[5]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "6", ' + JSON.stringify(config[6]) + ']', "108", function(data) { sync(); });
 	}
 
 	submit = function()
 	{
+		$('.apiError').detach();
 		if ( step == "interface" )
 		{
 			if ( $('#msg_wizard_interface').val() == "wlan" )
@@ -248,30 +540,60 @@
 		}
 		else if ( step == "network" )
 		{
+			step = "sensor";
+			load_sensor_config();
 			save_network(
 				function() {
 					jsonRequest("/cgi-bin/luci/rpc/uci", "apply", '["network", "wireless"]', "108", function(data) {});
 					window.setTimeout(poll_device(), 10000);
 				}
 			);
-			$("#form-buttons").hide();
+			//$("#form-buttons").hide();
 			$("#network").hide();
-			$("#msg_wizard-final").show();
+			$("#msg_wizard-sensor").show();
+		}
+		else if ( step == "sensor" )
+		{
+			step = "registration";
+			save_sensors();
+			$("#msg_wizard-sensor").hide();
+			$("#msg_wizard-registration").show();
 		}
 	}
 
 	wizard_reset = function()
 	{
+		$('.apiError').detach();
+		$('.tmp_essid').detach();
 		if ( step == "wifi" )
 		{
 			$("#msg_wifi").hide(20, function() { $("#msg_wizard").show(); } );
+			step = "interface";
 		}
 		else if ( step == "network" )
 		{
-			$("#network").hide(20, function() { $("#msg_wizard").show(); } );
+			if ( iface == "wifi" )
+			{
+				load_wifi();
+				$("#network").hide(20, function() { $("#msg_wifi").show(); } );
+				step = "wifi";
+			}
+			else
+			{
+				$("#network").hide(20, function() { $("#msg_wizard").show(); } );
+				step = "interface";
+			}
 		}
-		step = "interface";
-		$('.tmp_essid').detach();
+		else if ( step == "sensor" )
+		{
+			$('#msg_wizard-sensor').hide(20, function() { $("#network").show(); } );
+			step = "network";
+		}
+		else if ( step == "registration" )
+		{
+			$('#msg_wizard-registration').hide(20, function() { $("#msg_wizard-sensor").show(); } );
+			step = "sensor";
+		}
 	}
 	
 	toggle_dhcp = function()
@@ -294,13 +616,13 @@
 
 	poll_device = function()
 	{
-		$('#msg_wizard-apply').attr('src', '/resources/loading.gif');
+		$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/loading.gif');
 		$.ajax({
 			'type': "POST",
 			'data': '{"method": "login", "params": "["root", "root"]", "id": "200"}',
 			'dataType': 'json',
 			'url': "/cgi-bin/luci/rpc/auth",
-			'success': function(data) {$('#msg_wizard-apply').attr('src', '/resources/ok.png'); },
+			'success': function(data) {$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/ok.png'); },
 			'timeout': 5000,
 			'error': function(jqXHR, textStatus, errorThrown) {
 					if (textStatus == "timeout")
@@ -308,11 +630,61 @@
 				}
 		});
 	}
-	
+
+	show_login_form = function()
+	{
+		$('#login_form_div').overlay({
+			mask: {
+				color: '#fff',
+				loadSpeed: 200,
+				opacity: 0.5
+			},
+			closeOnClick: false,
+			load: true //load overlay on first call
+		}).load(); //load overlay on every call except the first one
+		$('#password').focus();
+	}
+
+	toggle_sensor_config = function(config)
+	{
+		if ( $(config).prop('checked') )
+		{
+			var name = $(config).parent().parent().parent().attr('id');
+			var k = name[name.length - 1];
+			if ( $('#cbi-flukso-' + k + '-class').find('input').val() == "pulse" )
+			{
+				if ( $('#cbi-flukso-' + k + '-type').find('select').val() == "electricity" )
+				{
+					$(config).parent().parent().nextUntil('fieldset').not('#cbi-flukso-' + k + '-lpimp').show();
+				} else {
+					$(config).parent().parent().nextUntil('fieldset').not('#cbi-flukso-' + k + '-imppkwh').show();
+				}
+			} else {
+				$(config).parent().parent().nextUntil('fieldset').show();
+			}
+		} else {
+			$(config).parent().parent().nextUntil('fieldset').hide();
+		}
+	}
+
+	toggle_sensor_type = function(config)
+	{
+		var name = $(config).parent().parent().parent().attr('id');
+		var k = name[name.length - 1];
+		if ( $('#cbi-flukso-' + k + '-type').find('select').val() == "electricity" )
+		{
+			$('#cbi-flukso-' + k + '-lpimp').hide();
+			$('#cbi-flukso-' + k + '-imppkwh').show();
+		} else {
+			$('#cbi-flukso-' + k + '-imppkwh').hide();
+			$('#cbi-flukso-' + k + '-lpimp').show();
+		}
+	}
+
 	//--><!]]> 
 </script>
 
-<form method="get" action="javascript: submit()" onreset="wizard_reset()">
+<form id="wizard_form" method="get" action="javascript: submit()" onreset="wizard_reset()">
 	<div>
 		<noscript>
 			<div class="errorbox">
@@ -348,11 +720,11 @@
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-wifi-config" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-config" />
 					Loading current wireless configuration.
 				</div>
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-wifi-list" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-list" />
 					Loading list of available wireless networks.
 				</div>
 			</fieldset>
@@ -424,11 +796,11 @@
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value" id="msg_wizard-wifi-save-div">
-					<img src="/resources/loading.gif" id="msg_wizard-wifi-save" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-save" />
 					Saving wireless configuration.
 				</div>
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-net-config" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-config" />
 					Loading current network configuration.
 				</div>
 			</fieldset>
@@ -487,27 +859,440 @@
 		</fieldset>
 	</div>
 
-	<div class="cbi-map" id="msg_wizard-final" style="display: none;">
+	<div class="cbi-map" id="msg_wizard-sensor" style="display: none;">
 		<h2><a id="content" name="content"></a></h2>
 		<div class="cbi-map-descr"></div>
 		<fieldset class="cbi-section">
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-net-save" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-save" />
 					Saving network configuration.
 				</div>
 				<div class="cbi-value">
-					<img src="/resources/loading.gif" id="msg_wizard-apply" />
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-apply" />
 					Applying configuration. (Please be patient)
 				</div>
+			</fieldset>
+			<fieldset class="cbi-section">
+				<legend>Sensor configuration</legend>
+				<div class="cbi-section-node" id="sensors">
+					<div class="cbi-value" id="sensor-phases">
+						<label class="cbi-value-title">
+							Number of phases
+						</label>
+						<div class="cbi-value-field">
+							<select>
+								<option value="1">1</option>
+								<option value="3">3</option>
+							</select>
+							<br />
+							<div class="cbi-value-description">
+								<span class="cbi-value-helpicon"><img src="/luci-static/resources/cbi/help.gif" alt="" /></span>
+								When selecting 3 phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When selecting 1 phase, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively.
+							</div>
+						</div>
+					</div>
+				</div>
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-1">
+				<legend>Sensor #1</legend>
+				<div class="cbi-section-node" id="cbi-flukso-1">
+					<div class="cbi-value" id="cbi-flukso-1-enable">
+						<label class="cbi-value-title" for="flukso-1-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-1-enable" name="flukso-1-enable" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-id" style="display: none;">
+						<label class="cbi-value-title" for="flukso-1-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-1-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-class" style="display: none;">
+						<label class="cbi-value-title" for="flukso-1-class">Class</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-1-class" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-type" style="display: none;">
+						<label class="cbi-value-title" for="flukso-1-type">Type</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-1-type" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-function" style="display: none;">
+						<label class="cbi-value-title" for="flukso-1-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-1-function" id="flukso-1-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-voltage" style="display: none;">
+						<label class="cbi-value-title" for="flukso-1-voltage">Voltage</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-1-voltage" id="flukso-1-voltage" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-1-current" style="display: none;">
+						<label class="cbi-value-title" for="flukso-1-current">Current</label>
+						<div class="cbi-value-field">
+							<select class="cbi-input-select" id="flukso-1-current" name="flukso-1-current" size="1">
+								<option id="cbi-flukso-1-current-50" value="50" selected="selected">50</option>
+								<option id="cbi-flukso-1-current-100" value="100">100</option>
+								<option id="cbi-flukso-1-current-250" value="250">250</option>
+								<option id="cbi-flukso-1-current-500" value="500">500</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-2">
+				<legend>Sensor #2</legend>
+				<div class="cbi-section-node" id="cbi-flukso-2">
+					<div class="cbi-value" id="cbi-flukso-2-enable">
+						<label class="cbi-value-title" for="flukso-2-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-2-enable" name="flukso-2-enable" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-id" style="display: none;">
+						<label class="cbi-value-title" for="flukso-2-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-2-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-class" style="display: none;">
+						<label class="cbi-value-title" for="flukso-2-class">Class</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-2-class" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-type" style="display: none;">
+						<label class="cbi-value-title" for="flukso-2-type">Type</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-2-type" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-function" style="display: none;">
+						<label class="cbi-value-title" for="flukso-2-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-2-function" id="flukso-2-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-voltage" style="display: none;">
+						<label class="cbi-value-title" for="flukso-2-voltage">Voltage</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-2-voltage" id="flukso-2-voltage" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-2-current" style="display: none;">
+						<label class="cbi-value-title" for="flukso-2-current">Current</label>
+						<div class="cbi-value-field">
+							<select class="cbi-input-select" id="flukso-2-current" name="flukso-2-current" size="1">
+								<option id="cbi-flukso-2-current-50" value="50" selected="selected">50</option>
+								<option id="cbi-flukso-2-current-100" value="100">100</option>
+								<option id="cbi-flukso-2-current-250" value="250">250</option>
+								<option id="cbi-flukso-2-current-500" value="500">500</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-3">
+				<legend>Sensor #3</legend>
+				<div class="cbi-section-node" id="cbi-flukso-3">
+					<div class="cbi-value" id="cbi-flukso-3-enable">
+						<label class="cbi-value-title" for="flukso-3-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-3-enable" name="flukso-3-enable" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-id" style="display: none;">
+						<label class="cbi-value-title" for="flukso-3-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-3-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-class" style="display: none;">
+						<label class="cbi-value-title" for="flukso-3-class">Class</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-3-class" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-type" style="display: none;">
+						<label class="cbi-value-title" for="flukso-3-type">Type</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-3-type" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-function" style="display: none;">
+						<label class="cbi-value-title" for="flukso-3-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-3-function" id="flukso-3-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-voltage" style="display: none;">
+						<label class="cbi-value-title" for="flukso-3-voltage">Voltage</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-3-voltage" id="flukso-3-voltage" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-3-current" style="display: none;">
+						<label class="cbi-value-title" for="flukso-3-current">Current</label>
+						<div class="cbi-value-field">
+							<select class="cbi-input-select" id="flukso-3-current" name="flukso-3-current" size="1">
+								<option id="cbi-flukso-3-current-50" value="50" selected="selected">50</option>
+								<option id="cbi-flukso-3-current-100" value="100">100</option>
+								<option id="cbi-flukso-3-current-250" value="250">250</option>
+								<option id="cbi-flukso-3-current-500" value="500">500</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-4">
+				<legend>Sensor #4</legend>
+				<div class="cbi-section-node" id="cbi-flukso-4">
+					<div class="cbi-value" id="cbi-flukso-4-enable">
+						<label class="cbi-value-title" for="flukso-4-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-4-enable" name="flukso-4-enable" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-id" style="display: none;">
+						<label class="cbi-value-title" for="flukso-4-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-4-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-class" style="display: none;">
+						<label class="cbi-value-title" for="flukso-4-class">Class</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-4-class" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-type" style="display: none;">
+						<label class="cbi-value-title" for="flukso-4-type">Type</label>
+						<div class="cbi-value-field">
+							<!--<input type="text" class="cbi-input-text" name="flukso-4-type" id="flukso-4-type" value="" />-->
+							<select class="cbi-input-select" onchange="toggle_sensor_type(this);" name="flukso-4-type" id="flukso-4-type">
+								<option value="electricity" selected="selected">electricity</option>
+								<option value="water">water</option>
+								<option value="gas">gas</option>
+							</select>
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-function" style="display: none;">
+						<label class="cbi-value-title" for="flukso-4-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-4-function" id="flukso-4-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-imppkwh" style="display: none;">
+						<label class="cbi-value-title" for="flukso-4-imppkwh">pulses/kWh</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-4-imppkwh" id="flukso-4-imppkwh" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-4-lpimp" style="display: none;">
+						<label class="cbi-value-title" for="flukso-4-lpimp">L/pulse</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-4-lpimp" id="flukso-4-lpimp" value="" />
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-5">
+				<legend>Sensor #5</legend>
+				<div class="cbi-section-node" id="cbi-flukso-5">
+					<div class="cbi-value" id="cbi-flukso-5-enable">
+						<label class="cbi-value-title" for="flukso-5-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-5-enable" name="flukso-5-enable" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-id" style="display: none;">
+						<label class="cbi-value-title" for="flukso-5-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-5-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-class" style="display: none;">
+						<label class="cbi-value-title" for="flukso-5-class">Class</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-5-class" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-type" style="display: none;">
+						<label class="cbi-value-title" for="flukso-5-type">Type</label>
+						<div class="cbi-value-field">
+							<!--<input type="text" class="cbi-input-text" name="flukso-5-type" id="flukso-5-type" value="" />-->
+							<select class="cbi-input-select" onchange="toggle_sensor_type(this);" name="flukso-5-type" id="flukso-5-type">
+								<option value="electricity" selected="selected">electricity</option>
+								<option value="water">water</option>
+								<option value="gas">gas</option>
+							</select>
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-function" style="display: none;">
+						<label class="cbi-value-title" for="flukso-5-function">Function/Name</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-5-function" id="flukso-5-function" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-imppkwh" style="display: none;">
+						<label class="cbi-value-title" for="flukso-5-imppkwh">pulses/kWh</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-5-imppkwh" id="flukso-5-imppkwh" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-5-lpimp" style="display: none;">
+						<label class="cbi-value-title" for="flukso-5-lpimp">L/pulse</label>
+						<div class="cbi-value-field">
+							<input type="text" class="cbi-input-text" name="flukso-5-lpimp" id="flukso-5-lpimp" value="" />
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+
+			<fieldset class="cbi-section sensor-config" id="cbi-flukso-6">
+				<legend>Sensor #6</legend>
+				<div class="cbi-section-node" id="cbi-flukso-6">
+					<div class="cbi-value" id="cbi-flukso-6-enable">
+						<label class="cbi-value-title" for="flukso-6-enable">Enable</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-6-enable" name="flukso-6-enable" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-6-id" style="display: none;">
+						<label class="cbi-value-title" for="flukso-6-id">Identification</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-6-id" value="" />
+						</div>
+					</div>
+					<div class="cbi-value" id="cbi-flukso-6-class" style="display: none;">
+						<label class="cbi-value-title" for="flukso-6-class">Class</label>
+						<div class="cbi-value-field">
+							<div class="sensor-value"></div>
+							<input type="hidden" id="flukso-6-class" value="" />
+						</div>
+					</div>
+				</div>
+				<br />
+			</fieldset>
+		</fieldset>
+	</div>
+
+	<div class="cbi-map" id="msg_wizard-registration" style="display: none;">
+		<h2><a id="content" name="content"></a></h2>
+		<div class="cbi-map-descr"></div>
+		<fieldset class="cbi-section">
+			<fieldset class="cbi-section-node">
+				<div class="cbi-value">
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-sensor-save" />
+					Saving sensor configuration.
+				</div>
+				<div class="cbi-value">
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-sensor-apply" />
+					Applying sensor configuration.
+				</div>
+			</fieldset>
+			<fieldset class="cbi-section">
+				<legend>Registration</legend>
+					<div class="cbi-value">
+						Bitte führen Sie die folgenden Schritte durch um ihren Flukso zu aktivieren:
+					</div>
+
+					<div style="padding: 0.5em 1em; background-color: white; border-width: 1px; border-style: dotted; border-color: #555;">
+						<ol style="margin: 0.5em 1em 0.5em 1.5em">
+							<li style="margin-bottom: 0.5em">
+								Besuchen Sie mit Ihrem Webbrowser die Webseite <a href="http://www.mysmartgrid.de">http://www.mysmartgrid.de</a>. Falls Sie bereits ein Benutzerkonto angelegt haben springen Sie zu Schritt 3.
+							</li>
+							<li style="margin-bottom: 0.5em">
+								Bitte legen Sie sich ein Benutzerkonto an. Dazu klicken Sie bitte auf "Registrieren". Sie finden diesen Link auf der linken Seite unten, um Kasten "Benutzeranmeldung". Auf der folgenden Seite geben Sie einen Benutzernamen und eine gültige eMail-Adresse ein. Das System schickt Ihnen daraufhin eine eMail. Darin finden Sie einen Link, mit dem das Anlegen eines Benutzerkontos abgeschlossen wird. Folgen Sie dazu einfach den Hinweisen.
+							</li>
+							<li style="margin-bottom: 0.5em">
+								Bitte loggen Sie sich auf der Webseite ein. Dazu geben Sie ihren Benutzernamen und ihr Passwort im Kasten "Benutzeranmeldung" ein. Das System zeigt Ihnen nun ihr Dashboard an - hier können Sie in Zukunft Ihren Stromverbrauch beobachten. Im Moment ist der Graph allerdings noch leer, da Ihr Flukso noch nicht mit dem System verknüpft ist.
+							</li>
+							<li style="margin-bottom: 0.5em">
+								Um den Flukso zu verknüpfen klicken Sie bitte auf "Mein Konto" auf der linken Seite, danach auf "Geräte". Hier können Sie nun Ihren persönlichen Aktivierungscode eingeben. Für Ihr Gerät geben sie nun bitte folgenden Aktivierungscode ein:
+								<div style="margin: 0.5em 1em; font-weight: bold">
+									<%
+										local uci = require "luci.model.uci".cursor()
+
+										local DEVICE = '0123456789abcdef0123456789abcdef'
+										uci:foreach('system', 'system', function(x) if x.device ~= nil then DEVICE = x.device end end)
+
+										print(string.sub(DEVICE, 1, 10))
+									%>
+								</div>
+								Klicken Sie anschließend auf "Gerät hinzufügen", um das Gerät anzumelden
+							 </li>
+							 <li style="margin-bottom: 0.5em">
+								Fertig! Wenn die Installation des Geräts korrekt funktioniert, sollten Sie nach max. 15 Minuten erste Werte auf Ihrem Dashboard sehen. In der Spalte "Last heartbeat" ("Mein Konto" -> "Geräte") sehen Sie zudem, wann sich das Gerät das letzte Mal gemeldet hat.
+							 </li>
+							 <li style="margin-bottom: 0.5em">
+								Falls Sie Hilfe benötigen kontaktieren Sie uns bitte via eMail. Die Adresse hierfür ist:
+								<div>
+									<a href="mailto:msg-support@itwm.fraunhofer.de">msg-support@itwm.fraunhofer.de</a>
+								</div>
+								Telefonisch können wir die Anfragen leider nicht bewältigen.
+							 </li>
+						</ol>
+					</div>
+					Sie können nun ihren Stromverbrauch direkt beobachten. Wenn Sie weitere Vorschläge oder Anregungen haben, benutzen Sie bitte das Forum auf <a href="http://www.mysmartgrid.de">www.mysmartgrid.de</a>. Dort können Sie sich auch mit anderen Projektteilnehmern austauschen.
 			</fieldset>
 		</fieldset>
 	</div>
 
 	<div id="form-buttons">
 		<input type="submit" class="cbi-button-save" value="Next" />
-		<input type="reset" class="cbi-button-reset" value="Reset" />
+		<input type="reset" class="cbi-button-reset" value="Back" />
 	</div>
 </form>
+
+<div id="login_form_div" style="display: none; border: 1px solid #888; padding: 10px; z-index: 9999; background: #fff;" >
+	<form id="login_form" action="javascript: login_callback([], $('#username').val(), $('#password').val());" onreset="wizard_reset(); " >
+		<fieldset class="cbi-section">
+			<fieldset class="cbi-section-node">
+				<div class="cbi-value">
+					<input type="text" id="username" value="root" />
+				</div>
+				<div class="cbi-value">
+					<input type="password" id="password" />
+				</div>
+			</fieldset>
+		</fieldset>
+
+		<div id="form-buttons">
+			<input type="submit" class="cbi-button-save" value="Login" />
+			<input type="reset" class="cbi-button-reset close" value="Cancel" />
+		</div>
+	</form>
+</div>
 
 <%+footer%>
