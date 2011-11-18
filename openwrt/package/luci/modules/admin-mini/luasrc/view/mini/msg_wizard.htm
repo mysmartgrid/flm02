@@ -464,8 +464,8 @@
 				$(':input').removeAttr('disabled');
 			}
 			sync(2);
-			save_wifi(sync()),
-			load_network(sync())
+			save_wifi(sync),
+			load_network(sync)
 			step = "network";
 				$("#msg_wizard-wifi-save-div").show();
 			$("#msg_wifi").hide(20, function() { $("#network").show(); } );
@@ -476,14 +476,14 @@
 			{
 				$(':input').removeAttr('disabled');
 			}
-			sync(4);
+			sync(3);
 			step = "sensor";
-			load_sensor_config(sync());
+			load_sensor_config(sync);
 			save_network(
 				function() {
 					sync();
 					jsonRequest("/cgi-bin/luci/rpc/uci", "apply", '["network", "wireless"]', "108", function(data) {});
-					window.setTimeout(poll_device(sync()), 10000);
+					window.setTimeout(poll_device(sync), 10000);
 				}
 			);
 			//$("#form-buttons").hide();
