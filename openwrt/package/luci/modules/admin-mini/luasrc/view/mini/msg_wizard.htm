@@ -19,6 +19,7 @@
 	counter = 0;
 
 	$(function() {
+		$('.menubar').hide();
 		$('#msg_wizard-sensor').find('input[type="checkbox"]').bind('change', function() {toggle_sensor_config(this);});
 	});
 
