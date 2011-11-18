@@ -1,5 +1,10 @@
 <%+header%>
 
+<style type="text/css">
+	[disabled] {
+		color: #bbb;
+	}
+</style>
 <script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"></script>
 <script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"></script>
 <script type="text/javascript" src="/luci-static/resources/jquery.validate.min.js"></script>
@@ -120,10 +125,12 @@ return true;
 	auth = "";
 	wifi_section = "";
 	wifis = [];
-	task = null;
+	login_task = null;
+	sync_task = null;
 	counter = 0;
 
 	$(function() {
+		$('.menubar').hide();
 		$('#msg_wizard-sensor').find('input[type="checkbox"]').bind('change', function() {toggle_sensor_config(this);});
 	});
 
@@ -131,10 +138,10 @@ return true;
 		if (data["result"] != null && data["error"] == null)
 		{
 			auth = data["result"];
-			if ( task != null )
+			if ( login_task != null )
 			{
-				task();
-				task = null;
+				login_task();
+				login_task = null;
 				$('#login_form_div').overlay().close();
 			}
 		}
@@ -165,7 +172,7 @@ return true;
 			'["root", "root"]',
 			100,
 			function(data) {
-				task = jsonCall;
+				login_task = jsonCall;
 				login_callback(data);
 			}
 		);
@@ -179,7 +186,7 @@ return true;
 		} else {
 			counter--;
 			if ( counter == 0 )
-				task();
+				sync_task();
 		}
 	}
 
@@ -207,68 +214,69 @@ return true;
 	{
 		$('#msg_wizard-wifi-config').attr('src', '/luci-static/resources/loading.gif');
 		$('#msg_wizard-wifi-list').attr('src', '/luci-static/resources/loading.gif');
+		sync_task = function() {
+			$(':input').removeAttr('disabled');
+			if (callback)
+				callback();
+		}
+		sync(2);
 		login(function() {
-			$.when(
-				jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
-					var options;
-					for ( var k = 0; k < data.result.length; k++ )
+			jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
+				var options;
+				for ( var k = 0; k < data.result.length; k++ )
+				{
+					if ( data.result[k].ESSID != "" )
 					{
-						if ( data.result[k].ESSID != "" )
-						{
-							options += '<option class="tmp_essid" value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
-							wifis.push(data.result[k]);
-						}
+						options += '<option class="tmp_essid" value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
+						wifis.push(data.result[k]);
 					}
-					if ( data.result.length > 0 )
+				}
+				if ( data.result.length > 0 )
+				{
+					$('#essid').prepend(options);
+				}
+				$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/ok.png");
+				sync();
+			}, function(jqXHR, textStatus, errorThrown) {
+				$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/fail.png");
+				$('#msg_wizard-wifi-list').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+			});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
+				var ssid, enc, key;
+				for ( tmpKey in data.result )
+				{
+					if (data.result[tmpKey].ssid)
 					{
-						$('#essid').prepend(options);
+						ssid = data.result[tmpKey].ssid;
+						enc = data.result[tmpKey].encryption;
+						key = data.result[tmpKey].key;
+						wifi_section = tmpKey;
 					}
-					$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/ok.png");
-				}, function(jqXHR, textStatus, errorThrown) {
-					$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/fail.png");
-					$('#msg_wizard-wifi-list').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
-				}),
-				jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
-					var ssid, enc, key;
-					for ( tmpKey in data.result )
-					{
-						if (data.result[tmpKey].ssid)
-						{
-							ssid = data.result[tmpKey].ssid;
-							enc = data.result[tmpKey].encryption;
-							key = data.result[tmpKey].key;
-							wifi_section = tmpKey;
-						}
-					}
-					present = $('.tmp_essid');
-					var custom = true;
-					for ( var k = 0; k < present.length; k++ )
-					{
-						if ( present[k].value == ssid )
-							custom = false;
-					}
-					if ( custom )
-					{
-						$('#essid').val('');
-						$('#essid-input-div').show();
-						$('#essid-input').val(ssid);
-					} else {
-						$('#essid').val(ssid);
-						$('#essid-input-div').hide();
-					}
-					$('#wifi-enc-input').val(enc);
-					$('#wifi-key-input').val(key);
-					$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/ok.png");
-				}, function(jqXHR, textStatus, errorThrown) {
-					$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/fail.png");
-					$('#msg_wizard-wifi-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
-				})
-			)
-				.then(function() {
-						if (callback)
-							callback()
-					}
-				);
+				}
+				present = $('.tmp_essid');
+				var custom = true;
+				for ( var k = 0; k < present.length; k++ )
+				{
+					if ( present[k].value == ssid )
+						custom = false;
+				}
+				if ( custom )
+				{
+					$('#essid').val('');
+					$('#essid-input-div').show();
+					$('#essid-input').val(ssid);
+				} else {
+					$('#essid').val(ssid);
+					$('#essid-input-div').hide();
+				}
+				$('#wifi-enc-input').val(enc);
+				$('#wifi-key-input').val(key);
+				$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/ok.png");
+				sync();
+			}, function(jqXHR, textStatus, errorThrown) {
+				$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/fail.png");
+				$('#msg_wizard-wifi-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+			});
 		});
 	}
 
@@ -310,9 +318,18 @@ return true;
 	load_sensor_config = function(callback)
 	{
 		$('.sensor-value').empty();
+		$('#msg_wizard-sensor-load').attr('src', "/luci-static/resources/loading.gif");
 		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["flukso"]', "110", function(data)
 		{
-			$('#sensor-phases').find('select').val(data["result"]["main"]["phase"]);
+			$('#flukso-sensor-phases').val(data["result"]["main"]["phase"]);
+			if ( data["result"]["main"]["phase"] == "3" )
+			{
+				$('#cbi-flukso-2').hide();
+				$('#cbi-flukso-3').hide();
+			} else {
+				$('#cbi-flukso-2').show();
+				$('#cbi-flukso-3').show();
+			}
 			for(var k = 1; k <= data["result"]["main"]["max_sensors"]; k++)
 			{
 				if ( data["result"][k]["enable"] == "1" )
@@ -367,6 +384,12 @@ return true;
 					}
 				}
 			};
+			$('#msg_wizard-sensor-load').attr('src', '/luci-static/resources/ok.png');
+			if(callback)
+				callback();
+		}, function(jqXHR, textStatus, errorThrown) {
+			$('#msg_wizard-sensor-load').attr('src', "/luci-static/resources/fail.png");
+			$('#msg_wizard-sensor-load').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
 
@@ -484,9 +507,23 @@ return true;
 			}
 			config[k] = sensor;
 		});
+		if ( $('#flukso-sensor-phases').val() == 1 )
+		{
+			config[1]['port'] = ["1"];
+			config[2]['port'] = ["2"];
+			config[3]['port'] = ["3"];
+			config['main'] = {'phase': "1"};
+		} else {
+			config[1]['port'] = ["1", "2", "3"];
+			config[2]['port'] = "";
+			config[2]['enable'] = "0"; //make sure to disable sensor 2
+			config[3]['port'] = "";
+			config[3]['enable'] = "0"; //make sure to disable sensor 3
+			config['main'] = {'phase': "3"};
+		}
 
-		sync(6);
-		task = function() {
+		sync(7);
+		sync_task = function() {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["flukso"]', "109", function(data) {
 				$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/ok.png');
 				jsonRequest("/cgi-bin/luci/rpc/sys", "exec", '["fsync"]', "109", function(data) {
@@ -509,11 +546,13 @@ return true;
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "4", ' + JSON.stringify(config[4]) + ']', "108", function(data) { sync(); });
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "5", ' + JSON.stringify(config[5]) + ']', "108", function(data) { sync(); });
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "6", ' + JSON.stringify(config[6]) + ']', "108", function(data) { sync(); });
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "main", ' + JSON.stringify(config['main']) + ']', "108", function(data) { sync(); });
 	}
 
 	submit = function()
 	{
 		$('.apiError').detach();
+		$(':input').attr('disabled', true);
 		if ( step == "interface" )
 		{
 			if ( $('#msg_wizard_interface').val() == "wlan" )
@@ -532,20 +571,31 @@ return true;
 		}
 		else if ( step == "wifi" )
 		{
-			save_wifi(),
-			load_network()
+			sync_task = function()
+			{
+				$(':input').removeAttr('disabled');
+			}
+			sync(2);
+			save_wifi(sync),
+			load_network(sync)
 			step = "network";
 				$("#msg_wizard-wifi-save-div").show();
 			$("#msg_wifi").hide(20, function() { $("#network").show(); } );
 		}
 		else if ( step == "network" )
 		{
+			sync_task = function()
+			{
+				$(':input').removeAttr('disabled');
+			}
+			sync(3);
 			step = "sensor";
-			load_sensor_config();
+			load_sensor_config(sync);
 			save_network(
 				function() {
+					sync();
 					jsonRequest("/cgi-bin/luci/rpc/uci", "apply", '["network", "wireless"]', "108", function(data) {});
-					window.setTimeout(poll_device(), 10000);
+					window.setTimeout(poll_device(sync), 10000);
 				}
 			);
 			//$("#form-buttons").hide();
@@ -554,10 +604,15 @@ return true;
 		}
 		else if ( step == "sensor" )
 		{
+			sync_task = function()
+			{
+				$(':input').removeAttr('disabled');
+			}
 			step = "registration";
-			save_sensors();
+			save_sensors(sync_task);
 			$("#msg_wizard-sensor").hide();
 			$("#msg_wizard-registration").show();
+			$("[type=submit]").hide();
 		}
 	}
 
@@ -591,6 +646,7 @@ return true;
 		}
 		else if ( step == "registration" )
 		{
+			load_sensor_config();
 			$('#msg_wizard-registration').hide(20, function() { $("#msg_wizard-sensor").show(); } );
 			step = "sensor";
 		}
@@ -614,7 +670,7 @@ return true;
 		}
 	}
 
-	poll_device = function()
+	poll_device = function(callback)
 	{
 		$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/loading.gif');
 		$.ajax({
@@ -622,11 +678,17 @@ return true;
 			'data': '{"method": "login", "params": "["root", "root"]", "id": "200"}',
 			'dataType': 'json',
 			'url': "/cgi-bin/luci/rpc/auth",
-			'success': function(data) {$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/ok.png'); },
+			'success': function(data) {
+					$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/ok.png');
+					if (callback)
+						callback();
+				},
 			'timeout': 5000,
 			'error': function(jqXHR, textStatus, errorThrown) {
 					if (textStatus == "timeout")
-						poll_device();
+						poll_device(callback);
+					else if (callback)
+						callback();
 				}
 		});
 	}
@@ -681,10 +743,71 @@ return true;
 		}
 	}
 
+	toggle_phase_setting = function(config)
+	{
+		var setting = $(config).val();
+		if ( setting == 1 )
+		{
+			//$('#flukso-1-enable').prop('checked', true);
+			toggle_sensor_config($('#flukso-1-enable'));
+			//$('#flukso-2-enable').prop('checked', true);
+			toggle_sensor_config($('#flukso-2-enable'));
+			//$('#flukso-3-enable').prop('checked', true);
+			toggle_sensor_config($('#flukso-3-enable'));
+			$('#cbi-flukso-2').show();
+			$('#cbi-flukso-3').show();
+		} else {
+			//$('#flukso-1-enable').prop('checked', true);
+			toggle_sensor_config($('#flukso-1-enable'));
+			//$('#flukso-2-enable').prop('checked', false);
+			toggle_sensor_config($('#flukso-2-enable'));
+			//$('#flukso-3-enable').prop('checked', false);
+			toggle_sensor_config($('#flukso-3-enable'));
+			$('#cbi-flukso-2').hide();
+			$('#cbi-flukso-3').hide();
+		}
+	}
+
+	change_wifi = function()
+	{
+		if ($('#essid').val() == '')
+		{
+			$('#essid-input-div').show();
+			$('#autoenc').removeAttr('checked');
+			$('#wifi-enc').show();
+			$('#wifi-key').show();
+		} else {
+			$('#essid-input-div').hide();
+
+			if ($('#autoenc').prop('checked'))
+			{
+				$('#wifi-enc').hide();
+				if (select_enc($('#essid').val()) != 'none')
+				{
+					$('#wifi-key').show();
+				} else {
+					$('#wifi-key').hide();
+				}
+			} else {
+				$('#wifi-enc').show();
+				if ($('#wifi-enc-select').val() == 'none')
+				{
+					$('wifi-key').hide();
+				} else {
+					$('#wifi-key').show();
+				}
+			}
+		}
+	}
+
 	//--><!]]> 
 </script>
 
 <form id="wizard_form" method="get" action="javascript: submit()" onreset="wizard_reset()">
+	<div id=progress">
+		<div id=prog-iface"></div>
+	</div>
+
 	<div>
 		<noscript>
 			<div class="errorbox">
@@ -732,13 +855,13 @@ return true;
 		<fieldset class="cbi-section" id="cbi-wireless-wifi-iface">
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node" id="cbi-wireless-cfg03bd0e">
-				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-ssid">
+				<div class="cbi-value" id="wifi-ssid">
 					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.ssid">
 						Network Name (<abbr title="Extended Service Set Identifier">ESSID</abbr>)
 					</label>
 					<div class="cbi-value-field">
 						<div>
-							<select onchange="if ($(this).val() == '') { $('#essid-input-div').show() } else { $('#essid-input-div').hide() }" id="essid" class="cbi-input-select">
+							<select onchange="change_wifi()" id="essid" class="cbi-input-select">
 								<option value="">-- custom --</option>
 							</select>
 						</div>
@@ -747,23 +870,23 @@ return true;
 						</div>
 					</div>
 				</div>
-				<div class="cbi-value" id="cbi-wireless-cfg03bd0e-autoencr">
-					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.autoencr">
+				<div class="cbi-value" id="wifi-autoenc">
+					<label class="cbi-value-title" for="autoenc">
 						Auto-Encryption
 					</label>
 					<div class="cbi-value-field">
-						<input type="checkbox" onchange="if ( this.checked ) { $('#wifi-enc').hide(); $('#wifi-key-input').removeAttr('disabled'); } else { $('#wifi-enc').show() }" class="cbi-input-checkbox" id="autoenc" name="autoenc" value="1" checked="checked" />
+						<input type="checkbox" onchange="change_wifi()" class="cbi-input-checkbox" id="autoenc" name="autoenc" value="1" checked="checked" />
 						<div class="cbi-value-description">
 							Automatically set encryption
 						</div>
 					</div>
 				</div>
 				<div class="cbi-value" id="wifi-enc" style="display: none;" >
-					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.encryption">
+					<label class="cbi-value-title" for="wifi-enc-select">
 						Encryption
 					</label>
 					<div class="cbi-value-field">
-						<select onchange="if (this.value == 'none') { $('#wifi-key-input').attr('disabled', 'disabled')} else { $('#wifi-key-input').removeAttr('disabled')}" class="cbi-input-select" id="cbid.wireless.cfg03bd0e.encryption" name="cbid.wireless.cfg03bd0e.encryption" size="1">
+						<select onchange="change-wifi()" class="cbi-input-select" id="wifi-enc-select" name="wifi-enc-select" size="1">
 							<option id="cbi-wireless-cfg03bd0e-encryption-none" value="none">No Encryption</option>
 							<option id="cbi-wireless-cfg03bd0e-encryption-wep" value="wep" selected="selected">WEP</option>
 							<option id="cbi-wireless-cfg03bd0e-encryption-psk" value="psk">WPA-PSK</option>
@@ -870,7 +993,11 @@ return true;
 				</div>
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-apply" />
-					Applying configuration. (Please be patient)
+					Applying network configuration. (Please be patient)
+				</div>
+				<div class="cbi-value">
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-sensor-load" />
+					Loading current sensor configuration.
 				</div>
 			</fieldset>
 			<fieldset class="cbi-section">
@@ -881,7 +1008,7 @@ return true;
 							Number of phases
 						</label>
 						<div class="cbi-value-field">
-							<select>
+							<select id="flukso-sensor-phases" onchange="toggle_phase_setting(this);">
 								<option value="1">1</option>
 								<option value="3">3</option>
 							</select>

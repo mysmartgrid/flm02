@@ -19,5 +19,5 @@ function index()
 	luci.i18n.loadc("admin-core")
 	local i18n = luci.i18n.translate
 
-	entry({"msg_wizard"}, template("mini/msg_wizard"), i18n("wizard"), 3).sysauth = "root"
+	entry({"msg_wizard"}, template("mini/msg_wizard"), i18n("wizard"), 3)
 end
