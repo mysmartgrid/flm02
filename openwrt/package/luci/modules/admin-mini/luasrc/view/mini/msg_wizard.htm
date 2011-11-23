@@ -131,6 +131,7 @@ return true;
 
 	$(function() {
 		$('.menubar').hide();
+		load_iface();
 		$('#msg_wizard-sensor').find('input[type="checkbox"]').bind('change', function() {toggle_sensor_config(this);});
 	});
 
@@ -207,6 +208,21 @@ return true;
 			'success': callback,
 			'error': error,
 			'timeout': timeout
+		});
+	}
+
+	load_iface = function(callback)
+	{
+		$(':input').attr('disabled', true);
+		login(function() {
+			jsonRequest("/cgi-bin/luci/rpc/uci", "get", '["network", "wan", "ifname"]', 90, function(data) {
+				if ( data['result'] == "ath0" )
+					$('#msg_wizard_interface').val("wlan");
+				else
+					$('#msg_wizard_interface').val("lan");
+
+				$(':input').removeAttr('disabled');
+			});
 		});
 	}
 
@@ -411,6 +427,64 @@ return true;
 		}
 	}
 
+	save_iface = function(callback)
+	{
+		fwzone = "";
+		sync_task = function() {
+			if ( $('#msg_wizard_interface').val() == "ath0" )
+			{
+				alert("blubb");
+				sync_task = function() {
+					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["firewall"]', "96", function(data) {});
+					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "97", function(data) {});
+					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "98", function(data) {});
+					if ( callback )
+						callback();
+				}
+				sync(5);
+				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["firewall", ' + JSON.stringify(fwzone) + ', "input", "REJECT"]', "91", function(data) {sync();});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "wan", "ifname", "ath0"]', "92", function(data) {sync();});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "lan", "ifname", "eth0"]', "93", function(data) {sync();});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["wireless", "wifi0", "disabled", "0"]', "94", function(data) {sync();});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"network": "wan", "mode": "sta"}) + ']', "95", function(data) {sync();});
+			} else {
+				sync_task = function() {
+					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["firewall"]', "96", function(data) {});
+					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "97", function(data) {});
+					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "98", function(data) {});
+					if ( callback )
+						callback();
+				}
+				sync(5);
+				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["firewall", ' + JSON.stringify(fwzone) + ', "input", "ACCEPT"]', "91", function(data) {sync();});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "wan", "ifname", "eth0"]', "92", function(data) {sync();});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "lan", "ifname", "ath0"]', "93", function(data) {sync();});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["wireless", "wifi0", "disabled", "1"]', "94", function(data) {sync();});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"network": "lan", "mode": "ap"}) + ']', "95", function(data) {sync();});
+			}
+		}
+		sync(2);
+		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["firewall"]', "80", function(data) {
+			for ( tmpKey in data.result )
+			{
+				if ( data.result[tmpKey].name == "wan" )
+					fwzone = tmpKey;
+			}
+			sync();
+		});
+		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "81", function(data) {
+			if ( wifi_section == "" )
+			{
+				for ( tmpKey in data.result )
+				{
+					if ( data.result[tmpKey].ssid )
+						wifi_section = tmpKey;
+				}
+			};
+			sync();
+		});
+	}
+
 	save_wifi = function(callback)
 	{
 		$('#msg_wizard-wifi-save').attr('src', '/luci-static/resources/loading.gif');
@@ -555,19 +629,21 @@ return true;
 		$(':input').attr('disabled', true);
 		if ( step == "interface" )
 		{
-			if ( $('#msg_wizard_interface').val() == "wlan" )
-			{
-				load_wifi();
-				step = "wifi";
-				iface = "wifi";
-				$("#msg_wizard").hide(20, function() { $("#msg_wifi").show(); } );
-			} else {
-				load_network();
-				iface = "lan";
-				step = "network";
-				$("#msg_wizard-wifi-save-div").hide();
-				$("#msg_wizard").hide(20, function() { $("#network").show(); } );
-			}
+			save_iface(function() {
+				if ( $('#msg_wizard_interface').val() == "wlan" )
+				{
+					load_wifi();
+					step = "wifi";
+					iface = "wifi";
+					$("#msg_wizard").hide(20, function() { $("#msg_wifi").show(); } );
+				} else {
+					load_network();
+					iface = "lan";
+					step = "network";
+					$("#msg_wizard-wifi-save-div").hide();
+					$("#msg_wizard").hide(20, function() { $("#network").show(); } );
+				}
+			});
 		}
 		else if ( step == "wifi" )
 		{
