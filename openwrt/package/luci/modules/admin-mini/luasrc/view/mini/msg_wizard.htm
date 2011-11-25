@@ -16,18 +16,52 @@
 				rules: {
 					'wifi-key-input': {
 						wep: {
-							depends: function(element) {return ($('#wifi-enc-select').val() == 'wep');},
+							depends: function(element)
+							{
+								var ssid, enc, key;
+								if ( $('#essid').val() == '' )
+									ssid = $('#essid-input').val();
+								else
+									ssid = $('#essid').val();
+
+								if ( $('#autoenc').prop('checked') == true )
+									enc = select_enc(ssid);
+								else
+									enc = $('#wifi-enc-select').val();
+								return (enc == 'wep');
+							}
+
 						},
 						'wep-hex': {
 							depends: function(element)
 							{
-								return (($('#wifi-enc-select').val() == 'wep') && ($('#wifi-key-input').val().length == 10 || $('#wifi-key-input').val().length == 26));
+								var ssid, enc, key;
+								if ( $('#essid').val() == '' )
+									ssid = $('#essid-input').val();
+								else
+									ssid = $('#essid').val();
+
+								if ( $('#autoenc').prop('checked') == true )
+									enc = select_enc(ssid);
+								else
+									enc = $('#wifi-enc-select').val();
+								return (enc == 'wep') && ($('#wifi-key-input').val().length == 10 || $('#wifi-key-input').val().length == 26));
 							}
 						},
 						wpa: {
 							depends: function(element)
 							{
-								return ($('#wifi-enc-select').val() == 'psk' || $('#wifi-enc-select').val() == 'psk2');
+								var ssid, enc, key;
+								if ( $('#essid').val() == '' )
+									ssid = $('#essid-input').val();
+								else
+									ssid = $('#essid').val();
+
+								if ( $('#autoenc').prop('checked') == true )
+									enc = select_enc(ssid);
+								else
+									enc = $('#wifi-enc-select').val();
+								return (enc == 'psk' || enc == 'psk2');
 							}
 						}
 
