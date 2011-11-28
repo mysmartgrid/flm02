@@ -440,9 +440,8 @@ return true;
 		$('#msg_wizard-iface-set').attr('src', "/luci-static/resources/loading.gif");
 		fwzone = "";
 		sync_task = function() {
-			if ( $('#msg_wizard_interface').val() == "ath0" )
+			if ( $('#msg_wizard_interface').val() == "wlan" )
 			{
-				alert("blubb");
 				sync_task = function() {
 					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["firewall"]', "96", function(data) {});
 					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "97", function(data) {});
