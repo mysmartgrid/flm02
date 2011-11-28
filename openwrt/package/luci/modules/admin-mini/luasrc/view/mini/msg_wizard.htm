@@ -440,7 +440,8 @@ return true;
 
 	save_iface = function(callback)
 	{
-		$('#msg_wizard-iface-set').attr('src', "/luci-static/resources/loading.gif");
+		$('#msg_wizard-net-iface-set').attr('src', "/luci-static/resources/loading.gif");
+		$('#msg_wizard-wifi-iface-set').attr('src', "/luci-static/resources/loading.gif");
 		fwzone = "";
 		sync_task = function() {
 			if ( $('#msg_wizard_interface').val() == "wlan" )
@@ -449,7 +450,7 @@ return true;
 					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["firewall"]', "96", function(data) {});
 					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "97", function(data) {});
 					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "98", function(data) {});
-					$('#msg_wizard-iface-set').attr('src', "/luci-static/resources/ok.png");
+					$('#msg_wizard-wifi-iface-set').attr('src', "/luci-static/resources/ok.png");
 					if ( callback )
 						callback();
 				}
@@ -464,6 +465,7 @@ return true;
 					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["firewall"]', "96", function(data) {});
 					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "97", function(data) {});
 					jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "98", function(data) {});
+					$('#msg_wizard-net-iface-set').attr('src', "/luci-static/resources/ok.png");
 					if ( callback )
 						callback();
 				}
