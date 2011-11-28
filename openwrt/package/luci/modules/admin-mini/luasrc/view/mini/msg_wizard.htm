@@ -329,6 +329,7 @@ return true;
 					$('#network-wan-dns').show();
 				}
 				$('#msg_wizard-net-config').attr('src', '/luci-static/resources/ok.png');
+				$(':input').removeAttr('disabled');
 				if ( callback )
 					callback();
 			}, function(jqXHR, textStatus, errorThrown) {
