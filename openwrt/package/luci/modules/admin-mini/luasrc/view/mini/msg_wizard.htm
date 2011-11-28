@@ -453,7 +453,7 @@ return true;
 				sync(5);
 				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["firewall", ' + JSON.stringify(fwzone) + ', "input", "REJECT"]', "91", function(data) {sync();});
 				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "wan", "ifname", "ath0"]', "92", function(data) {sync();});
-				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "lan", "ifname", "eth0"]', "93", function(data) {sync();});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", "lan", ' + JSON.stringify({"ifname": "eth0", "ipaddr": "192.168.255.1", "netmask": "255.255.255.0", "proto": "static"}) + ']', "93", function(data) {sync();});
 				jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["wireless", "wifi0", "disabled", "0"]', "94", function(data) {sync();});
 				jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"network": "wan", "mode": "sta"}) + ']', "95", function(data) {sync();});
 			} else {
