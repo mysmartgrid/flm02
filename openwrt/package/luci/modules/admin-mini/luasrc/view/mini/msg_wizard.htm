@@ -532,10 +532,10 @@ return true;
 		$('#msg_wizard-net-save').attr('src', '/luci-static/resources/loading.gif');
 		$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/loading.gif');
 		var section, config;
-		if ( iface == "wifi" )
+		/*if ( iface == "wifi" )
 			section = "wan";
 		else
-			section = "lan";
+			section = "lan";*/
 
 		if ( $('#dhcp').prop('checked') == true )
 			config = {'proto': 'dhcp'};
@@ -544,7 +544,7 @@ return true;
 			config = {'proto': 'static', 'ipaddr': $('#network-ipaddr').val(), 'netmask': $('#network-netmask').val(), 'gateway': $('#network-gateway').val(), 'dns': $('#network-dns').val()};
 		}
 
-		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", ' + JSON.stringify(section) + ', ' + JSON.stringify(config) + ']', "106", function(data) {
+		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", "wan", ' + JSON.stringify(config) + ']', "106", function(data) {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "107", function(data) {
 				$('#msg_wizard-net-save').attr('src', '/luci-static/resources/ok.png');
 				if(callback)
