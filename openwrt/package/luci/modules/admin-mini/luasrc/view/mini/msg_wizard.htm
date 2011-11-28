@@ -259,15 +259,22 @@ return true;
 			});
 			jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
 				var ssid, enc, key;
-				for ( tmpKey in data.result )
+				if ( wifi_section == "" )
 				{
-					if (data.result[tmpKey].ssid)
+					for ( tmpKey in data.result )
 					{
-						ssid = data.result[tmpKey].ssid;
-						enc = data.result[tmpKey].encryption;
-						key = data.result[tmpKey].key;
-						wifi_section = tmpKey;
+						if (data.result[tmpKey].ssid)
+						{
+							ssid = data.result[tmpKey].ssid;
+							enc = data.result[tmpKey].encryption;
+							key = data.result[tmpKey].key;
+							wifi_section = tmpKey;
+						}
 					}
+				} else {
+					ssid = data.result[wifi_section].ssid;
+					enc = data.result[wifi_section].encryption;
+					key = data.result[wifi_section].key;
 				}
 				present = $('.tmp_essid');
 				var custom = true;
