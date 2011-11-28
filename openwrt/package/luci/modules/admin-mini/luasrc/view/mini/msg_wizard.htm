@@ -241,70 +241,68 @@ return true;
 				callback();
 		}
 		sync(2);
-		login(function() {
-			jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
-				var options;
-				for ( var k = 0; k < data.result.length; k++ )
+		jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
+			var options;
+			for ( var k = 0; k < data.result.length; k++ )
+			{
+				if ( data.result[k].ESSID != "" )
 				{
-					if ( data.result[k].ESSID != "" )
+					options += '<option class="tmp_essid" value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
+					wifis.push(data.result[k]);
+				}
+			}
+			if ( data.result.length > 0 )
+			{
+				$('#essid').prepend(options);
+			}
+			$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/ok.png");
+			sync();
+		}, function(jqXHR, textStatus, errorThrown) {
+			$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/fail.png");
+			$('#msg_wizard-wifi-list').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+		});
+		jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
+			var ssid, enc, key;
+			if ( wifi_section == "" )
+			{
+				for ( tmpKey in data.result )
+				{
+					if (data.result[tmpKey].ssid)
 					{
-						options += '<option class="tmp_essid" value="' + data.result[k].ESSID + '">' + data.result[k].ESSID + '</option>';
-						wifis.push(data.result[k]);
+						ssid = data.result[tmpKey].ssid;
+						enc = data.result[tmpKey].encryption;
+						key = data.result[tmpKey].key;
+						wifi_section = tmpKey;
 					}
 				}
-				if ( data.result.length > 0 )
-				{
-					$('#essid').prepend(options);
-				}
-				$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/ok.png");
-				sync();
-			}, function(jqXHR, textStatus, errorThrown) {
-				$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/fail.png");
-				$('#msg_wizard-wifi-list').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
-			});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
-				var ssid, enc, key;
-				if ( wifi_section == "" )
-				{
-					for ( tmpKey in data.result )
-					{
-						if (data.result[tmpKey].ssid)
-						{
-							ssid = data.result[tmpKey].ssid;
-							enc = data.result[tmpKey].encryption;
-							key = data.result[tmpKey].key;
-							wifi_section = tmpKey;
-						}
-					}
-				} else {
-					ssid = data.result[wifi_section].ssid;
-					enc = data.result[wifi_section].encryption;
-					key = data.result[wifi_section].key;
-				}
-				present = $('.tmp_essid');
-				var custom = true;
-				for ( var k = 0; k < present.length; k++ )
-				{
-					if ( present[k].value == ssid )
-						custom = false;
-				}
-				if ( custom )
-				{
-					$('#essid').val('');
-					$('#essid-input-div').show();
-					$('#essid-input').val(ssid);
-				} else {
-					$('#essid').val(ssid);
-					$('#essid-input-div').hide();
-				}
-				$('#wifi-enc-input').val(enc);
-				$('#wifi-key-input').val(key);
-				$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/ok.png");
-				sync();
-			}, function(jqXHR, textStatus, errorThrown) {
-				$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/fail.png");
-				$('#msg_wizard-wifi-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
-			});
+			} else {
+				ssid = data.result[wifi_section].ssid;
+				enc = data.result[wifi_section].encryption;
+				key = data.result[wifi_section].key;
+			}
+			present = $('.tmp_essid');
+			var custom = true;
+			for ( var k = 0; k < present.length; k++ )
+			{
+				if ( present[k].value == ssid )
+					custom = false;
+			}
+			if ( custom )
+			{
+				$('#essid').val('');
+				$('#essid-input-div').show();
+				$('#essid-input').val(ssid);
+			} else {
+				$('#essid').val(ssid);
+				$('#essid-input-div').hide();
+			}
+			$('#wifi-enc-input').val(enc);
+			$('#wifi-key-input').val(key);
+			$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/ok.png");
+			sync();
+		}, function(jqXHR, textStatus, errorThrown) {
+			$('#msg_wizard-wifi-config').attr('src', "/luci-static/resources/fail.png");
+			$('#msg_wizard-wifi-config').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		});
 	}
 
