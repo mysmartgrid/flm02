@@ -229,6 +229,7 @@ return true;
 	load_iface = function(callback)
 	{
 		$(':input').attr('disabled', true);
+		$('#msg_wizard-iface-load').attr('src', '/luci-static/resources/loading.gif');
 		login(function() {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "get", '["network", "wan", "ifname"]', 90, function(data) {
 				if ( data['result'] == "ath0" )
@@ -236,6 +237,7 @@ return true;
 				else
 					$('#msg_wizard_interface').val("lan");
 
+				$('#msg_wizard-iface-load').attr('src', '/luci-static/resources/ok.png');
 				$(':input').removeAttr('disabled');
 			});
 		});
@@ -921,7 +923,17 @@ return true;
 		<h2><a id="content" name="content"></a></h2>
 		<div class="cbi-map-descr"></div>
 		<fieldset class="cbi-section">
-			<div class="cbi-section-node" id="msg_wizard-0x4e1e60">
+			<div class="cbi-section-descr"></div>
+			<fieldset class="cbi-section-node">
+				<div class="cbi-value" id="msg_wizard-iface-load-div">
+					<img src="/luci-static/resources/loading.gif" id="msg_wizard-iface-load" />
+					Loading current interface selection.
+				</div>
+			</fieldset>
+		</fieldset>
+		<fieldset class="cbi-section">
+			<div class="cbi-section-descr"></div>
+			<fieldset class="cbi-section-node" id="msg_wizard-0x4e1e60">
 				<div class="cbi-value" id="msg_wizard-1-interface">
 					<label class="cbi-value-title" for="msg_wizard_interface">Interface</label>
 					<div class="cbi-value-field">
@@ -931,7 +943,7 @@ return true;
 						</select>
 					</div>
 				</div>
-			</div>
+			</fieldset>
 		</fieldset>
 	</div>
 
