@@ -88,7 +88,8 @@ local function ucimenu(prefix, node)
 end
 %>
 
-<div id="header"></div>
+<div id="header">
+</div>
 
 <%
 if tree.nodes[category] and tree.nodes[category].ucidata then
@@ -108,25 +109,40 @@ ucimenu("/" .. category .. "/uci/", tree.nodes[category].nodes["uci"], "changes"
 <% end %>
 <% end %>
 
-<script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"></script>                                                         
-<script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"></script>                                                     
-<script type="text/javascript" src="/luci-static/resources/jquery-lang.js" charset="utf-8"></script>                                          
-<script type="text/javascript" src="/luci-static/resources/langpack/de.js" charset="utf-8"></script>                                          
-                                                                                                                                              
+<script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"></script>
+<script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"></script>
+<script type="text/javascript" src="/luci-static/resources/jquery.cookie.js"></script>
+<script type="text/javascript" src="/luci-static/resources/jquery-lang.js" charset="utf-8"></script>
+<script type="text/javascript" src="/luci-static/resources/langpack/de.js" charset="utf-8"></script>
+
 <script type="text/javascript">
-	<!--//--><![CDATA[//><!--
-	window.lang = new jquery_lang_js();                                                                                                         
-	$().ready(function () {                                                                                                                     
-		window.lang.run();                                                                                                                        
-	});
-	//--><!]]>
-</script>                                                                                                                                     
-                                                                                                                                              
-<div class="preferencebar">                                                                                                                   
-	<a href="#" onclick="javascript: window.lang.change('en');"><img src="/luci-static/oxygen/icons/enflag.png"/></a>                    
-	<a href="#" onclick="javascript: window.lang.change('de');"><img src="/luci-static/oxygen/icons/deflag.png"/></a>                    
-	&nbsp;&nbsp;                                                                                                                                
-	<a href="#" onclick="javascript: $('#menubar').toggle();" lang="en">Expert Options</a>                                        
+  <!--//--><![CDATA[//><!--
+  window.lang = new jquery_lang_js();
+  
+  translate = function(lang){                                                                            
+    window.lang.change(lang);                                                                            
+    $.cookie('lang', lang);                                                                              
+  };
+
+  toggleMenuBar = function() {
+    $('#menubar').toggle();                                                                              
+    $.cookie('menubar', $('#menubar').css("display"));
+  }
+ 
+  $().ready(function () {
+    window.lang.run();
+    
+    $('#menubar').css('display', $.cookie('menubar'));
+    translate($.cookie('lang'));
+  });
+  //--><!]]>
+</script>
+
+<div class="preferencebar">                                                     
+  <a href="#" onclick="javascript: translate('en')"><img src="/luci-static/oxygen/icons/enflag.png"/></a>
+  <a href="#" onclick="javascript: translate('de')"><img src="/luci-static/oxygen/icons/deflag.png"/></a>
+  &nbsp;&nbsp;                                                          
+  <a href="#" onclick="javascript: toggleMenuBar()" lang="en">Expert Options</a>
 </div>
 
 <div id="menubar" class="menubar">
