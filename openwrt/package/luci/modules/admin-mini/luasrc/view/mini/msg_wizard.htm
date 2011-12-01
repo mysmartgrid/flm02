@@ -22,9 +22,6 @@
 		padding: 0.5em 0pt 0.5em 2.5em;
 	}
 </style>
-<script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"></script>
-<script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"></script>
-<script type="text/javascript" src="/luci-static/resources/jquery.validate.min.js"></script>
 <script id="validations" type="text/javascript">
 	<!--//--><![CDATA[//><!--
 		$(document).ready(function() {
@@ -157,7 +154,6 @@ return true;
 	}
 
 	$(function() {
-		$('.menubar').hide();
 		load_iface();
 		$('#msg_wizard-sensor').find('input[type="checkbox"]').bind('change', function() {toggle_sensor_config(this);});
 	});
@@ -600,6 +596,26 @@ return true;
 		});
 	}
 
+	//TODO: add more error entries
+	errorsMap = {                                                                                                         
+		"\.\*\\sok\\n$": 'ok',                                                                                              
+                "\.\*Name\\sor\\sservice\\snot\\sknown\.\*": 'The mySmartGrid server is unreachable. Please check your network configuration',
+        }
+
+	checkFsyncResult = function(result) {                                                                                   
+                                                                                                                                                  
+		var message = 'Unknown';
+		var ok = true;
+		$.each(errorsMap, function(exp, formatted) {                                                                  
+			if ((new RegExp(exp)).test(result)) {
+				message = formatted;
+				ok = false;
+				return false;//Stop searching
+			}
+		});
+		return {'ok' : ok, 'message': message};
+	}
+
 	save_sensors = function(callback)
 	{
 		$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/loading.gif');
@@ -646,17 +662,29 @@ return true;
 			config['main'] = {'phase': "3"};
 		}
 
+		//TODO: adapt this function to be used in other places
+		handleSensorApplyError = function(jqXHR, textStatus, errorThrown) {                                         
+			$('#msg_wizard-sensor-apply').attr('src', "/luci-static/resources/fail.png"); 
+			$('#msg_wizard-sensor-apply').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+		}
+
 		sensor_sync = new Sync(7, function() {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["flukso"]', "109", function(data) {
 				$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/ok.png');
 				jsonRequest("/cgi-bin/luci/rpc/sys", "exec", '["fsync"]', "109", function(data) {
-					$('#msg_wizard-sensor-apply').attr('src', '/luci-static/resources/ok.png');
-					if(callback)
-						callback();
-				}, function(jqXHR, textStatus, errorThrown) {
-					$('#msg_wizard-sensor-apply').attr('src', "/luci-static/resources/fail.png");
-					$('#msg_wizard-sensor-apply').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
-				})
+				
+					var check = checkFsyncResult(data.result);                                                 
+			
+					if (check.ok) {
+						$('#msg_wizard-sensor-apply').attr('src', '/luci-static/resources/ok.png');
+						if(callback)
+							callback();
+					} else {
+						handleSensorApplyError(null, 'Failure', check.message);
+					}
+					
+				}, handleSensorApplyError)
+
 			}, function(jqXHR, textStatus, errorThrown) {
 				$('#msg_wizard-sensor-save').attr('src', "/luci-static/resources/fail.png");
 				$('#msg_wizard-sensor-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
@@ -748,9 +776,9 @@ return true;
 				}
 			);
 			//$("#form-buttons").hide();
+			progress_bar("sensors");
 			$("#network").hide();
 			$("#msg_wizard-sensor").show();
-			progress_bar("sensors");
 		}
 		else if ( step == "sensor" )
 		{
@@ -760,10 +788,10 @@ return true;
 			}
 			step = "registration";
 			save_sensors(sync_task);
+			progress_bar("registration");
 			$("#msg_wizard-sensor").hide();
 			$("#msg_wizard-registration").show();
 			$("[type=submit]").hide();
-			progress_bar("registration");
 		}
 	}
 

@@ -40,12 +40,23 @@ require("luci.http").prepare_content("application/xhtml+xml")
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="Content-Script-Type" content="text/javascript" />
+
 <link rel="stylesheet" type="text/css" media="screen" href="<%=media%>/cascade.css" />
 <link rel="stylesheet" type="text/css" media="screen" href="<%=media%>/dashboard.css" />
 <% if node and node.css then %><link rel="stylesheet" type="text/css" media="screen" href="<%=resource%>/<%=node.css%>" />
 <% end -%>
+
+<script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"/>                                 
+<script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"/>                             
+<script type="text/javascript" src="/luci-static/resources/jquery.cookie.js"/>                               
+<script type="text/javascript" src="/luci-static/resources/jquery.validate.min.js"/> 
+<script type="text/javascript" src="/luci-static/resources/jquery-lang.js" charset="utf-8"/>                  
+<script type="text/javascript" src="/luci-static/resources/langpack/de.js" charset="utf-8"/>
+
 <title><%=striptags( hostname .. ( (node and node.title) and ' - ' .. node.title or '')) %> - LuCI</title>
+
 </head>
+
 <body class="lang_<%=luci.i18n.context.lang%>">
 <div id="screen">
 
@@ -109,12 +120,6 @@ ucimenu("/" .. category .. "/uci/", tree.nodes[category].nodes["uci"], "changes"
 <% end %>
 <% end %>
 
-<script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"></script>
-<script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"></script>
-<script type="text/javascript" src="/luci-static/resources/jquery.cookie.js"></script>
-<script type="text/javascript" src="/luci-static/resources/jquery-lang.js" charset="utf-8"></script>
-<script type="text/javascript" src="/luci-static/resources/langpack/de.js" charset="utf-8"></script>
-
 <script type="text/javascript">
   <!--//--><![CDATA[//><!--
   window.lang = new jquery_lang_js();
@@ -130,9 +135,9 @@ ucimenu("/" .. category .. "/uci/", tree.nodes[category].nodes["uci"], "changes"
   }
  
   $().ready(function () {
-    window.lang.run();
-    
     $('#menubar').css('display', $.cookie('menubar'));
+    
+    window.lang.run();
     translate($.cookie('lang'));
   });
   //--><!]]>
