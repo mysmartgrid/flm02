@@ -9,6 +9,18 @@
 		color: #bbb;
 		background-color: #ddd;
 	}
+
+	.progress {
+		display: block;
+		height: 1.5em;
+		float: left;
+		margin: 0.5em 0pt;
+		width: 10.5em;
+		background-image: url("/luci-static/resources/progressbar.png");
+		background-size: auto 100%;
+		background-repeat: no-repeat;
+		padding: 0.5em 0pt 0.5em 2.5em;
+	}
 </style>
 <script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"></script>
 <script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"></script>
@@ -644,6 +656,24 @@ return true;
 		jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "main", ' + JSON.stringify(config['main']) + ']', "108", function(data) { sensor_sync.run(); });
 	}
 
+	progress_bar = function(step)
+	{
+		if (step == "network")
+		{
+			$('#prog-network').css('background-image', 'url("/luci-static/resources/progressbar_cur.png")');
+			$('#prog-sensor').css('background-image', 'url("/luci-static/resources/progressbar.png")');
+			$('#prog-reg').css('background-image', 'url("/luci-static/resources/progressbar.png")');
+		} else if (step == "sensors") {
+			$('#prog-network').css('background-image', 'url("/luci-static/resources/progressbar_done.png")');
+			$('#prog-sensor').css('background-image', 'url("/luci-static/resources/progressbar_cur.png")');
+			$('#prog-reg').css('background-image', 'url("/luci-static/resources/progressbar.png")');
+		} else if (step == "registration") {
+			$('#prog-network').css('background-image', 'url("/luci-static/resources/progressbar_done.png")');
+			$('#prog-sensor').css('background-image', 'url("/luci-static/resources/progressbar_done.png")');
+			$('#prog-reg').css('background-image', 'url("/luci-static/resources/progressbar_cur.png")');
+		}
+	}
+
 	submit = function()
 	{
 		$('.apiError').detach();
@@ -671,6 +701,7 @@ return true;
 				$("#msg_wizard-net-iface-set-div").show();
 				$("#msg_wizard-wifi-iface-set-div").hide();
 			}
+			progress_bar("network");
 		}
 		else if ( step == "wifi" )
 		{
@@ -683,6 +714,7 @@ return true;
 			step = "network";
 				$("#msg_wizard-wifi-save-div").show();
 			$("#msg_wifi").hide(20, function() { $("#network").show(); } );
+			progress_bar("network");
 		}
 		else if ( step == "network" )
 		{
@@ -702,6 +734,7 @@ return true;
 			//$("#form-buttons").hide();
 			$("#network").hide();
 			$("#msg_wizard-sensor").show();
+			progress_bar("sensors");
 		}
 		else if ( step == "sensor" )
 		{
@@ -714,6 +747,7 @@ return true;
 			$("#msg_wizard-sensor").hide();
 			$("#msg_wizard-registration").show();
 			$("[type=submit]").hide();
+			progress_bar("registration");
 		}
 	}
 
@@ -906,7 +940,16 @@ return true;
 
 <form id="wizard_form" method="get" action="javascript: submit()" onreset="wizard_reset()">
 	<div id="progress">
-		<div id="prog-iface"></div>
+		<div id="prog-network" class="progress" style="background-image: url('/luci-static/resources/progressbar_cur.png');">
+			Network
+		</div>
+		<div id="prog-sensor" class="progress">
+			Sensors
+		</div>
+		<div id="prog-reg" class="progress">
+			Registration
+		</div>
+		<div style="clear: both;" />
 	</div>
 
 	<div>
