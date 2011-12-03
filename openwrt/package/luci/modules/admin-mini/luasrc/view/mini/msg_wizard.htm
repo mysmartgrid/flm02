@@ -759,6 +759,7 @@ return true;
 		{
 			$("#msg_wifi").hide(20, function() { $("#msg_wizard").show(); } );
 			step = "interface";
+			progress_bar("network");
 		}
 		else if ( step == "network" )
 		{
@@ -773,17 +774,20 @@ return true;
 				$("#network").hide(20, function() { $("#msg_wizard").show(); } );
 				step = "interface";
 			}
+			progress_bar("network");
 		}
 		else if ( step == "sensor" )
 		{
 			$('#msg_wizard-sensor').hide(20, function() { $("#network").show(); } );
 			step = "network";
+			progress_bar("network");
 		}
 		else if ( step == "registration" )
 		{
 			load_sensor_config();
 			$('#msg_wizard-registration').hide(20, function() { $("#msg_wizard-sensor").show(); } );
 			step = "sensor";
+			progress_bar("sensors");
 		}
 	}
 	
