@@ -233,7 +233,23 @@ return true;
 			'dataType': 'json',
 			'url': url + "?auth=" + auth,
 			'success': callback,
-			'error': error,
+			'error': function(jqXHR, textStatus, errorThrown) {
+				if (errorThrown == "Forbidden")
+				{
+					login(function() {
+						$.ajax({
+							'type': "POST",
+							'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + id + '}',
+							'dataType': 'json',
+							'url': url + "?auth=" + auth,
+							'success': callback,
+							'error': error,
+							'timeout': timeout
+						});
+					});
+				} else
+					error(jqXHR, textStatus, errorThrown);
+			},
 			'timeout': timeout
 		});
 	}
@@ -242,7 +258,7 @@ return true;
 	{
 		$(':input').attr('disabled', true);
 		$('#msg_wizard-iface-load').attr('src', '/luci-static/resources/loading.gif');
-		login(function() {
+		//login(function() {
 			jsonRequest("/cgi-bin/luci/rpc/uci", "get", '["network", "wan", "ifname"]', 90, function(data) {
 				if ( data['result'] == "ath0" )
 					$('#msg_wizard_interface').val("wlan");
@@ -252,7 +268,7 @@ return true;
 				$('#msg_wizard-iface-load').attr('src', '/luci-static/resources/ok.png');
 				$(':input').removeAttr('disabled');
 			});
-		});
+		//});
 	}
 
 	load_wifi = function(callback)
