@@ -26,9 +26,11 @@ function index()
 		local auth = luci.http.formvalue("auth", true)
 		if auth then
 			local sdat = luci.sauth.read(auth)
-			user = loadstring(sdat)().user
-			if user and luci.util.contains(accs, user) then
-				return user, auth
+			if sdat then
+				user = loadstring(sdat)().user
+				if user and luci.util.contains(accs, user) then
+					return user, auth
+				end
 			end
 		end
 		luci.http.status(403, "Forbidden")
