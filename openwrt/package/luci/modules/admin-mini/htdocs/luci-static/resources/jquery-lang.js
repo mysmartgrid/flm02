@@ -89,8 +89,8 @@ jquery_lang_js.prototype.change = function (lang) {
 						case 'button':
 						case 'submit':
 							// A button or submit, change the value attribute
-							var currentText = langElem.val();
-							var defaultLangText = langElem.data('deftext');
+							var currentText = $.trim(langElem.val());
+							var defaultLangText = $.trim(langElem.data('deftext'));
 							
 							var newText = this.lang[lang][defaultLangText] || currentText;
 							var newHtml = currentText.replace(currentText, newText);
@@ -103,8 +103,8 @@ jquery_lang_js.prototype.change = function (lang) {
 					}
 				} else {
 					// Not an input element
-					var currentText = langElem.html();
-					var defaultLangText = langElem.data('deftext');
+					var currentText = $.trim(langElem.html());
+					var defaultLangText = $.trim(langElem.data('deftext'));
 					
 					var newText = this.lang[lang][defaultLangText] || currentText;
 					var newHtml = currentText.replace(currentText, newText);
