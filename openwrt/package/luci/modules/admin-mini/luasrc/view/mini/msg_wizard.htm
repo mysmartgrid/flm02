@@ -973,13 +973,13 @@ return true;
 
 <form id="wizard_form" method="get" action="javascript: submit()" onreset="wizard_reset()">
 	<div id="progress">
-		<div id="prog-network" class="progress" style="background-image: url('/luci-static/resources/progressbar_cur.png');">
+		<div id="prog-network" class="progress" style="background-image: url('/luci-static/resources/progressbar_cur.png');" lang="en">
 			Network
 		</div>
-		<div id="prog-sensor" class="progress">
+		<div id="prog-sensor" class="progress" lang="en">
 			Sensors
 		</div>
-		<div id="prog-reg" class="progress">
+		<div id="prog-reg" class="progress" lang="en">
 			Registration
 		</div>
 		<div style="clear: both;" />
@@ -1003,7 +1003,9 @@ return true;
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value" id="msg_wizard-iface-load-div">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-iface-load" />
+					<span lang="en">
 					Loading current interface selection.
+					</span>
 				</div>
 			</fieldset>
 		</fieldset>
@@ -1011,11 +1013,11 @@ return true;
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node" id="msg_wizard-0x4e1e60">
 				<div class="cbi-value" id="msg_wizard-1-interface">
-					<label class="cbi-value-title" for="msg_wizard_interface">Interface</label>
+					<label class="cbi-value-title" for="msg_wizard_interface" lang="en">Interface</label>
 					<div class="cbi-value-field">
 						<select class="cbi-input-select" id="msg_wizard_interface" name="msg_wizard_interface" size="1">
-							<option id="msg_wizard-1-interface-wlan" value="wlan" selected="selected">WIFI</option>
-							<option id="msg_wizard-1-interface-lan" value="lan">LAN</option>
+							<option id="msg_wizard-1-interface-wlan" value="wlan" selected="selected" lang="en">WIFI</option>
+							<option id="msg_wizard-1-interface-lan" value="lan" lang="en">LAN</option>
 						</select>
 					</div>
 				</div>
@@ -1024,22 +1026,22 @@ return true;
 	</div>
 
 	<div class="cbi-map" id="msg_wifi" style="display: none;">
-		<h2><a id="content" name="content">Wifi</a></h2>
-		<div class="cbi-map-descr">Please enter the name, encryption type and key/passphrase of your wifi network.</div>
+		<h2><a id="content" name="content" lang="en">Wifi</a></h2>
+		<div class="cbi-map-descr" lang="en">Please enter the name, encryption type and key/passphrase of your wifi network.</div>
 		<fieldset class="cbi-section">
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value" id="msg_wizard-wifi-iface-set-div">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-iface-set" />
-					Setting up interfaces.
+					<span lang="en">Setting up interfaces.</span>
 				</div>
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-config" />
-					Loading current wireless configuration.
+					<span lang="en">Loading current wireless configuration.</span>
 				</div>
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-list" />
-					Loading list of available wireless networks.
+					<span lang="en">Loading list of available wireless networks.</span>
 				</div>
 			</fieldset>
 		</fieldset>
@@ -1047,13 +1049,13 @@ return true;
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node" id="cbi-wireless-cfg03bd0e">
 				<div class="cbi-value" id="wifi-ssid">
-					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.ssid">
-						Network Name (<abbr title="Extended Service Set Identifier">ESSID</abbr>)
+					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.ssid" lang="en">
+						<span lang="en">Network Name</span> (<abbr title="Extended Service Set Identifier">ESSID</abbr>)
 					</label>
 					<div class="cbi-value-field">
 						<div>
 							<select onchange="change_wifi()" id="essid" class="cbi-input-select">
-								<option value="">-- custom --</option>
+								<option value="" lang="en">-- custom --</option>
 							</select>
 						</div>
 						<div style="margin-top: 0.3em;" id="essid-input-div" >
@@ -1062,31 +1064,31 @@ return true;
 					</div>
 				</div>
 				<div class="cbi-value" id="wifi-autoenc">
-					<label class="cbi-value-title" for="autoenc">
+					<label class="cbi-value-title" for="autoenc" lang="en">
 						Auto-Encryption
 					</label>
 					<div class="cbi-value-field">
 						<input type="checkbox" onchange="change_wifi()" class="cbi-input-checkbox" id="autoenc" name="autoenc" value="1" checked="checked" />
-						<div class="cbi-value-description">
+						<div class="cbi-value-description" lang="en">
 							Automatically set encryption
 						</div>
 					</div>
 				</div>
 				<div class="cbi-value" id="wifi-enc" style="display: none;" >
-					<label class="cbi-value-title" for="wifi-enc-select">
+					<label class="cbi-value-title" for="wifi-enc-select" lang="en">
 						Encryption
 					</label>
 					<div class="cbi-value-field">
 						<select onchange="change-wifi()" class="cbi-input-select" id="wifi-enc-select" name="wifi-enc-select" size="1">
-							<option id="cbi-wireless-cfg03bd0e-encryption-none" value="none">No Encryption</option>
-							<option id="cbi-wireless-cfg03bd0e-encryption-wep" value="wep" selected="selected">WEP</option>
-							<option id="cbi-wireless-cfg03bd0e-encryption-psk" value="psk">WPA-PSK</option>
-							<option id="cbi-wireless-cfg03bd0e-encryption-psk2" value="psk2">WPA2-PSK</option>
+							<option id="cbi-wireless-cfg03bd0e-encryption-none" value="none" lang="en">No Encryption</option>
+							<option id="cbi-wireless-cfg03bd0e-encryption-wep" value="wep" selected="selected" lang="en">WEP</option>
+							<option id="cbi-wireless-cfg03bd0e-encryption-psk" value="psk" lang="en">WPA-PSK</option>
+							<option id="cbi-wireless-cfg03bd0e-encryption-psk2" value="psk2" lang="en">WPA2-PSK</option>
 						</select>
 					</div>
 				</div>
 				<div class="cbi-value" id="wifi-key">
-					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.key">
+					<label class="cbi-value-title" for="cbid.wireless.cfg03bd0e.key" lang="en">
 						WEP-key or WPA-passphrase
 					</label>
 					<div class="cbi-value-field">
@@ -1101,25 +1103,25 @@ return true;
 
 	<div class="cbi-map" id="network" style="display: none;">
 		<h2>
-			<a id="content" name="content">Network</a>
+			<a id="content" name="content" lang="en">Network</a>
 		</h2>
-		<div class="cbi-map-descr">
-			These default settings should work just fine for most wifi networks.
+		<div class="cbi-map-descr" lang="en">
+			These default settings should work just fine for most networks.
 		</div>
 		<fieldset class="cbi-section">
 			<div class="cbi-section-descr"></div>
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value" id="msg_wizard-net-iface-set-div">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-iface-set" />
-					Setting up interfaces.
+					<span lang="en">Setting up interfaces.</span>
 				</div>
 				<div class="cbi-value" id="msg_wizard-wifi-save-div">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-wifi-save" />
-					Saving wireless configuration.
+					<span lang="en">Saving wireless configuration.</span>
 				</div>
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-config" />
-					Loading current network configuration.
+					<span lang="en">Loading current network configuration.</span>
 				</div>
 			</fieldset>
 		</fieldset>
@@ -1127,12 +1129,12 @@ return true;
 			<!--<legend>Local Network</legend>-->
 			<div class="cbi-section-node" id="network-wan">
 				<div class="cbi-value" id="network-wan-proto">
-					<label class="cbi-value-title" for="dhcp">
+					<label class="cbi-value-title" for="dhcp" lang="en">
 						DHCP
 					</label>
 					<div class="cbi-value-field">
 						<input type="checkbox" class="cbi-input-checkbox" id="dhcp" name="dhcp" onchange="toggle_dhcp();" checked="checked" value="1" />
-						<div class="cbi-value-description">
+						<div class="cbi-value-description" lang="en">
 							Automatically set network settings
 						</div>
 					</div>
@@ -1140,7 +1142,7 @@ return true;
 			</div>
 			<div class="cbi-value" id="network-wan-ipaddr" style="display: none;">
 				<label class="cbi-value-title" for="network-ipaddr">
-					<abbr title="Internet Protocol Version 4">IPv4</abbr>-Address
+					<abbr title="Internet Protocol Version 4" lang="en">IPv4</abbr>-<span lang="en">Address</span>
 				</label>
 				<div class="cbi-value-field">
 					<input type="text" class="cbi-input-text" name="network-ipaddr" id="network-ipaddr" value="" />
@@ -1149,7 +1151,7 @@ return true;
 
 			<div class="cbi-value" id="network-wan-netmask" style="display: none;">
 				<label class="cbi-value-title" for="network-netmask">
-					<abbr title="Internet Protocol Version 4">IPv4</abbr>-Netmask
+					<abbr title="Internet Protocol Version 4" lang="en">IPv4</abbr>-<span lang="en">Netmask</span>
 				</label>
 				<div class="cbi-value-field">
 					<input type="text" class="cbi-input-text" name="network-netmask" id="network-netmask" value="" />
@@ -1158,7 +1160,7 @@ return true;
 
 			<div class="cbi-value" id="network-wan-gateway" style="display: none;">
 				<label class="cbi-value-title" for="network-gateway">
-					<abbr title="Internet Protocol Version 4">IPv4</abbr>-Gateway
+					<abbr title="Internet Protocol Version 4" lang="en">IPv4</abbr>-<span lang="en">Gateway</span>
 				</label>
 				<div class="cbi-value-field">
 					<input type="text" class="cbi-input-text" name="network-gateway" id="network-gateway" value="" />
@@ -1167,7 +1169,7 @@ return true;
 
 			<div class="cbi-value" id="network-wan-dns" style="display: none;">
 				<label class="cbi-value-title" for="network-dns">
-					<abbr title="Domain Name System">DNS</abbr>-Server
+					<abbr title="Domain Name System" lang="en">DNS</abbr>-<span lang="en">Server</span>
 				</label>
 				<div class="cbi-value-field">
 					<input type="text" class="cbi-input-text" name="network-dns" id="network-dns" value="" />
@@ -1184,15 +1186,15 @@ return true;
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-save" />
-					Saving network configuration.
+					<span lang="en">Saving network configuration.</span>
 				</div>
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-net-apply" />
-					Applying network configuration. (Please be patient)
+					<span lang="en">Applying network configuration. (Please be patient)</span>
 				</div>
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-sensor-load" />
-					Loading current sensor configuration.
+					<span lang="en">Loading current sensor configuration.</span>
 				</div>
 			</fieldset>
 		</fieldset>
@@ -1201,7 +1203,7 @@ return true;
 				<div class="cbi-section-node" id="sensors">
 					<div class="cbi-value" id="sensor-phases">
 						<label class="cbi-value-title">
-							Number of phases
+							<span lang="en">Number of phases</span>
 						</label>
 						<div class="cbi-value-field">
 							<select id="flukso-sensor-phases" onchange="toggle_phase_setting(this);">
@@ -1211,7 +1213,7 @@ return true;
 							<br />
 							<div class="cbi-value-description">
 								<span class="cbi-value-helpicon"><img src="/luci-static/resources/cbi/help.gif" alt="" /></span>
-								When selecting 3 phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When selecting 1 phase, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively.
+								<span lang="en">When selecting 3 phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When selecting 1 phase, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively.</span>
 							</div>
 						</div>
 					</div>
@@ -1219,49 +1221,49 @@ return true;
 			</fieldset>
 
 			<fieldset class="cbi-section sensor-config" id="cbi-flukso-1">
-				<legend>Sensor #1</legend>
+				<legend lang="en">Sensor #1</legend>
 				<div class="cbi-section-node" id="cbi-flukso-1">
 					<div class="cbi-value" id="cbi-flukso-1-enable">
-						<label class="cbi-value-title" for="flukso-1-enable">Enable</label>
+						<label class="cbi-value-title" for="flukso-1-enable" lang="en">Enable</label>
 						<div class="cbi-value-field">
 							<input class="cbi-input-checkbox" type="checkbox" id="flukso-1-enable" name="flukso-1-enable" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-1-id" style="display: none;">
-						<label class="cbi-value-title" for="flukso-1-id">Identification</label>
+						<label class="cbi-value-title" for="flukso-1-id" lang="en">Identification</label>
 						<div class="cbi-value-field">
 							<div class="sensor-value"></div>
 							<input type="hidden" id="flukso-1-id" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-1-class" style="display: none;">
-						<label class="cbi-value-title" for="flukso-1-class">Class</label>
+						<label class="cbi-value-title" for="flukso-1-class" lang="en">Class</label>
 						<div class="cbi-value-field">
-							<div class="sensor-value"></div>
+							<div class="sensor-value" lang="en"></div>
 							<input type="hidden" id="flukso-1-class" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-1-type" style="display: none;">
-						<label class="cbi-value-title" for="flukso-1-type">Type</label>
+						<label class="cbi-value-title" for="flukso-1-type" lang="en">Type</label>
 						<div class="cbi-value-field">
-							<div class="sensor-value"></div>
+							<div class="sensor-value" lang="en"></div>
 							<input type="hidden" id="flukso-1-type" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-1-function" style="display: none;">
-						<label class="cbi-value-title" for="flukso-1-function">Function/Name</label>
+						<label class="cbi-value-title" for="flukso-1-function" lang="en">Function/Name</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-1-function" id="flukso-1-function" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-1-voltage" style="display: none;">
-						<label class="cbi-value-title" for="flukso-1-voltage">Voltage</label>
+						<label class="cbi-value-title" for="flukso-1-voltage" lang="en">Voltage</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-1-voltage" id="flukso-1-voltage" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-1-current" style="display: none;">
-						<label class="cbi-value-title" for="flukso-1-current">Current</label>
+						<label class="cbi-value-title" for="flukso-1-current" lang="en">Current</label>
 						<div class="cbi-value-field">
 							<select class="cbi-input-select" id="flukso-1-current" name="flukso-1-current" size="1">
 								<option id="cbi-flukso-1-current-50" value="50" selected="selected">50</option>
@@ -1276,49 +1278,49 @@ return true;
 			</fieldset>
 
 			<fieldset class="cbi-section sensor-config" id="cbi-flukso-2">
-				<legend>Sensor #2</legend>
+				<legend lang="en">Sensor #2</legend>
 				<div class="cbi-section-node" id="cbi-flukso-2">
 					<div class="cbi-value" id="cbi-flukso-2-enable">
-						<label class="cbi-value-title" for="flukso-2-enable">Enable</label>
+						<label class="cbi-value-title" for="flukso-2-enable" lang="en">Enable</label>
 						<div class="cbi-value-field">
 							<input class="cbi-input-checkbox" type="checkbox" id="flukso-2-enable" name="flukso-2-enable" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-2-id" style="display: none;">
-						<label class="cbi-value-title" for="flukso-2-id">Identification</label>
+						<label class="cbi-value-title" for="flukso-2-id" lang="en">Identification</label>
 						<div class="cbi-value-field">
 							<div class="sensor-value"></div>
 							<input type="hidden" id="flukso-2-id" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-2-class" style="display: none;">
-						<label class="cbi-value-title" for="flukso-2-class">Class</label>
+						<label class="cbi-value-title" for="flukso-2-class" lang="en">Class</label>
 						<div class="cbi-value-field">
-							<div class="sensor-value"></div>
+							<div class="sensor-value" lang="en"></div>
 							<input type="hidden" id="flukso-2-class" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-2-type" style="display: none;">
-						<label class="cbi-value-title" for="flukso-2-type">Type</label>
+						<label class="cbi-value-title" for="flukso-2-type" lang="en">Type</label>
 						<div class="cbi-value-field">
-							<div class="sensor-value"></div>
+							<div class="sensor-value" lang="en"></div>
 							<input type="hidden" id="flukso-2-type" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-2-function" style="display: none;">
-						<label class="cbi-value-title" for="flukso-2-function">Function/Name</label>
+						<label class="cbi-value-title" for="flukso-2-function" lang="en">Function/Name</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-2-function" id="flukso-2-function" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-2-voltage" style="display: none;">
-						<label class="cbi-value-title" for="flukso-2-voltage">Voltage</label>
+						<label class="cbi-value-title" for="flukso-2-voltage" lang="en">Voltage</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-2-voltage" id="flukso-2-voltage" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-2-current" style="display: none;">
-						<label class="cbi-value-title" for="flukso-2-current">Current</label>
+						<label class="cbi-value-title" for="flukso-2-current" lang="en">Current</label>
 						<div class="cbi-value-field">
 							<select class="cbi-input-select" id="flukso-2-current" name="flukso-2-current" size="1">
 								<option id="cbi-flukso-2-current-50" value="50" selected="selected">50</option>
@@ -1333,49 +1335,49 @@ return true;
 			</fieldset>
 
 			<fieldset class="cbi-section sensor-config" id="cbi-flukso-3">
-				<legend>Sensor #3</legend>
+				<legend lang="en">Sensor #3</legend>
 				<div class="cbi-section-node" id="cbi-flukso-3">
 					<div class="cbi-value" id="cbi-flukso-3-enable">
-						<label class="cbi-value-title" for="flukso-3-enable">Enable</label>
+						<label class="cbi-value-title" for="flukso-3-enable" lang="en">Enable</label>
 						<div class="cbi-value-field">
 							<input class="cbi-input-checkbox" type="checkbox" id="flukso-3-enable" name="flukso-3-enable" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-3-id" style="display: none;">
-						<label class="cbi-value-title" for="flukso-3-id">Identification</label>
+						<label class="cbi-value-title" for="flukso-3-id" lang="en">Identification</label>
 						<div class="cbi-value-field">
 							<div class="sensor-value"></div>
 							<input type="hidden" id="flukso-3-id" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-3-class" style="display: none;">
-						<label class="cbi-value-title" for="flukso-3-class">Class</label>
+						<label class="cbi-value-title" for="flukso-3-class" lang="en">Class</label>
 						<div class="cbi-value-field">
-							<div class="sensor-value"></div>
+							<div class="sensor-value" lang="en"></div>
 							<input type="hidden" id="flukso-3-class" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-3-type" style="display: none;">
-						<label class="cbi-value-title" for="flukso-3-type">Type</label>
+						<label class="cbi-value-title" for="flukso-3-type" lang="en">Type</label>
 						<div class="cbi-value-field">
-							<div class="sensor-value"></div>
+							<div class="sensor-value" lang="en"></div>
 							<input type="hidden" id="flukso-3-type" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-3-function" style="display: none;">
-						<label class="cbi-value-title" for="flukso-3-function">Function/Name</label>
+						<label class="cbi-value-title" for="flukso-3-function" lang="en">Function/Name</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-3-function" id="flukso-3-function" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-3-voltage" style="display: none;">
-						<label class="cbi-value-title" for="flukso-3-voltage">Voltage</label>
+						<label class="cbi-value-title" for="flukso-3-voltage" lang="en">Voltage</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-3-voltage" id="flukso-3-voltage" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-3-current" style="display: none;">
-						<label class="cbi-value-title" for="flukso-3-current">Current</label>
+						<label class="cbi-value-title" for="flukso-3-current" lang="en">Current</label>
 						<div class="cbi-value-field">
 							<select class="cbi-input-select" id="flukso-3-current" name="flukso-3-current" size="1">
 								<option id="cbi-flukso-3-current-50" value="50" selected="selected">50</option>
@@ -1390,53 +1392,53 @@ return true;
 			</fieldset>
 
 			<fieldset class="cbi-section sensor-config" id="cbi-flukso-4">
-				<legend>Sensor #4</legend>
+				<legend lang="en">Sensor #4</legend>
 				<div class="cbi-section-node" id="cbi-flukso-4">
 					<div class="cbi-value" id="cbi-flukso-4-enable">
-						<label class="cbi-value-title" for="flukso-4-enable">Enable</label>
+						<label class="cbi-value-title" for="flukso-4-enable" lang="en">Enable</label>
 						<div class="cbi-value-field">
 							<input class="cbi-input-checkbox" type="checkbox" id="flukso-4-enable" name="flukso-4-enable" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-4-id" style="display: none;">
-						<label class="cbi-value-title" for="flukso-4-id">Identification</label>
+						<label class="cbi-value-title" for="flukso-4-id" lang="en">Identification</label>
 						<div class="cbi-value-field">
 							<div class="sensor-value"></div>
 							<input type="hidden" id="flukso-4-id" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-4-class" style="display: none;">
-						<label class="cbi-value-title" for="flukso-4-class">Class</label>
+						<label class="cbi-value-title" for="flukso-4-class" lang="en">Class</label>
 						<div class="cbi-value-field">
-							<div class="sensor-value"></div>
+							<div class="sensor-value" lang="en"></div>
 							<input type="hidden" id="flukso-4-class" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-4-type" style="display: none;">
-						<label class="cbi-value-title" for="flukso-4-type">Type</label>
+						<label class="cbi-value-title" for="flukso-4-type" lang="en">Type</label>
 						<div class="cbi-value-field">
 							<!--<input type="text" class="cbi-input-text" name="flukso-4-type" id="flukso-4-type" value="" />-->
 							<select class="cbi-input-select" onchange="toggle_sensor_type(this);" name="flukso-4-type" id="flukso-4-type">
-								<option value="electricity" selected="selected">electricity</option>
-								<option value="water">water</option>
-								<option value="gas">gas</option>
+								<option value="electricity" selected="selected" lang="en">electricity</option>
+								<option value="water" lang="en">water</option>
+								<option value="gas" lang="en">gas</option>
 							</select>
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-4-function" style="display: none;">
-						<label class="cbi-value-title" for="flukso-4-function">Function/Name</label>
+						<label class="cbi-value-title" for="flukso-4-function" lang="en">Function/Name</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-4-function" id="flukso-4-function" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-4-imppkwh" style="display: none;">
-						<label class="cbi-value-title" for="flukso-4-imppkwh">pulses/kWh</label>
+						<label class="cbi-value-title" for="flukso-4-imppkwh" lang="en">pulses/kWh</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-4-imppkwh" id="flukso-4-imppkwh" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-4-lpimp" style="display: none;">
-						<label class="cbi-value-title" for="flukso-4-lpimp">L/pulse</label>
+						<label class="cbi-value-title" for="flukso-4-lpimp" lang="en">L/pulse</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-4-lpimp" id="flukso-4-lpimp" value="" />
 						</div>
@@ -1446,53 +1448,53 @@ return true;
 			</fieldset>
 
 			<fieldset class="cbi-section sensor-config" id="cbi-flukso-5">
-				<legend>Sensor #5</legend>
+				<legend lang="en">Sensor #5</legend>
 				<div class="cbi-section-node" id="cbi-flukso-5">
 					<div class="cbi-value" id="cbi-flukso-5-enable">
-						<label class="cbi-value-title" for="flukso-5-enable">Enable</label>
+						<label class="cbi-value-title" for="flukso-5-enable" lang="en">Enable</label>
 						<div class="cbi-value-field">
 							<input class="cbi-input-checkbox" type="checkbox" id="flukso-5-enable" name="flukso-5-enable" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-5-id" style="display: none;">
-						<label class="cbi-value-title" for="flukso-5-id">Identification</label>
+						<label class="cbi-value-title" for="flukso-5-id" lang="en">Identification</label>
 						<div class="cbi-value-field">
 							<div class="sensor-value"></div>
 							<input type="hidden" id="flukso-5-id" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-5-class" style="display: none;">
-						<label class="cbi-value-title" for="flukso-5-class">Class</label>
+						<label class="cbi-value-title" for="flukso-5-class" lang="en">Class</label>
 						<div class="cbi-value-field">
-							<div class="sensor-value"></div>
+							<div class="sensor-value" lang="en"></div>
 							<input type="hidden" id="flukso-5-class" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-5-type" style="display: none;">
-						<label class="cbi-value-title" for="flukso-5-type">Type</label>
+						<label class="cbi-value-title" for="flukso-5-type" lang="en">Type</label>
 						<div class="cbi-value-field">
 							<!--<input type="text" class="cbi-input-text" name="flukso-5-type" id="flukso-5-type" value="" />-->
 							<select class="cbi-input-select" onchange="toggle_sensor_type(this);" name="flukso-5-type" id="flukso-5-type">
-								<option value="electricity" selected="selected">electricity</option>
-								<option value="water">water</option>
-								<option value="gas">gas</option>
+								<option value="electricity" selected="selected" lang="en">electricity</option>
+								<option value="water" lang="en">water</option>
+								<option value="gas" lang="en">gas</option>
 							</select>
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-5-function" style="display: none;">
-						<label class="cbi-value-title" for="flukso-5-function">Function/Name</label>
+						<label class="cbi-value-title" for="flukso-5-function" lang="en">Function/Name</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-5-function" id="flukso-5-function" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-5-imppkwh" style="display: none;">
-						<label class="cbi-value-title" for="flukso-5-imppkwh">pulses/kWh</label>
+						<label class="cbi-value-title" for="flukso-5-imppkwh" lang="en">pulses/kWh</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-5-imppkwh" id="flukso-5-imppkwh" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-5-lpimp" style="display: none;">
-						<label class="cbi-value-title" for="flukso-5-lpimp">L/pulse</label>
+						<label class="cbi-value-title" for="flukso-5-lpimp" lang="en">L/pulse</label>
 						<div class="cbi-value-field">
 							<input type="text" class="cbi-input-text" name="flukso-5-lpimp" id="flukso-5-lpimp" value="" />
 						</div>
@@ -1502,25 +1504,25 @@ return true;
 			</fieldset>
 
 			<fieldset class="cbi-section sensor-config" id="cbi-flukso-6">
-				<legend>Sensor #6</legend>
+				<legend lang="en">Sensor #6</legend>
 				<div class="cbi-section-node" id="cbi-flukso-6">
 					<div class="cbi-value" id="cbi-flukso-6-enable">
-						<label class="cbi-value-title" for="flukso-6-enable">Enable</label>
+						<label class="cbi-value-title" for="flukso-6-enable" lang="en">Enable</label>
 						<div class="cbi-value-field">
 							<input class="cbi-input-checkbox" type="checkbox" id="flukso-6-enable" name="flukso-6-enable" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-6-id" style="display: none;">
-						<label class="cbi-value-title" for="flukso-6-id">Identification</label>
+						<label class="cbi-value-title" for="flukso-6-id" lang="en">Identification</label>
 						<div class="cbi-value-field">
 							<div class="sensor-value"></div>
 							<input type="hidden" id="flukso-6-id" value="" />
 						</div>
 					</div>
 					<div class="cbi-value" id="cbi-flukso-6-class" style="display: none;">
-						<label class="cbi-value-title" for="flukso-6-class">Class</label>
+						<label class="cbi-value-title" for="flukso-6-class" lang="en">Class</label>
 						<div class="cbi-value-field">
-							<div class="sensor-value"></div>
+							<div class="sensor-value" lang="en"></div>
 							<input type="hidden" id="flukso-6-class" value="" />
 						</div>
 					</div>
@@ -1537,11 +1539,11 @@ return true;
 			<fieldset class="cbi-section-node">
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-sensor-save" />
-					Saving sensor configuration.
+					<span lang="en">Saving sensor configuration.</span>
 				</div>
 				<div class="cbi-value">
 					<img src="/luci-static/resources/loading.gif" id="msg_wizard-sensor-apply" />
-					Applying sensor configuration.
+					<span lang="en">Applying sensor configuration.</span>
 				</div>
 			</fieldset>
 			<fieldset class="cbi-section">
@@ -1588,8 +1590,8 @@ return true;
 	</div>
 
 	<div id="form-buttons">
-		<input type="submit" class="cbi-button-save" value="Next" />
-		<input type="reset" class="cbi-button-reset" value="Back" />
+		<input type="submit" class="cbi-button-save" value="Next" lang="en" />
+		<input type="reset" class="cbi-button-reset" value="Back" lang="en" />
 	</div>
 </form>
 
@@ -1607,8 +1609,8 @@ return true;
 		</fieldset>
 
 		<div id="form-buttons">
-			<input type="submit" class="cbi-button-save" value="Login" />
-			<input type="reset" class="cbi-button-reset close" value="Cancel" />
+			<input type="submit" class="cbi-button-save" value="Login" lang="en" />
+			<input type="reset" class="cbi-button-reset close" value="Cancel" lang="en" />
 		</div>
 	</form>
 </div>
