@@ -140,7 +140,6 @@ return true;
 	wifi_section = "";
 	wifis = [];
 	login_task = null;
-	sync_task = null;
 	counter = 0;
 
 	function Sync (counter, task) {
@@ -200,18 +199,6 @@ return true;
 				login_callback(data);
 			}
 		);
-	}
-
-	sync = function(init)
-	{
-		if ( init )
-		{
-			counter = init;
-		} else {
-			counter--;
-			if ( counter == 0 )
-				sync_task();
-		}
 	}
 
 	jsonRequest = function(url, method, params, id, callback, error, timeout)
