@@ -71,7 +71,7 @@ jquery_lang_js.prototype.lang.de = {
 	'pulse': 'Puls',
 	//registration
 	'Saving sensor configuration.': 'Speichere Sensoreinstellungen.',
-	'Applying sensor configuration.': 'Wende Sensoreinstllungen an.',
+	'Applying sensor configuration.': 'Wende Sensoreinstellungen an.',
 	//login form
 	'Login': 'Einloggen',
 	'Cancel': 'Abbrechen',
