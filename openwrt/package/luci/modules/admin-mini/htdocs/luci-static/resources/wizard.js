@@ -29,7 +29,7 @@ login_callback = function(data, username, password) {
 		{
 			login_task();
 			login_task = null;
-//TODO				$('#login_form_div').overlay().close();
+			$('#login_form_div').overlay().close();
 		}
 	}
 	else
