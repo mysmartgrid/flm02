@@ -3,7 +3,7 @@ iface = "";
 auth = "";
 wifi_section = "";
 wifis = [];
-login_task = null;
+login_task = new Array();
 counter = 0;
 
 function Sync (counter, task) {
@@ -25,12 +25,11 @@ login_callback = function(data, username, password) {
 	if (data["result"] != null && data["error"] == null)
 	{
 		auth = data["result"];
-		if ( login_task != null )
+		while ( login_task.length > 0 )
 		{
-			login_task();
-			login_task = null;
-//TODO				$('#login_form_div').overlay().close();
+			login_task.pop()();
 		}
+		$('#login_form_div').overlay().close();
 	}
 	else
 	{
@@ -59,7 +58,7 @@ login = function(jsonCall)
 		'["root", "root"]',
 		100,
 		function(data) {
-			login_task = jsonCall;
+			login_task.push(jsonCall);
 			login_callback(data);
 		}
 	);
@@ -728,6 +727,7 @@ poll_device = function(callback)
 
 show_login_form = function()
 {
+	$('#login_form_div').find(':input').removeAttr('disabled');
 	$('#login_form_div').overlay({
 		mask: {
 			color: '#fff',
