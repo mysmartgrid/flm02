@@ -815,7 +815,9 @@ change_wifi = function()
 		if ($('#autoenc').prop('checked'))
 		{
 			$('#wifi-enc').hide();
-			if (select_enc($('#essid').val()) != 'none')
+			var enc = select_enc($('#essid').val());
+			$('#wifi-enc-select').val(enc);
+			if (enc != 'none')
 			{
 				$('#wifi-key').show();
 			} else {
