@@ -174,6 +174,9 @@ load_wifi = function(callback)
 			$('#essid').val('');
 			$('#essid-input-div').show();
 			$('#essid-input').val(ssid);
+			$('#autoenc').val(0);
+			$('#autoenc').attr('disabled', true);
+			$('#wifi-enc').hide();
 		} else {
 			$('#essid').val(ssid);
 			$('#essid-input-div').hide();
