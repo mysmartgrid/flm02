@@ -75,4 +75,9 @@ jquery_lang_js.prototype.lang.de = {
 	//login form
 	'Login': 'Einloggen',
 	'Cancel': 'Abbrechen',
+	//system form
+        'Release':'Version',
+        'Firmware-release':'Firmware-Version',
+        'Firmware-date':'Firmware-Datum',
+        'Firmware-tag':'Firmware-Tag'
 }

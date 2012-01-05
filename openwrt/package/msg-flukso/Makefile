@@ -37,17 +37,27 @@ define Build/Prepare
 endef
 
 FLUKSO_COMMIT:=$(shell git rev-parse HEAD | awk '{print substr($$0,1,16)}')
+FLUKSO_COMMIT_FULL:=$(shell git rev-parse HEAD )
+FLUKSO_TAG:=$(shell git describe --always )
+FLUKSO_BUILD_DATE:=$(shell date +%Y%m%d_%H%M )
 
 define Package/msg-flukso2/install
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/etc/banner $(1)/etc/banner
-	
+
 	$(SED) 's,$$$$R,$(REVISION),g' $(1)/etc/banner
 	$(SED) 's,$$$$F,$(PKG_VERSION)-$(PKG_RELEASE),g' $(1)/etc/banner
 	$(SED) 's,$$$$G,$(FLUKSO_COMMIT),g' $(1)/etc/banner
 
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/flukso.uci $(1)/etc/config/flukso
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/firmware $(1)/etc/config/firmware
+
+	$(SED) 's,$$$$I,$(FLUKSO_COMMIT_FULL),g' $(1)/etc/config/firmware
+	$(SED) 's,$$$$T,$(FLUKSO_TAG),g' $(1)/etc/config/firmware
+	$(SED) 's,$$$$D,$(FLUKSO_BUILD_DATE),g' $(1)/etc/config/firmware
+	$(SED) 's,$$$$F,$(PKG_VERSION)-$(PKG_RELEASE),g' $(1)/etc/config/firmware
+
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/flukso.init $(1)/etc/init.d/flukso
 	$(INSTALL_DIR) $(1)/usr/lib/lua
