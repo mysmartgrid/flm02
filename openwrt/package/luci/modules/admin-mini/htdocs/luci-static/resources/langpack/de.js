@@ -51,7 +51,7 @@ jquery_lang_js.prototype.lang.de = {
 	//sensors
 	'Please configure the sensors you want to use.': 'Bitte konfigurieren sie die Sensoren, die sie verwenden möchten.',
 	'Saving network configuration.': 'Speichere Netzwerkeinstellungen.',
-	'Applying network configuration. (Please be patient)': 'Wende Netzwerkeinstellungen an. (Dies kann mehrer Minuten dauern)',
+	'Applying network configuration. (Please be patient)': 'Wende Netzwerkeinstellungen an. (Dies kann mehrere Minuten dauern)',
 	'Loading current sensor configuration.': 'Lade aktuelle Sensoreinstellungen.',
 	'Number of phases': 'Anzahl der Phasen',
 	'When selecting 3 phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When selecting 1 phase, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively.': 'Wenn 3 Phasen ausgewählt sind, werden die drei Klemmen gruppiert und als ein einziger Sensor #1 angezeigt. Die Sensoren #2 und #3 werden automatisch deaktiviert. Wenn 1 Phase ausgewählt ist wird jede Klemme einzeln gemessen und entsprechend als Sensoren #1, #2 und #3 angezeigt.',
@@ -75,4 +75,10 @@ jquery_lang_js.prototype.lang.de = {
 	//login form
 	'Login': 'Einloggen',
 	'Cancel': 'Abbrechen',
+	//validations
+	'Please specify a sensor function.': 'Bitte geben sie einen Sensornamen an.',
+	'Please enter a valid WiFi key.': 'Bitte geben sie einen korrekten Wlanschlüssel an.',
+	'Please enter a valid IP address.': 'Bitte geben sie eine korrekte IP-Adresse an.',
+	'Please enter a valid subnet mask.': 'Bitte geben sie eine korrekte Subnetzmaske an.',
+	'The WiFi IP address must not be in the same subnet as the LAN IP address.': 'Die IP-Adresse der Wlanschnittstelle darf sich nicht im gleichen Subnetz wie die IP-Adresse der Lanschnittstelle befinden.',
 }

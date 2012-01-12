@@ -1,10 +1,4 @@
-var lanip = "192.168.255.1"; // TODO richtig machen...
-/* TODO Authentifizierung hat natürlich auch gefehlt... Zu spät zum fixen
-jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["network", "lan"]', "201", function(data)
-		{
-		lanip = data.result.ipaddr;
-		}
-		); */
+var lanip = "192.168.255.1";
 $(document).ready(function() {
 	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["network", "lan"]', "201", function(data)
 	{
@@ -137,32 +131,30 @@ $(document).ready(function() {
 					return $('#flukso-5-enable').prop('checked');
 				}
 			}
-			},
-			'flukso-6-function': {
-			required: {
-				depends: function(element)
-				{
-					return $('#flukso-6-enable').prop('checked');
-				}
-			}
 			}
 		},
 		messages: {
-			'flukso-1-function': "Bitte geben Sie eine Sensorfunktion an",
-			'flukso-2-function': "Bitte geben Sie eine Sensorfunktion an",
-			'flukso-3-function': "Bitte geben Sie eine Sensorfunktion an",
-			'flukso-4-function': "Bitte geben Sie eine Sensorfunktion an",
-			'flukso-5-function': "Bitte geben Sie eine Sensorfunktion an",
-			'flukso-6-function': "Bitte geben Sie eine Sensorfunktion an"
+			'flukso-1-function': "Please specify a sensor function.",
+			'flukso-2-function': "Please specify a sensor function.",
+			'flukso-3-function': "Please specify a sensor function.",
+			'flukso-4-function': "Please specify a sensor function.",
+			'flukso-5-function': "Please specify a sensor function.",
+			'network-netmask': "Please enter a valid subnet mask."
+		},
+		showErrors: function(errorMap, errorList) {
+			this.defaultShowErrors();
+			$('.error').attr('lang', $.cookie('lang'));
+			$('.error').attr('lang', 'en');
+			window.lang.run();
 		}
 	});
 });
 jQuery.validator.addMethod("wep", function(value, element) {
 	return (value.length == 5 || value.length == 13 || value.length == 10 || value.length == 26);
-}, "WEP-Schlüssel falsch");
+}, "Please enter a valid WiFi key.");
 jQuery.validator.addMethod("wep-hex", function(value, element) {
 	return value.match(/^([0-9]|[a-f]|[A-F])+$/);
-}, "Hex falsch");
+}, "Please enter a valid WiFi key.");
 jQuery.validator.addMethod("wpa", function(value, element) {
 	if ( value.length < 7 || value.length > 64 ) {
 		return false;
@@ -170,18 +162,19 @@ jQuery.validator.addMethod("wpa", function(value, element) {
 	else {
 		return true;
 	}
-}, "WPA-Schlüssel falsch");
+}, "Please enter a valid WiFi key.");
 jQuery.validator.addMethod("ip", function(value, element) {
 	return value.match(/^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})$/);
-}, "Keine IP-Adresse");
+}, "Please enter a valid IP address.");
 jQuery.validator.addMethod("subnet", function(value, element) {
+		if ( $('#msg_wizard_interface').val() == "lan" ) {
+			return true;
+		}
 		var exp = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})$/;
 		ip = exp.exec(value);
 		testip = exp.exec(lanip);
 
 		return (value != testip[1] + "." + testip[2] + "." + testip[3] + "." + ip[4]);
-}, "Gleiches Subnetz");
-//TODO wlan key check bei auto encryption scheint noch ein problem zu sein
-//TODO wlan -> lan wechsel, wlan deaktiviert
+}, "The WiFi IP address must not be in the same subnet as the LAN IP address.");
 //TODO was passiert wenn man im wizard zurück geht
 
