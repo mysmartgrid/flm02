@@ -36,19 +36,27 @@ require("luci.http").prepare_content("application/xhtml+xml")
 
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<%=luci.i18n.context.lang%>" lang="<%=luci.i18n.context.lang%>">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<%=luci.i18n.context.lang%>">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="Content-Script-Type" content="text/javascript" />
+
 <link rel="stylesheet" type="text/css" media="screen" href="<%=media%>/cascade.css" />
 <link rel="stylesheet" type="text/css" media="screen" href="<%=media%>/dashboard.css" />
 <% if node and node.css then %><link rel="stylesheet" type="text/css" media="screen" href="<%=resource%>/<%=node.css%>" />
 <% end -%>
 
-<script type="text/javascript" src="/luci-static/js/json-rpc-api.js"></script>
+<script type="text/javascript" src="/luci-static/resources/jquery-1.6.4.js"/>                                 
+<script type="text/javascript" src="/luci-static/resources/jquery.tools.min.js"/>                             
+<script type="text/javascript" src="/luci-static/resources/jquery.cookie.js"/>                               
+<script type="text/javascript" src="/luci-static/resources/jquery.validate.min.js"/> 
+<script type="text/javascript" src="/luci-static/resources/jquery-lang.js" charset="utf-8"/>                  
+<script type="text/javascript" src="/luci-static/resources/langpack/de.js" charset="utf-8"/>
 
 <title><%=striptags( hostname .. ( (node and node.title) and ' - ' .. node.title or '')) %> - LuCI</title>
+
 </head>
+
 <body class="lang_<%=luci.i18n.context.lang%>">
 <div id="screen">
 
@@ -91,7 +99,8 @@ local function ucimenu(prefix, node)
 end
 %>
 
-<div id="header"></div>
+<div id="header">
+</div>
 
 <%
 if tree.nodes[category] and tree.nodes[category].ucidata then
@@ -111,34 +120,68 @@ ucimenu("/" .. category .. "/uci/", tree.nodes[category].nodes["uci"], "changes"
 <% end %>
 <% end %>
 
-<div class="menubar">
+<script type="text/javascript">
+  <!--//--><![CDATA[//><!--
+  window.lang = new jquery_lang_js();
+  
+  translate = function(lang){                                                                            
+    window.lang.change(lang);                                                                            
+    $.cookie('lang', lang);                                                                              
+  };
+
+  toggleMenuBar = function() {
+    $('#menubar').toggle();                                                                              
+    $.cookie('menubar', $('#menubar').css("display"));
+  }
+ 
+  $().ready(function () {
+    $('#menubar').css('display', $.cookie('menubar'));
+    
+    window.lang.run();
+		var lang = $.cookie('lang');
+		if ( !lang )
+			lang = 'en';
+		console.log(lang);
+    translate(lang);
+  });
+  //--><!]]>
+</script>
+
+<div class="preferencebar">                                                     
+  <a href="#" onclick="javascript: translate('en')"><img src="/luci-static/oxygen/icons/enflag.png"/></a>
+  <a href="#" onclick="javascript: translate('de')"><img src="/luci-static/oxygen/icons/deflag.png"/></a>
+  &nbsp;&nbsp;                                                          
+  <a href="#" onclick="javascript: toggleMenuBar()" lang="en">Expert Options</a>
+</div>
+
+<div id="menubar" class="menubar">
 	<div class="dashboard">
 		<div class="dashicon di_wizard">
-			<a href="/cgi-bin/luci/msg_wizard">Wizard</a>
+			<a href="/cgi-bin/luci/welcome" lang="en">Welcome</a>
 		</div>
 
 		<div class="dashicon di_sensor">
-			<a href="/cgi-bin/luci/sensor">Sensor</a>
+			<a href="/cgi-bin/luci/sensor" lang="en">Sensor</a>
 		</div>
 
 		<div class="dashicon di_wifi">
-			<a href="/cgi-bin/luci/wifi">Wifi</a>
+			<a href="/cgi-bin/luci/wifi" lang="en">Wifi</a>
 		</div>
 
 		<div class="dashicon di_network">
-			<a href="/cgi-bin/luci/network">Network</a>
+			<a href="/cgi-bin/luci/network" lang="en">Network</a>
 		</div>
 
 		<div class="dashicon di_system">
-			<a href="/cgi-bin/luci/system">System</a>
+			<a href="/cgi-bin/luci/system" lang="en">System</a>
 		</div>
 
 		<div class="dashicon di_syslog">
-			<a href="/cgi-bin/luci/syslog">Syslog</a>
+			<a href="/cgi-bin/luci/syslog" lang="en">Syslog</a>
 		</div>
 
 		<div class="dashicon di_reg">
-			<a href="/cgi-bin/luci/registration">Registration</a>
+			<a href="/cgi-bin/luci/registration" lang="en">Registration</a>
 		</div>
 	</div>
 
