@@ -8,12 +8,14 @@ config defaults
 
 config zone
 	option name		lan
+	option network	'lan'
 	option input	ACCEPT 
 	option output	ACCEPT 
 	option forward	REJECT
 
 config zone
 	option name		wan
+	option network	'wan'
 	option input	REJECT
 	option output	ACCEPT 
 	option forward	REJECT
@@ -35,24 +37,38 @@ config rule
 
 #Allow ping
 config rule
-	option src		wan
-	option proto		icmp
-	option icmp_type	echo-request
-	option target		ACCEPT
+	option src wan
+	option proto icmp
+	option icmp_type echo-request
+	option target ACCEPT
+
+#Allow access to local ssh server on the wan itf
+config rule
+	option src              wan
+	option proto            tcp
+	option dest_port        22
+	option target           ACCEPT
+
+#Allow access to luci interface on the wan itf
+config rule
+	option src              wan
+	option proto            tcp
+	option dest_port        80
+	option target           ACCEPT
 
 #Allow access to local REST API on the wan itf
 config rule
-	option src		wan
-	option proto		tcp
-	option dest_port	8080
-	option target		ACCEPT
+	option src              wan
+	option proto            tcp
+	option dest_port        8080
+	option target           ACCEPT
 
 #Open up UDP port 5353 on the wan for avahi
 config rule
-	option src		wan
-	option proto		udp
-	option dest_port	5353
-	option target		ACCEPT
+	option src              wan
+	option proto            udp
+	option dest_port        5353
+	option target           ACCEPT
 
 # include a file with users custom iptables rules
 config include
