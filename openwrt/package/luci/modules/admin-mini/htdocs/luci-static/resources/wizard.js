@@ -531,6 +531,7 @@ save_sensors = function(callback)
 						callback();
 				} else {
 					handleSensorApplyError(null, 'Failure', check.message);
+					$('#wizard-form-buttons').find(':reset').removeAttr('disabled');
 				}
 				
 			}, handleSensorApplyError)
@@ -595,6 +596,7 @@ submit = function()
 			$("#msg_wizard-net-iface-set-div").show();
 			$("#msg_wizard-wifi-iface-set-div").hide();
 		}
+		$("#wizard-form-buttons").find(':reset').show();
 		progress_bar("network");
 	}
 	else if ( step == "wifi" )
@@ -641,7 +643,7 @@ submit = function()
 		progress_bar("registration");
 		$("#msg_wizard-sensor").hide();
 		$("#msg_wizard-registration").show();
-		$("[type=submit]").hide();
+		$("#wizard-form-buttons").find(":submit").hide();
 	}
 }
 
@@ -654,6 +656,7 @@ wizard_reset = function()
 		$("#msg_wifi").hide(20, function() { $("#msg_wizard").show(); } );
 		step = "interface";
 		progress_bar("network");
+		$("#wizard-form-buttons").find(':reset').hide();
 	}
 	else if ( step == "network" )
 	{
@@ -667,6 +670,7 @@ wizard_reset = function()
 		{
 			$("#network").hide(20, function() { $("#msg_wizard").show(); } );
 			step = "interface";
+			$("#wizard-form-buttons").find(':reset').hide();
 		}
 		progress_bar("network");
 	}
@@ -678,10 +682,11 @@ wizard_reset = function()
 	}
 	else if ( step == "registration" )
 	{
-		load_sensor_config();
+		load_sensor_config(function() { $(':input').removeAttr('disabled') });
 		$('#msg_wizard-registration').hide(20, function() { $("#msg_wizard-sensor").show(); } );
 		step = "sensor";
 		progress_bar("sensors");
+		$("#wizard-form-buttons").find(':submit').show();
 	}
 }
 
