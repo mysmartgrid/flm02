@@ -59,88 +59,83 @@ $(document).ready(function() {
 				}
 
 			},
+			'essid-input': {
+			required: true
+			},
 			'network-ipaddr': {
-			ip: {
-				depends: function(element)
-				{
-					return !$('#dhcp').prop('checked');
-				}
-				},
+			ip: true,
 			subnet: true
 			},
 			'network-netmask': {
-			ip: {
-				depends: function(element)
-				{
-					return !$('#dhcp').prop('checked');
-				}
-			}
+			ip: true
 			},
 			'network-gateway': {
-			ip: {
-				depends: function(element)
-				{
-					return $('#network-gateway').val() != '';
-				}
-			}
+			ip: true
 			},
 			'network-dns': {
-			ip: {
-				depends: function(element)
-				{
-					return $('#network-dns').val() != '';
-				}
-			}
+			ip: true
 			},
 			'flukso-1-function': {
-			required: {
-				depends: function(element)
-				{
-					return $('#flukso-1-enable').prop('checked');
-				}
-			}
+			required: true
 			},
 			'flukso-2-function': {
-			required: {
-				depends: function(element)
-				{
-					return $('#flukso-2-enable').prop('checked');
-				}
-			}
+			required: true
 			},
 			'flukso-3-function': {
-			required: {
-				depends: function(element)
-				{
-					return $('#flukso-3-enable').prop('checked');
-				}
-			}
+			required: true
 			},
 			'flukso-4-function': {
-			required: {
-				depends: function(element)
-				{
-					return $('#flukso-4-enable').prop('checked');
-				}
-			}
+			required: true
 			},
 			'flukso-5-function': {
-			required: {
-				depends: function(element)
-				{
-					return $('#flukso-5-enable').prop('checked');
-				}
-			}
+			required: true
+			},
+			'flukso-1-voltage': {
+			required: true,
+			number: true
+			},
+			'flukso-2-voltage': {
+			required: true,
+			number: true
+			},
+			'flukso-3-voltage': {
+			required: true,
+			number: true
+			},
+			'flukso-4-imppkwh': {
+			required: true,
+			number: true
+			},
+			'flukso-4-lpimp': {
+			required: true,
+			number: true
+			},
+			'flukso-5-imppkwh': {
+			required: true,
+			number: true
+			},
+			'flukso-5-lpimp': {
+			required: true,
+			number: true
 			}
 		},
 		messages: {
+			'essid-input': "Please enter a valid SSID.",
 			'flukso-1-function': "Please specify a sensor function.",
 			'flukso-2-function': "Please specify a sensor function.",
 			'flukso-3-function': "Please specify a sensor function.",
 			'flukso-4-function': "Please specify a sensor function.",
 			'flukso-5-function': "Please specify a sensor function.",
+			'flukso-1-voltage': "Please enter a valid number.",
+			'flukso-2-voltage': "Please enter a valid number.",
+			'flukso-3-voltage': "Please enter a valid number.",
+			'flukso-4-imppkwh': "Please enter a valid number.",
+			'flukso-5-imppkwh': "Please enter a valid number.",
+			'flukso-4-lpimp': "Please enter a valid number.",
+			'flukso-5-lpimp': "Please enter a valid number.",
 			'network-netmask': "Please enter a valid subnet mask."
 		},
+		// Use the translation plugin to translate the error messages
 		showErrors: function(errorMap, errorList) {
 			this.defaultShowErrors();
 			$('.error').attr('lang', $.cookie('lang'));
