@@ -555,17 +555,17 @@ progress_bar = function(step)
 {
 	if (step == "network")
 	{
-		$('#prog-network').css('background-image', 'url("/luci-static/resources/progressbar_cur.png")');
-		$('#prog-sensor').css('background-image', 'url("/luci-static/resources/progressbar.png")');
-		$('#prog-reg').css('background-image', 'url("/luci-static/resources/progressbar.png")');
+		$('#prog-network').attr('src', '/luci-static/resources/progressbar_cur.png');
+		$('#prog-sensor').attr('src', '/luci-static/resources/progressbar.png');
+		$('#prog-reg').attr('src', '/luci-static/resources/progressbar.png');
 	} else if (step == "sensors") {
-		$('#prog-network').css('background-image', 'url("/luci-static/resources/progressbar_done.png")');
-		$('#prog-sensor').css('background-image', 'url("/luci-static/resources/progressbar_cur.png")');
-		$('#prog-reg').css('background-image', 'url("/luci-static/resources/progressbar.png")');
+		$('#prog-network').attr('src', '/luci-static/resources/progressbar_done.png');
+		$('#prog-sensor').attr('src', '/luci-static/resources/progressbar_cur.png');
+		$('#prog-reg').attr('src', '/luci-static/resources/progressbar.png');
 	} else if (step == "registration") {
-		$('#prog-network').css('background-image', 'url("/luci-static/resources/progressbar_done.png")');
-		$('#prog-sensor').css('background-image', 'url("/luci-static/resources/progressbar_done.png")');
-		$('#prog-reg').css('background-image', 'url("/luci-static/resources/progressbar_cur.png")');
+		$('#prog-network').attr('src', '/luci-static/resources/progressbar_done.png');
+		$('#prog-sensor').attr('src', '/luci-static/resources/progressbar_done.png');
+		$('#prog-reg').attr('src', '/luci-static/resources/progressbar_cur.png');
 	}
 }
 
