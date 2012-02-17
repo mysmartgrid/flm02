@@ -95,7 +95,8 @@ jsonRequest = function(url, method, params, id, callback, error, timeout)
 					});
 				});
 			} else
-				error(jqXHR, textStatus, errorThrown);
+				if ( error != null )
+					error(jqXHR, textStatus, errorThrown);
 		},
 		'timeout': timeout
 	});
