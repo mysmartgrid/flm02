@@ -28,6 +28,7 @@ s.addremove = false
 
 local system, model, memtotal, memcached, membuffers, memfree = luci.sys.sysinfo()
 local uptime = luci.sys.uptime()
+local uci = luci.model.uci.cursor()
 
 s:option(DummyValue, "_chipset", translate("m_i_chipset")).value = system
 s:option(DummyValue, "_cpu", translate("m_i_processor")).value = model
@@ -56,9 +57,17 @@ s:option(DummyValue, "_uptime", translate("m_i_uptime")).value =
 s:option(DummyValue, "_hostname", translate("hostname")).value =                   
  luci.sys.hostname(value)                                                          
 
+s:option(DummyValue, "_release", "Release").value =                   
+   uci:get("firmware", "system", "version")
+s:option(DummyValue, "_release", "Firmware-tag").value =                   
+   uci:get("firmware", "system", "tag")
+s:option(DummyValue, "_release", "Firmware-date").value =                   
+   uci:get("firmware", "system", "releasedate")
+s:option(DummyValue, "_release", "Firmware-release").value =
+   uci:get("firmware", "system", "build")
+
 
 -- Wifi Data init -- 
-local uci = luci.model.uci.cursor()
 if not uci:get("network", "wan") then
 	uci:section("network", "interface", "wan", {proto="none", ifname=" "})
 	uci:save("network")

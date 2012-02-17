@@ -83,4 +83,9 @@ jquery_lang_js.prototype.lang.de = {
 	'The WiFi IP address must not be in the same subnet as the LAN IP address.': 'Die IP-Adresse der Wlanschnittstelle darf sich nicht im gleichen Subnetz wie die IP-Adresse der Lanschnittstelle befinden.',
 	'Please enter a valid SSID.': 'Bitte geben sie eine korrekte SSID an.',
 	'Please enter a valid number.': 'Bitte geben sie eine korrekte Zahl an',
+	//system form
+	'Release':'Version',
+	'Firmware-release':'Firmware-Version',
+	'Firmware-date':'Firmware-Datum',
+	'Firmware-tag':'Firmware-Tag'
 }

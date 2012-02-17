@@ -119,6 +119,10 @@ code {
        -opera-border-radius: 1em;
 }
 
+.preferencebar img { 
+    border: none;
+}
+
 .menubar {
 	clear: both;
 	width: 80%;
