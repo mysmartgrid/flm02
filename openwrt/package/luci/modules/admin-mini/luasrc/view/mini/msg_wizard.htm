@@ -10,16 +10,25 @@
 		background-color: #ddd;
 	}
 
-	.progress {
-		display: block;
-		height: 1.5em;
+	.progress-div {
 		float: left;
+	}
+
+	.progress {
 		margin: 0.5em 0pt;
-		width: 10.5em;
-		background-image: url("/luci-static/resources/progressbar.png");
-		background-size: auto 100%;
-		background-repeat: no-repeat;
-		padding: 0.5em 0pt 0.5em 2.5em;
+		width: 12.5em;
+	}
+
+	.progress-div > div {
+		display: block;
+		float: left;
+	}
+
+	.progress-div > p {
+		position: relative;
+		top: -2.5em;
+		margin-left: 2em;
+		margin-bottom: 0 !important;
 	}
 </style>
 
@@ -28,14 +37,17 @@
 
 <form id="wizard_form" method="get" action="javascript: submit()" onreset="wizard_reset()">
 	<div id="progress">
-		<div id="prog-network" class="progress" style="background-image: url('/luci-static/resources/progressbar_cur.png');" lang="en">
-			Network
+		<div class="progress-div">
+			<img id="prog-network" class="progress" src="/luci-static/resources/progressbar_cur.png" />
+			<p lang="en">Network</p>
 		</div>
-		<div id="prog-sensor" class="progress" lang="en">
-			Sensors
+		<div class="progress-div">
+			<img id="prog-sensor" class="progress" src="/luci-static/resources/progressbar.png" />
+			<p lang="en">Sensors</p>
 		</div>
-		<div id="prog-reg" class="progress" lang="en">
-			Registration
+		<div class="progress-div">
+			<img id="prog-reg" class="progress" src="/luci-static/resources/progressbar.png" />
+			<p lang="en">Registration</p>
 		</div>
 		<div style="clear: both;" />
 	</div>
@@ -51,6 +63,9 @@
 	</div>
 
 	<div class="cbi-map" id="msg_wizard">
+		<div class="errorbox" lang="en">
+			WARNING! This wizard is only tested in Mozilla Firefox >= 3.6.26 and Chromium 17.<br />All other browser may not display the wizard correctly or the wizard may not work correctly.
+		</div>
 		<h2><a id="content" name="content" lang="en">Interface</a></h2>
 		<div class="cbi-map-descr" lang="en">Please select the interface connected to the internet.</div>
 		<fieldset class="cbi-section">
