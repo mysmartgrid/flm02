@@ -83,4 +83,5 @@ jquery_lang_js.prototype.lang.de = {
 	'The WiFi IP address must not be in the same subnet as the LAN IP address.': 'Die IP-Adresse der Wlanschnittstelle darf sich nicht im gleichen Subnetz wie die IP-Adresse der Lanschnittstelle befinden.',
 	'Please enter a valid SSID.': 'Bitte geben sie eine korrekte SSID an.',
 	'Please enter a valid number.': 'Bitte geben sie eine korrekte Zahl an',
+	'WARNING! This wizard is only tested in Mozilla Firefox >= 3.6.26 and Chromium 17.<br />All other browser may not display the wizard correctly or the wizard may not work correctly.': 'WARNUNG! Dieser Wizard ist nur mit Mozilla Firefox >= 3.6.36 und Chromium 17 getestet.<br />Bei anderen Browsern können Darstellungs- und Funktionsfehler auftreten.',
 }
