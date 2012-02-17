@@ -29,7 +29,8 @@ login_callback = function(data, username, password) {
 		{
 			login_task.pop()();
 		}
-		$('#login_form_div').overlay().close();
+		if ( typeof $('#login_form_div').overlay().close === 'function' )
+			$('#login_form_div').overlay().close();
 	}
 	else
 	{
