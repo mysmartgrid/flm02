@@ -36,6 +36,38 @@ luci.sys         = require 'luci.sys'
 luci.json        = require 'luci.json'
 local httpclient = require 'luci.httpclient'
 
+-- character table string
+local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+-- encoding
+function enc(data)
+	return ((data:gsub('.', function(x)
+		local r,b='',x:byte()
+		for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
+		return r;
+		end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+		if (#x < 6) then return '' end
+		local c=0
+		for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
+		return b:sub(c+1,c+1)
+		end)..({ '', '==', '=' })[#data%3+1])
+end
+
+-- decoding
+function dec(data)
+	data = string.gsub(data, '[^'..b..'=]', '')
+	return (data:gsub('.', function(x)
+		if (x == '=') then return '' end
+		local r,f='',(b:find(x)-1)
+		for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
+		return r;
+		end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
+		if (#x ~= 8) then return '' end
+		local c=0
+		for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
+		return string.char(c)
+		end))
+end
 
 -- parse and load /etc/config/flukso
 local FLUKSO		= uci:get_all('flukso')
@@ -151,6 +183,44 @@ if call_info.headers['X-Digest'] ~= hash:final() then
 end
 
 local response = luci.json.decode(response_json)
+
+if response.support then
+	local support = response.support
+	md5 = nixio.crypto.hmac('md5', support.devicekey)
+	hash = md5:final()
+
+	for i, v in pairs(support) do
+		print(i, v)
+	end
+
+	if not FLUKSO.support or FLUKSO.support.hash ~= hash then
+		uci:set("flukso", "support", "mysmartgrid")
+		uci:set("flukso", "support", "hash", hash)
+
+		uci:set("flukso", "support", "host", support.host)
+		uci:set("flukso", "support", "port", support.port)
+		uci:set("flukso", "support", "user", support.user)
+		uci:set("flukso", "support", "hostkey", support.hostkey)
+		uci:set("flukso", "support", "techkey", support.techkey)
+
+		uci:commit("flukso")
+
+		local file = assert(io.open("/root/.ssh/id_dss", "wb"))
+		file:write(dec(support.devicekey))
+		file:close()
+
+		os.execute("/etc/init.d/reverse-ssh restart")
+		os.execute("/etc/init.d/reverse-ssh enable")
+	end
+else
+	os.execute("/etc/init.d/reverse-ssh stop")
+	os.execute("/etc/init.d/reverse-ssh disable")
+
+	uci:delete("flukso", "support")
+	uci:commit("flukso")
+
+	os.remove("/root/.ssh/id_dss")
+end
 
 -- check whether we have to reset or upgrade
 if response.upgrade == monitor.version then
