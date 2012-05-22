@@ -27,7 +27,7 @@ execute_process(
   
 add_custom_target(image ALL
   make
-  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/flm02.0.2/"
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/flm02.0.3/"
   COMMENT ""
 )
 
