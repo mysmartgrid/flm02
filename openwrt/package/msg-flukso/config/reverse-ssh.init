@@ -1,5 +1,6 @@
 #!/bin/sh /etc/rc.common
 
+SUPPORT_TUNNELPORT=$(uci get flukso.support.tunnelPort)
 SUPPORT_PORT=$(uci get flukso.support.port)
 SUPPORT_HOST=$(uci get flukso.support.host)
 SUPPORT_USER=$(uci get flukso.support.user)
@@ -22,7 +23,7 @@ start()
 	echo "$SUPPORT_TECHKEY" >> /etc/dropbear/authorized_keys
 	echo "$SUPPORT_HOSTKEY" >> /root/.ssh/known_hosts
 	echo "Starting ssh"
-	start-stop-daemon -S -x ssh -b -m -p "${PID_FILE}" -- -N -R "${SUPPORT_PORT}":localhost:22 "${SUPPORT_USER}"@"${SUPPORT_HOST}" -i "${ID_FILE}"
+	start-stop-daemon -S -x ssh -b -m -p "${PID_FILE}" -- -p "${SUPPORT_PORT}" -N -R "${SUPPORT_TUNNELPORT}:localhost:22" "${SUPPORT_USER}@${SUPPORT_HOST}" -i "${ID_FILE}" -y
 }
 
 stop()

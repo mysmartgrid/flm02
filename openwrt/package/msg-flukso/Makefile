@@ -60,6 +60,7 @@ define Package/msg-flukso2/install
 
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/flukso.init $(1)/etc/init.d/flukso
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/reverse-ssh.init $(1)/etc/init.d/reverse-ssh
 	$(INSTALL_DIR) $(1)/usr/lib/lua
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/dbg.lua $(1)/usr/lib/lua/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/rrd

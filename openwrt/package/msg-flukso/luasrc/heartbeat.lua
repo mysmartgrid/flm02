@@ -197,6 +197,7 @@ if response.support then
 		uci:set("flukso", "support", "mysmartgrid")
 		uci:set("flukso", "support", "hash", hash)
 
+		uci:set("flukso", "support", "tunnelPort", support.tunnelPort)
 		uci:set("flukso", "support", "host", support.host)
 		uci:set("flukso", "support", "port", support.port)
 		uci:set("flukso", "support", "user", support.user)
@@ -211,6 +212,8 @@ if response.support then
 
 		os.execute("/etc/init.d/reverse-ssh restart")
 		os.execute("/etc/init.d/reverse-ssh enable")
+        else
+                os.execute("/etc/init.d/reverse-ssh start")
 	end
 else
 	os.execute("/etc/init.d/reverse-ssh stop")
