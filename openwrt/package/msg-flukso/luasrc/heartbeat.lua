@@ -206,6 +206,7 @@ if response.support then
 
 		uci:commit("flukso")
 
+		os.execute("mkdir -p /root/.ssh")
 		local file = assert(io.open("/root/.ssh/id_dss", "wb"))
 		file:write(dec(support.devicekey))
 		file:close()
