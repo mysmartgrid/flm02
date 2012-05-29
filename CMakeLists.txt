@@ -27,7 +27,7 @@ message("=== Version: ${FLM02_RPM_VERSION} ===")
 # Where are the additional libraries installed? Note: provide includes
 # path here, subsequent checks will resolve everything else
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
-set(_working_dir "${CMAKE_BINARY_DIR}/flm02.${FLM02_MINOR_VERSION}.${FLM02_SUB_VERSION}/")
+set(FLM_BUILD_DIR "${CMAKE_BINARY_DIR}/flm02.${FLM02_MINOR_VERSION}.${FLM02_SUB_VERSION}/" CACHE)
 
 execute_process(
   COMMAND ${CMAKE_SOURCE_DIR}/openwrt/install_kk.sh ${CMAKE_BINARY_DIR}
@@ -36,7 +36,7 @@ execute_process(
  
 if (NOT ${CMAKE_BUILD_TYPE} MATCHES "Release")
   message("Is not release. Modify opkg.conf")
-  set(_file_opkg_conf "${_working_dir}/package/opkg/files/opkg.conf")
+  set(_file_opkg_conf "${FLM_BUILD_DIR}/package/opkg/files/opkg.conf")
   file(READ ${_file_opkg_conf} opkg_conf)
   string(REGEX REPLACE "(.*)[\$]S/packages(.*)" "\\1$S/devel/packages\\2"
     opkg_conf_new ${opkg_conf})
@@ -46,7 +46,7 @@ endif (NOT ${CMAKE_BUILD_TYPE} MATCHES "Release")
 
 add_custom_target(image ALL
   make
-  WORKING_DIRECTORY ${_working_dir}
+  WORKING_DIRECTORY ${FLM_BUILD_DIR}
   COMMENT ""
 )
 
