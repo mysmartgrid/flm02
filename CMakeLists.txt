@@ -27,7 +27,7 @@ message("=== Version: ${FLM02_RPM_VERSION} ===")
 # Where are the additional libraries installed? Note: provide includes
 # path here, subsequent checks will resolve everything else
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
-set(FLM_BUILD_DIR "${CMAKE_BINARY_DIR}/flm02.${FLM02_MINOR_VERSION}.${FLM02_SUB_VERSION}/" CACHE)
+set(FLM_BUILD_DIR "${CMAKE_BINARY_DIR}/flm02.${FLM02_MINOR_VERSION}.${FLM02_SUB_VERSION}/" CACHE  FILEPATH "flm build directory")
 
 execute_process(
   COMMAND ${CMAKE_SOURCE_DIR}/openwrt/install_kk.sh ${CMAKE_BINARY_DIR}
