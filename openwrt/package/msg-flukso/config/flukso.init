@@ -77,7 +77,7 @@ start()
 	$HEARTBEAT 1 >&- 2>&- <&-
 
 	# Configure cron
-	echo -e "$MINUTE * * * * $EVENTS\n$MINUTE * * * * $HEARTBEAT 0\n*/15 * * * * [ \$($FCHECK; echo \$?) -ne 0 ] && reboot" | crontab -
+	echo -e "$MINUTE * * * * $EVENTS\n$MINUTE/10 * * * * $HEARTBEAT 0\n*/15 * * * * [ \$($FCHECK; echo \$?) -ne 0 ] && reboot" | crontab -
 }
 
 stop()
