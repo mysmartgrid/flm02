@@ -62,7 +62,7 @@ s:option(DummyValue, "_release", "Release").value =
 s:option(DummyValue, "_release", "Firmware-tag").value =                   
    uci:get("firmware", "system", "tag")
 s:option(DummyValue, "_release", "Firmware-date").value =                   
-   uci:get("firmware", "system", "releasedate")
+   uci:get("firmware", "system", "releasetime")
 s:option(DummyValue, "_release", "Firmware-release").value =
    uci:get("firmware", "system", "build")
 

@@ -114,6 +114,19 @@ local function collect_mp()
 	return monitor
 end
 
+local function collect_firmware()
+   local FIRMWARE = uci:get_all('firmware', 'system')
+   for i, v in pairs(FIRMWARE) do
+      print('Firmware:', i, v)
+   end
+   local firmware = {}
+   firmware.tag         = FIRMWARE.tag
+   firmware.build       = FIRMWARE.build
+   firmware.version     = FIRMWARE.version
+   firmware.releasetime = FIRMWARE.releasetime
+   return firmware
+end
+
 -- terminate when WAN reporting is not set
 if not WAN_ENABLED then
 	os.exit(2)
@@ -123,7 +136,9 @@ end
 nixio.openlog('heartbeat', 'pid')
 
 local monitor = collect_mp()
+monitor.firmware = collect_firmware()
 local monitor_json = luci.json.encode(monitor)
+print(monitor_json)
 
 
 -- phone home
