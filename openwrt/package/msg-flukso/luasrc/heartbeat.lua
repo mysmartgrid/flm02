@@ -116,9 +116,9 @@ end
 
 local function collect_firmware()
    local FIRMWARE = uci:get_all('firmware', 'system')
-   for i, v in pairs(FIRMWARE) do
-      print('Firmware:', i, v)
-   end
+--   for i, v in pairs(FIRMWARE) do
+--      print('Firmware:', i, v)
+--   end
    local firmware = {}
    firmware.tag         = FIRMWARE.tag
    firmware.build       = FIRMWARE.build
@@ -138,7 +138,6 @@ nixio.openlog('heartbeat', 'pid')
 local monitor = collect_mp()
 monitor.firmware = collect_firmware()
 local monitor_json = luci.json.encode(monitor)
-print(monitor_json)
 
 
 -- phone home
