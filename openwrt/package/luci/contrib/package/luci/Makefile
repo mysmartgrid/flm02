@@ -7,7 +7,7 @@ ifeq ($(DUMP),)
 endif
 
 PKG_NAME:=luci
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 ifeq ($(USELOCAL),1)
   PKG_VERSION:=0.9+svn
@@ -311,7 +311,7 @@ endef
 define Package/luci-web
   $(call Package/luci/libtemplate)
   DEPENDS+=+luci-http +luci-sys +luci-nixio +luci-uci \
-  	+luci-sgi-cgi +luci-lmo
+	+luci-sgi-cgi +luci-lmo
   TITLE:=MVC Webframework
   $(call Config,luci.main.lang,string,en,Default Language)
 endef
