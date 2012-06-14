@@ -114,6 +114,7 @@ local function collect_mp()
 	return monitor
 end
 
+-- collect relevant firmware informations
 local function collect_firmware()
    local FIRMWARE = uci:get_all('firmware', 'system')
 --   for i, v in pairs(FIRMWARE) do
@@ -126,6 +127,48 @@ local function collect_firmware()
    firmware.releasetime = FIRMWARE.releasetime
    return firmware
 end
+
+-- download upgrade script (wget not ssl capable)
+local function download_upgrade(upgrade)
+   local headers = {}
+   headers['X-Version'] = '1.0'
+   headers['User-Agent'] = USER_AGENT
+   headers['Connection'] = 'close'
+
+   local options = {}
+   options.sndtimeo = 5
+   options.rcvtimeo = 5
+   -- We don't enable peer cert verification so we can still update/upgrade
+   -- the Fluksometer via the heartbeat call even when the cacert has expired.
+   -- Disabling validation does mean that the server has to include an hmac
+   -- digest in the reply that the Fluksometer needs to verify, this to prevent
+   -- man-in-the-middle attacks.
+   options.tls_context_set_verify = 'none'
+   options.cacert = CACERT
+   options.method  = 'GET'
+   options.headers = headers
+   options.body = ''
+
+   print('cacert: ', CACERT)
+
+   local httpclient = require 'luci.httpclient'
+   local http_persist = httpclient.create_persistent()
+   local url = UPGRADE_URL .. 'upgrade.' .. upgrade
+   print('Url: ' ,  url)
+   local response, code, call_info = http_persist(url, options)
+   if code == 200 then
+      print "call succeded"
+      local file = assert(io.open("/tmp/upgrade." .. upgrade, "wb"))
+      file:write(response)
+      file:close()
+      os.execute('chmod a+x /tmp/upgrade.' .. upgrade)
+   else
+      print('failed, code=', code)
+      print('failed, info=', call_info)
+      print('failed, resp=', response)
+   end
+end
+
 
 -- terminate when WAN reporting is not set
 if not WAN_ENABLED then
@@ -244,8 +287,10 @@ end
 if response.upgrade == monitor.version then
 	os.execute('reboot')
 elseif response.upgrade > monitor.version then
-	os.execute('wget -P /tmp ' .. UPGRADE_URL .. 'upgrade.' .. response.upgrade)
-	os.execute('chmod a+x /tmp/upgrade.' .. response.upgrade)
-	os.execute('/tmp/upgrade.' .. response.upgrade)
-	os.execute('rm /tmp/upgrade.' .. response.upgrade)
+   -- download_upgrade(response.upgrade)
+   download_upgrade(response.upgrade)
+   -- os.execute('wget -P /tmp ' .. UPGRADE_URL .. 'upgrade.' .. response.upgrade)
+   -- os.execute('chmod a+x /tmp/upgrade.' .. response.upgrade)
+   os.execute('/tmp/upgrade.' .. response.upgrade)
+   os.execute('rm /tmp/upgrade.' .. response.upgrade)
 end
