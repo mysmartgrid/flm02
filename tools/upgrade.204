@@ -13,6 +13,7 @@ then
 	then
 		echo "update successfull"
 		uci set 'system.@system[0].version'=204
+		uci commit system
 		reboot
 	fi
 fi
