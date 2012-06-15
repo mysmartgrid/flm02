@@ -1,0 +1,19 @@
+#!/bin/sh
+
+opkg update
+if [ $? -eq 0 ];
+then
+	cd /etc/config
+	cp flukso flukso.save
+	opkg upgrade `opkg list_installed | sed 's/ - .*//'`
+	mv flukso flukso.new
+	mv flukso.save flukso
+
+	if [ $? -eq 0 ];
+	then
+		echo "update successfull"
+		uci set 'system.@system[0].version'=204
+		reboot
+	fi
+fi
+
