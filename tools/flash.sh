@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # script to flash the flukso
+DOWNLOAD_URL=http://openwrt.mysmartgrid.de/flm02/atheros/
 
 # flash command
 AP51FLASH=/homes/krueger/Project/MySmartGrid/ap51-flash-64
@@ -30,6 +31,16 @@ verbose=0
 flukso_serial=$1
 install_date=`date +%Y%m%d`
 logfile="flukso_install.log"
+
+# download image from openwrt.mysmartgrid.de
+download_firmware() {
+    echo "Downloading firmware from ${DOWNLOAD_URL}"
+    ATHEROS_KERNEL=/tmp/openwrt-atheros-vmlinux.lzma
+    ATHEROS_IMAGE=/tmp/openwrt-atheros-root.squashfs
+    wget -O ${ATHEROS_KERNEL} ${DOWNLOAD_URL}/openwrt-atheros-vmlinux.lzma
+    wget -O ${ATHEROS_IMAGE} ${DOWNLOAD_URL}/openwrt-atheros-root.squashfs
+}
+
 
 # flash flukso
 flash_flukso() {
@@ -226,6 +237,7 @@ flukso_uci() {
 }
 
 ##### MAIN
+download_firmware
 flash_flukso
 flukso_alive
 sleep 60
