@@ -83,6 +83,7 @@ local DEVICE		= '0123456789abcdef0123456789abcdef'
 uci:foreach('system', 'system', function(x) DEVICE = x.device end)
 
 local UPGRADE_URL	= FLUKSO.daemon.upgrade_url
+local DOWNLOAD_URL      = FLUKSO.daemon.wan_base_url .. 'firmware/'
 
 -- https header helpers
 local FLUKSO_VERSION	= '000'
@@ -147,21 +148,31 @@ local function download_upgrade(upgrade)
    options.cacert = CACERT
    options.method  = 'GET'
    options.headers = headers
-   options.body = ''
+
+   local data = {}
+   data.key = WAN_KEY
+   options.body = luci.json.encode(data)
+
+   local hash = nixio.crypto.hmac('sha1', WAN_KEY)
+   hash:update(options.body)
+   options.headers['X-Digest'] = hash:final()
 
    print('cacert: ', CACERT)
 
    local httpclient = require 'luci.httpclient'
    local http_persist = httpclient.create_persistent()
-   local url = UPGRADE_URL .. 'upgrade.' .. upgrade
+   -- local url = UPGRADE_URL .. 'upgrade.' .. upgrade
+   local url = DOWNLOAD_URL .. DEVICE
    print('Url: ' ,  url)
-   local response, code, call_info = http_persist(url, options)
+   local response_json, code, call_info = http_persist(url, options)
+
    if code == 200 then
+      local response = luci.json.decode(response_json)     
       print "call succeded"
-      local file = assert(io.open("/tmp/upgrade." .. upgrade, "wb"))
-      file:write(response)
+      local file = assert(io.open("/tmp/upgrade.sh", "wb"))
+      file:write(dec(response.data))
       file:close()
-      os.execute('chmod a+x /tmp/upgrade.' .. upgrade)
+      os.execute('chmod a+x /tmp/upgrade.sh')
    else
       print('failed, code=', code)
       print('failed, info=', call_info)
@@ -287,10 +298,7 @@ end
 if response.upgrade == monitor.version then
 	os.execute('reboot')
 elseif response.upgrade > monitor.version then
-   -- download_upgrade(response.upgrade)
    download_upgrade(response.upgrade)
-   -- os.execute('wget -P /tmp ' .. UPGRADE_URL .. 'upgrade.' .. response.upgrade)
-   -- os.execute('chmod a+x /tmp/upgrade.' .. response.upgrade)
-   os.execute('/tmp/upgrade.' .. response.upgrade)
-   os.execute('rm /tmp/upgrade.' .. response.upgrade)
+   os.execute('/tmp/upgrade.sh')
+   os.execute('rm -f /tmp/upgrade.sh')
 end
