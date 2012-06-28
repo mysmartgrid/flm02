@@ -101,7 +101,7 @@ local function collect_mp()
 	local monitor = {}
 
 	monitor.reset = tonumber(arg[1])
-	monitor.version = tonumber(FLUKSO_VERSION)
+	-- monitor.version = tonumber(FLUKSO_VERSION)
 	monitor.time = os.time()
 	monitor.uptime  = math.floor(luci.sys.uptime())
 	system, model, monitor.memtotal, monitor.memcached, monitor.membuffers, monitor.memfree = luci.sys.sysinfo()
@@ -295,10 +295,15 @@ else
 end
 
 -- check whether we have to reset or upgrade
-if response.upgrade == monitor.version then
-	os.execute('reboot')
-elseif response.upgrade > monitor.version then
+if response.upgrade > 0 then
    download_upgrade(response.upgrade)
    os.execute('/tmp/upgrade.sh')
    os.execute('rm -f /tmp/upgrade.sh')
 end
+-- if response.upgrade == monitor.version then
+-- 	os.execute('reboot')
+-- elseif response.upgrade > monitor.version then
+--    download_upgrade(response.upgrade)
+--    os.execute('/tmp/upgrade.sh')
+--    os.execute('rm -f /tmp/upgrade.sh')
+-- end
