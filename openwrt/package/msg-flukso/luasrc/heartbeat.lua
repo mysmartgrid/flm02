@@ -171,7 +171,7 @@ local function download_upgrade(upgrade)
       file:close()
       os.execute('chmod a+x /tmp/upgrade.sh')
    else
-      os.execute('/usr/bin/event.lua 106')
+      os.execute('/usr/bin/event 106')
       print('failed, code=', code)
       print('failed, info=', call_info)
       print('failed, resp=', response)
@@ -297,9 +297,9 @@ if response.upgrade > 0 then
    download_upgrade(response.upgrade)
    local retval  = os.execute('/tmp/upgrade.sh')
    if retval == 0 then
-      os.execute('/usr/bin/event.lua 105')
+      os.execute('/usr/bin/event 105')
    else
-      os.execute('/usr/bin/event.lua 106')
+      os.execute('/usr/bin/event 106')
    end
    os.execute('rm -f /tmp/upgrade.sh')
 end
