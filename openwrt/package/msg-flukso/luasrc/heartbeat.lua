@@ -161,19 +161,17 @@ local function download_upgrade(upgrade)
 
    local httpclient = require 'luci.httpclient'
    local http_persist = httpclient.create_persistent()
-   -- local url = UPGRADE_URL .. 'upgrade.' .. upgrade
    local url = DOWNLOAD_URL .. DEVICE
-   print('Url: ' ,  url)
    local response_json, code, call_info = http_persist(url, options)
 
    if code == 200 then
       local response = luci.json.decode(response_json)     
-      print "call succeded"
       local file = assert(io.open("/tmp/upgrade.sh", "wb"))
       file:write(dec(response.data))
       file:close()
       os.execute('chmod a+x /tmp/upgrade.sh')
    else
+      os.execute('/usr/bin/event.lua 106')
       print('failed, code=', code)
       print('failed, info=', call_info)
       print('failed, resp=', response)
@@ -297,7 +295,12 @@ end
 -- check whether we have to reset or upgrade
 if response.upgrade > 0 then
    download_upgrade(response.upgrade)
-   os.execute('/tmp/upgrade.sh')
+   local retval  = os.execute('/tmp/upgrade.sh')
+   if retval == 0 then
+      os.execute('/usr/bin/event.lua 105')
+   else
+      os.execute('/usr/bin/event.lua 106')
+   end
    os.execute('rm -f /tmp/upgrade.sh')
 end
 -- if response.upgrade == monitor.version then
