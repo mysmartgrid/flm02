@@ -76,6 +76,7 @@ define Package/msg-flukso2/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/spid.lua $(1)/usr/sbin/
 
 	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/event.lua $(1)/usr/bin/event
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/events.lua $(1)/usr/bin/events
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/heartbeat.lua $(1)/usr/bin/heartbeat
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/fsync.lua $(1)/usr/bin/fsync
