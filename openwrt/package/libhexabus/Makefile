@@ -12,16 +12,29 @@ include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
 
 define Package/libhexabus
-	SECTION:=libs
-	CATEGORY:=Libraries
-	DEPENDS:=+boost-system +boost-filesystem +boost-program_options +boost-thread +boost-date_time +boost-test
-	TITLE:=Libhexabus
-	URL:=http://www.hexabus.net
-	MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>
+  SECTION:=libs
+  CATEGORY:=Libraries
+  DEPENDS:=+boost-system +boost-filesystem +boost-program_options +boost-thread +boost-date_time +boost-test
+  TITLE:=Libhexabus
+  URL:=http://www.hexabus.net
+  MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>
+endef
+
+define Package/hexaswitch
+  SECTION:=utils
+  CATEGORY:=Network
+  DEPENDS:=libhexabus
+  TITLE:=HexaSwitch
+  URL:=http://www.hexabus.net
+  MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>
 endef
 
 define Package/libhexabus/description
-	This package contains libhexabus, a library to interact with the HexaBus Home Automation Network
+  This package contains libhexabus, a library to interact with the HexaBus Home Automation Network.
+endef
+
+define Package/hexaswitch/description
+  Small utility to send and receive hexabus packets.
 endef
 
 define Build/Prepare
@@ -64,12 +77,34 @@ define Build/Configure
 endef
 
 define Build/Compile
-	(cd $(PKG_BUILD_DIR)/hostsoftware/libhexabus/build; \
-	make \
+	(rm -rf $(PKG_INSTALL_DIR); \
+	mkdir -p $(PKG_INSTALL_DIR); \
+	cd $(PKG_BUILD_DIR)/hostsoftware/libhexabus/build; \
+	make DESTDIR="$(PKG_INSTALL_DIR)" install \
 	)
+	echo "compile"
+endef
+
+define Build/Install
+endef
+
+define Build/InstallDev
+	$(INSTALL_DIR) $(1)/usr/include/libhexabus
+	$(CP) $(PKG_INSTALL_DIR)/usr/include/libhexabus/*.{h,hpp} $(1)/usr/include/libhexabus/
+
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libhexabus.a $(1)/usr/lib
 endef
 
 define Package/libhexabus/install
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libhexabus.a $(1)/usr/lib
+endef
+
+define Package/hexaswitch/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/hexaswitch $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,libhexabus))
+$(eval $(call BuildPackage,hexaswitch))
