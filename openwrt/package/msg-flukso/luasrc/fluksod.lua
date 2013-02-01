@@ -114,6 +114,24 @@ function dispatch(wan_child, lan_child)
 			os.exit(2)
 		end
 
+		if LAN_ENABLED then
+			nixio.fs.mkdirr(LAN_PUBLISH_PATH)
+
+			for file in nixio.fs.dir(LAN_PUBLISH_PATH) do
+				nixio.fs.unlink(file)
+			end
+
+			local function create_file(sensor_id)
+				local file = LAN_PUBLISH_PATH .. '/' .. sensor_id
+				
+				nixio.fs.unlink(file)
+				fd = nixio.open(file, O_RDWR_CREAT)
+				fd:close()
+			end
+
+			uci:foreach('flukso', 'sensor', function(x) create_file(x.id) end)
+		end
+
 		local function tolua(num)
 			return num + 1
 		end
