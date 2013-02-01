@@ -317,7 +317,7 @@ function lan_buffer(child)
 				previous[sensor_id] = {}
 			end
 
-			if timestamp > TIMESTAMP_MIN and timestamp > (previous[sensor_id].timestamp or 0) then
+			if timestamp > (previous[sensor_id].timestamp or 0) then
 				if not power then  -- we're dealing pulse message so first calculate power
 					if previous[sensor_id].msec and msec > previous[sensor_id].msec then
 						power = math.floor(
@@ -335,6 +335,11 @@ function lan_buffer(child)
 				end
 
 				if power then
+					if (timestamp - (previous[sensor_id].timestamp or 0)) > 10000 then
+						nixio.syslog('info', 'time warp detected. removing old sensor data')
+						measurements:clear(sensor_id)
+					end
+
 					measurements:add(sensor_id, timestamp, power)
 					previous[sensor_id].timestamp = timestamp
 				end
