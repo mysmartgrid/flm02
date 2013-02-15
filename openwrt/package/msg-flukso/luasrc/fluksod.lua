@@ -54,6 +54,7 @@ local POLLIN            = nixio.poll_flags('in')
 -- set WAN parameters
 local WAN_ENABLED	= (FLUKSO.daemon.enable_wan_branch == '1')
 
+local MAX_TIME_OFFSET   = 300
 local TIMESTAMP_MIN	= 1234567890
 local WAN_INTERVAL	= 300
 
@@ -82,6 +83,7 @@ local LAN_ENABLED	= (FLUKSO.daemon.enable_lan_branch == '1')
 local LAN_INTERVAL	= 0
 local LAN_POLISH_CUTOFF	= 60
 local LAN_PUBLISH_PATH	= DAEMON_PATH .. '/sensor'
+local LAN_PUBLISH_EID   = 2
 
 local LAN_FACTOR	= { ['electricity'] =  3.6e6,	-- 1 Wh/ms = 3.6e6 W
 			    ['water']       = 86.6e6,	-- 1 L/ms  = 24 * 3.6e6 L/day
@@ -100,6 +102,7 @@ end
 
 function dispatch(wan_child, lan_child)
 	return coroutine.create(function()
+		local sync_timestamp = 0
 		local delta = { fdin  = nixio.open(DELTA_PATH_IN, O_RDWR_NONBLOCK),
                                 fdout = nixio.open(DELTA_PATH_OUT, O_RDWR) }
 
@@ -155,10 +158,22 @@ function dispatch(wan_child, lan_child)
 
 				-- resume both branches
 				if WAN_ENABLED then
+					if timestamp < TIMESTAMP_MIN or timestamp < sync_timestamp then
+						local diff = timestamp - sync_timestamp
+						if DEBUG then
+							print(timestamp .. " - " .. sync_timestamp .. " = " .. diff)
+						end
+						if diff > 300 or diff < 0 then
+							nixio.syslog('info', 'trying to set correct time')
+							os.execute('ntpclient -c 1 -s -h pool.ntp.org')
+							sync_timestamp = timestamp
+						end
+					end
 					resume(wan_child, sensor_id, timestamp, counter)
 				end
 
 				if LAN_ENABLED then
+
 					if sensor_class == 'analog' then
 						resume(lan_child, sensor_id, timestamp, extra)
 
@@ -191,6 +206,12 @@ function wan_buffer(child)
 				then
 
 				nixio.syslog('info', string.format('processed pulse %s:%s:%s', sensor_id, timestamp, counter))
+
+				if (timestamp - (previous[sensor_id].timestamp or 0)) > MAX_TIME_OFFSET then
+					nixio.syslog('info', 'time warp detected. removing old sensor data')
+					measurements:clear(sensor_id)
+					collectgarbage()
+				end
 	
 				measurements:add(sensor_id, timestamp, counter)
 				previous[sensor_id].timestamp = timestamp
@@ -263,6 +284,10 @@ function send(child)
 					level = 'info'
 				else
 					level = 'err'
+					if code == -150 then
+						nixio.syslog('info', 'trying to set correct time')
+						os.execute('ntpclient -c 1 -s -h pool.ntp.org')
+					end
 				end
 
 				nixio.syslog(level, string.format('%s %s: %s', options.method, url, code))
@@ -335,13 +360,18 @@ function lan_buffer(child)
 				end
 
 				if power then
-					if (timestamp - (previous[sensor_id].timestamp or 0)) > 10000 then
+					if (timestamp - (previous[sensor_id].timestamp or 0)) > MAX_TIME_OFFSET then
 						nixio.syslog('info', 'time warp detected. removing old sensor data')
 						measurements:clear(sensor_id)
+						collectgarbage()
 					end
 
 					measurements:add(sensor_id, timestamp, power)
 					previous[sensor_id].timestamp = timestamp
+					local ret = os.execute("hexaswitch -c send -e " .. LAN_PUBLISH_EID .. " -d 3 -v " .. power)
+					if ret > 0 then
+						nixio.syslog('err', 'error while sending hexabus packet')
+					end
 				end
 			end
 
