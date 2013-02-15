@@ -226,6 +226,11 @@ if code == 200 then
 else
 	nixio.syslog('err', string.format('%s %s: %s', options.method, url, code))
 
+	if code == -150 then
+		nixio.syslog('info', 'trying to set correct time')
+		os.execute('ntpclient -c 1 -s -h pool.ntp.org')
+	end
+
 	-- if available, send additional error info to the syslog
 	if type(call_info) == 'string' then
 		nixio.syslog('err', call_info)
