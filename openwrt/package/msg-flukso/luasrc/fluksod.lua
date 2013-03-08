@@ -368,10 +368,6 @@ function lan_buffer(child)
 
 					measurements:add(sensor_id, timestamp, power)
 					previous[sensor_id].timestamp = timestamp
-					local ret = os.execute("hexaswitch -c send -e " .. LAN_PUBLISH_EID .. " -d 3 -v " .. power)
-					if ret > 0 then
-						nixio.syslog('err', 'error while sending hexabus packet')
-					end
 				end
 			end
 
