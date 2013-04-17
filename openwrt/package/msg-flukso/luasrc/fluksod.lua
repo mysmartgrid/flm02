@@ -163,7 +163,7 @@ function dispatch(wan_child, lan_child)
 						if DEBUG then
 							print(timestamp .. " - " .. sync_timestamp .. " = " .. diff)
 						end
-						if diff > 300 or diff < 0 then
+						if diff > MAX_TIME_OFFSET or diff < 0 then
 							nixio.syslog('info', 'trying to set correct time')
 							os.execute('ntpclient -c 1 -s -h pool.ntp.org')
 							sync_timestamp = timestamp
