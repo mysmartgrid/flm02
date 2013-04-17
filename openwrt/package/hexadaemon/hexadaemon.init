@@ -1,0 +1,14 @@
+#!/bin/sh /etc/rc.common
+# Copyright (c) 2013 Stephan Platz
+
+START=94
+
+start()
+{
+	/usr/bin/hexadaemon
+}
+
+stop()
+{
+	killall hexadaemon
+}
