@@ -1,6 +1,6 @@
 #!/bin/sh
 
-local variant
+variant
 
 if [ "${4%%/*}" = "branches" ]; then
 	variant="LuCI ${4##*[-/]} Branch"

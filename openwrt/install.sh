@@ -28,6 +28,7 @@ svn co svn://svn.openwrt.org/openwrt/branches/backfire -r 27608 $BACKFIRE_PATH
 
 # add the specific flukso packages as a feed
 echo "src-link msgflukso $REPO_PATH/package" > $BACKFIRE_PATH/feeds.conf
+echo "src-svn packages svn://svn.openwrt.org/openwrt/packages" >> $BACKFIRE_PATH/feeds.conf
 $BACKFIRE_PATH/scripts/feeds update
 $BACKFIRE_PATH/scripts/feeds install -a -p msgflukso
 
