@@ -54,6 +54,9 @@ rm $BACKFIRE_PATH/package/lua/patches/400-luaposix_5.1.4-embedded.patch
 rm $BACKFIRE_PATH/package/lua/patches/500-eglibc_config.patch
 cp patches/600-lua-tablecreate.patch $BACKFIRE_PATH/package/lua/patches
 
+# patch squashfs to support setuid
+cp patches/900-squashfs-mode.patch $BACKFIRE_PATH/tools/squashfs4/patches
+
 # copy flash utility to the tools dir
 cp ../tools/ap51-flash $BACKFIRE_PATH/tools
 
