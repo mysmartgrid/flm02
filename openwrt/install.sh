@@ -63,6 +63,7 @@ cp ../tools/ap51-flash $BACKFIRE_PATH/tools
 # patch files of the OpenWRT build system
 cd $BACKFIRE_PATH
 patch -p0 < $REPO_PATH/patches/900-disable_console.patch
+patch -p0 < $REPO_PATH/patches/900-setuid-ntpclient.patch
 patch -p0 < $REPO_PATH/patches/910-set_ttyS0_baud_to_115200.patch
 patch -p0 < $REPO_PATH/patches/920-add-make-flash-option.patch
 patch -p0 < $REPO_PATH/patches/921-add-make-publish-option.patch
