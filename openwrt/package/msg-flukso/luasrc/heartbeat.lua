@@ -89,6 +89,9 @@ local DOWNLOAD_URL      = FLUKSO.daemon.wan_base_url .. 'firmware/'
 local FLUKSO_VERSION	= '000'
 uci:foreach('system', 'system', function(x) FLUKSO_VERSION = x.version end)
 
+local SSL_NOT_YET_VALID = -150
+local SSL_EXPIRED       = -151
+
 local USER_AGENT	= 'Fluksometer v' .. FLUKSO_VERSION
 local CACERT		= FLUKSO.daemon.cacert
 
@@ -226,9 +229,15 @@ if code == 200 then
 else
 	nixio.syslog('err', string.format('%s %s: %s', options.method, url, code))
 
-	if code == -150 then
-		nixio.syslog('info', 'trying to set correct time')
-		os.execute('ntpclient -c 1 -s -h pool.ntp.org')
+	-- SSL_EXPIRED: The certificate presented by the server is expired
+	-- SSL_NOT_YET_VALID: The certificate presented by the server will be valid in the future but is not yet valid
+	-- those two errors are most likely caused by an incorrect local time
+	-- in all these cases we call ntpclient to synchronize our local time
+	if code == SSL_NOT_YET_VALID or code == SSL_EXPIRED then
+	nixio.syslog('info', 'trying to set correct time')
+	local output = io.popen('ntpclient -c 1 -s -h pool.ntp.org')
+	nixio.syslog('info', 'output of ntpclient: ' .. output:read('*all'))
+output:close()
 	end
 
 	-- if available, send additional error info to the syslog
