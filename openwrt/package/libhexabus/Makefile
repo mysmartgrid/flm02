@@ -38,7 +38,7 @@ define Package/hexaswitch/description
 endef
 
 define Build/Prepare
-	sh -c 'if [ -d hexabus ]; then cd hexabus; git pull --rebase; cd ..; else git clone http://github.com/mysmartgrid/hexabus.git -b development; fi'
+	sh -c 'if [ -d hexabus ]; then cd hexabus; git pull --rebase; cd ..; else git clone http://github.com/mysmartgrid/hexabus.git -b sp-hexadaemon; fi'
 
 	mkdir -p $(PKG_BUILD_DIR)
 	cp -R hexabus/* $(PKG_BUILD_DIR)
