@@ -2,6 +2,12 @@
 
 current_version=`uci get 'system.@system[0].version'`
 
+if [ ${current_version=} -lt 202 ];
+then
+	awk 'FNR==1{print "src/gz packages http://openwrt.mysmartgrid.de/flm02/atheros/packages"};FNR>1' /etc/opkg.conf > opkg.new
+	mv opkg.new /etc/opkg.conf
+fi
+
 opkg update
 if [ $? -eq 0 ];
 then
