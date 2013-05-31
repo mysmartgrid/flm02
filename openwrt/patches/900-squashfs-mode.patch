@@ -1,0 +1,11 @@
+--- a/squashfs-tools/squashfs_fs.h	2013-05-24 09:46:56.190474186 +0200
++++ b/squashfs-tools/squashfs_fs.h	2013-05-23 12:42:27.256540777 +0200
+@@ -137,7 +137,7 @@
+ 					((b) >> 2) + 1))
+ 
+ /* Translate between VFS mode and squashfs mode */
+-#define SQUASHFS_MODE(a)		((a) & 0xfff)
++#define SQUASHFS_MODE(a)		((a) & 0xffff)
+ 
+ /* fragment and fragment table defines */
+ #define SQUASHFS_FRAGMENT_BYTES(A)	((A) * sizeof(struct squashfs_fragment_entry))

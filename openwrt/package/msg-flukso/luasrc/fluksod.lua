@@ -55,6 +55,9 @@ local POLLIN            = nixio.poll_flags('in')
 local WAN_ENABLED	= (FLUKSO.daemon.enable_wan_branch == '1')
 
 local MAX_TIME_OFFSET   = 300
+local SSL_NOT_YET_VALID = -150
+local SSL_EXPIRED       = -151
+local API_TIME_ERROR    = 470
 local TIMESTAMP_MIN	= 1234567890
 local WAN_INTERVAL	= 300
 
@@ -165,7 +168,9 @@ function dispatch(wan_child, lan_child)
 						end
 						if diff > MAX_TIME_OFFSET or diff < 0 then
 							nixio.syslog('info', 'trying to set correct time')
-							os.execute('ntpclient -c 1 -s -h pool.ntp.org')
+							local output = io.popen('ntpclient -c 1 -s -h pool.ntp.org')
+							nixio.syslog('info', 'output of ntpclient: ' .. output:read('*all'))
+							output:close()
 							sync_timestamp = timestamp
 						end
 					end
@@ -284,9 +289,16 @@ function send(child)
 					level = 'info'
 				else
 					level = 'err'
-					if code == -150 then
+					-- SSL_EXPIRED: The certificate presented by the server is expired
+					-- SSL_NOT_YET_VALID: The certificate presented by the server will be valid in the future but is not yet valid
+					-- those two errors are most likely caused by an incorrect local time
+					-- API_TIME_ERROR: Invalid data, this code is returned by the api server when the timestamps of the transmitted data are incorrect
+					-- in all these cases we call ntpclient to synchronize our local time
+					if code == SSL_NOT_YET_VALID or code == SSL_EXPIRED or code == API_TIME_ERROR then
 						nixio.syslog('info', 'trying to set correct time')
-						os.execute('ntpclient -c 1 -s -h pool.ntp.org')
+						local output = io.popen('ntpclient -c 1 -s -h pool.ntp.org')
+						nixio.syslog('info', 'output of ntpclient: ' .. output:read('*all'))
+						output:close()
 					end
 				end
 

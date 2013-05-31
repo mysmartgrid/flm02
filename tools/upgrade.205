@@ -1,0 +1,39 @@
+#!/bin/sh
+
+current_version=`uci get 'system.@system[0].version'`
+
+opkg update
+if [ $? -eq 0 ];
+then
+	cd /etc/config
+	cp flukso flukso.save
+	opkg upgrade `opkg list_installed | sed 's/ - .*//'`
+	mv flukso flukso.new
+	mv flukso.save flukso
+
+        if [ $? -eq 0 ];
+	then
+		if [ ${current_version=} -le 203 ];
+		then
+			wget -O /tmp/firewall http://openwrt.mysmartgrid.de/flm02/atheros/firewall.204
+			if [ $? -eq 0 ];
+		        then
+			      mv /etc/config/firewall /etc/config/firewall.backup
+			      if [ $? -eq 0 ];
+			      then
+			        mv /tmp/firewall /etc/config/firewall
+
+                              fi
+                        fi
+                fi
+		if [ ${current_version=} -le 204 ];
+		then
+			chmod u+s /usr/sbin/ntpclient
+		fi
+		echo "update successfull"
+		uci set 'system.@system[0].version'=205
+		uci commit system
+		reboot
+	fi
+fi
+

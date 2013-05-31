@@ -45,7 +45,8 @@ define Package/ntpclient/install
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/ntpclient.config $(1)/etc/config/ntpclient
 	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ntpclient $(1)/usr/sbin/
+	$(CP) $(PKG_BUILD_DIR)/ntpclient $(1)/usr/sbin/
+	chmod 4755 $(1)/usr/sbin/ntpclient
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/adjtimex $(1)/usr/sbin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rate.awk $(1)/usr/sbin/
 endef
