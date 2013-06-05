@@ -135,7 +135,7 @@ function dispatch(wan_child, lan_child)
 				fd:close()
 			end
 
-			uci:foreach('flukso', 'sensor', function(x) create_file(x.id) end)
+			uci:foreach('flukso', 'sensor', function(x) if x.enabled then create_file(x.id) end end)
 		end
 
 		local function tolua(num)
