@@ -13,9 +13,6 @@ string(REGEX REPLACE "PKG_VERSION:=([0-9]+).([0-9]+).([0-9]+)" "\\1" FLM02_MAJOR
 string(REGEX REPLACE "PKG_VERSION:=([0-9]+).([0-9]+).([0-9]+)" "\\2" FLM02_MINOR_VERSION ${VERSION})
 string(REGEX REPLACE "PKG_VERSION:=([0-9]+).([0-9]+).([0-9]+)" "\\3" FLM02_SUB_VERSION ${VERSION})
 
-#set(FLM02_MAJOR_VERSION 2)
-#set(FLM02_MINOR_VERSION 0)
-#set(FLM02_SUB_VERSION   4)
 set(VERSION_SEP "-")
 set(FLM02_SHORT_VERSION "${FLM02_MAJOR_VERSION}${VERSION_SEP}${FLM02_MINOR_VERSION}")
 set(FLM02_VERSION "${FLM02_SHORT_VERSION}${VERSION_SEP}${FLM02_SUB_VERSION}")
@@ -27,12 +24,17 @@ message("=== Version: ${FLM02_RPM_VERSION} ===")
 # Where are the additional libraries installed? Note: provide includes
 # path here, subsequent checks will resolve everything else
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
-set(FLM_BUILD_DIR "${CMAKE_BINARY_DIR}/flm02.${FLM02_MINOR_VERSION}.${FLM02_SUB_VERSION}/" CACHE  FILEPATH "flm build directory")
+set(FLM_BUILD_DIR "flm02.${FLM02_MINOR_VERSION}.${FLM02_SUB_VERSION}/" CACHE  FILEPATH "flm build directory")
+set(FLM_FULL_BUILD_DIR "${CMAKE_BINARY_DIR}/${FLM_BUILD_DIR}" CACHE  FILEPATH "flm build directory")
+include(OpenWRTBuild)
 
-execute_process(
-  COMMAND ${CMAKE_SOURCE_DIR}/openwrt/install_kk.sh ${CMAKE_BINARY_DIR}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/openwrt
-)
+openwrt_env(${FLM_BUILD_DIR})
+
+
+#execute_process(
+#  COMMAND ${CMAKE_SOURCE_DIR}/openwrt/install_kk.sh ${CMAKE_BINARY_DIR}
+#  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/openwrt
+#)
  
 if (NOT ${CMAKE_BUILD_TYPE} MATCHES "Release")
   message("Is not release. Modify opkg.conf")
@@ -46,10 +48,10 @@ endif (NOT ${CMAKE_BUILD_TYPE} MATCHES "Release")
 
 add_custom_target(image ALL
   make
-  WORKING_DIRECTORY ${FLM_BUILD_DIR}
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${FLM_BUILD_DIR}/"
   COMMENT ""
+  DEPENDS ${CMAKE_BINARY_DIR}/feeds.done
 )
-
 
 ### print some output for the user
 message("")
