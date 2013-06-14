@@ -66,7 +66,7 @@ src-svn packages svn://svn.openwrt.org/openwrt/packages
     OUTPUT ${CMAKE_BINARY_DIR}/feeds.done
     COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds update
     COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds install -a -p msgflukso
-    COMMAND touch  ${CMAKE_BINARY_DIR}/feeds.done
+    COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/feeds.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "Update feeds"
     DEPENDS ${CMAKE_BINARY_DIR}/package.done
@@ -77,6 +77,7 @@ src-svn packages svn://svn.openwrt.org/openwrt/packages
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/openwrt/.config ${CMAKE_BINARY_DIR}/${_dest}
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/openwrt/files ${CMAKE_BINARY_DIR}/${_dest}
     COMMAND ${CMAKE_SOURCE_DIR}/openwrt/install_kk.sh  ${CMAKE_BINARY_DIR}/
+    COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/install.done
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/openwrt
     COMMENT "run installation script"
     DEPENDS ${CMAKE_BINARY_DIR}/feeds.done
