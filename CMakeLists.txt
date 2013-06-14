@@ -50,7 +50,7 @@ add_custom_target(image ALL
   make
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${FLM_BUILD_DIR}/"
   COMMENT ""
-  DEPENDS ${CMAKE_BINARY_DIR}/feeds.done
+  DEPENDS openwrt_patch
 )
 
 ### print some output for the user

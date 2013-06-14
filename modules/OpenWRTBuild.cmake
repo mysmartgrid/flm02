@@ -76,7 +76,6 @@ src-svn packages svn://svn.openwrt.org/openwrt/packages
     OUTPUT ${CMAKE_BINARY_DIR}/install.done
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/openwrt/.config ${CMAKE_BINARY_DIR}/${_dest}
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/openwrt/files ${CMAKE_BINARY_DIR}/${_dest}
-    COMMAND ${CMAKE_SOURCE_DIR}/openwrt/install_kk.sh  ${CMAKE_BINARY_DIR}/
     COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/install.done
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/openwrt
     COMMENT "run installation script"
@@ -88,6 +87,60 @@ src-svn packages svn://svn.openwrt.org/openwrt/packages
   message(STATUS "   * add checkout-target openwrt_feeds")
 
 endfunction(openwrt_configure)
+
+function(openwrt_patch _dest)
+  message(STATUS "   openwrt patching")
+
+  add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/copy_patches.done
+    # add patches to the toolchain
+    COMMAND ${CMAKE_COMMAND} -E copy patches/990-add_timerfd_support.patch ${CMAKE_BINARY_DIR}/${_dest}/toolchain/uClibc/patches-0.9.30.1
+    # add patches to the linux atheros target
+    COMMAND ${CMAKE_COMMAND} -E copy patches/"300-set_AR2315_RESET_GPIO_to_6.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
+    COMMAND ${CMAKE_COMMAND} -E copy patches/"310-hotplug_button_jiffies_calc.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
+    COMMAND ${CMAKE_COMMAND} -E copy patches/"400-spi_gpio_support.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
+    COMMAND ${CMAKE_COMMAND} -E copy patches/"410-spi_gpio_enable_cs_line.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
+    COMMAND ${CMAKE_COMMAND} -E copy patches/"420-tune_spi_bitbanging_for_avr.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
+    # backport loglevel fix to busybox v1.15.3-2
+    # see: https://bugs.busybox.net/show_bug.cgi?id=681
+    COMMAND ${CMAKE_COMMAND} -E copy patches/820-fix_crond_loglevel.patch ${CMAKE_BINARY_DIR}/${_dest}/package/busybox/patches
+    # patch the default OpenWRT Lua package
+    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/lua/patches/400-luaposix_5.1.4-embedded.patch
+    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/lua/patches/500-eglibc_config.patch
+    COMMAND ${CMAKE_COMMAND} -E copy patches/600-lua-tablecreate.patch ${CMAKE_BINARY_DIR}/${_dest}/package/lua/patches
+    # patch squashfs to support setuid
+    COMMAND ${CMAKE_COMMAND} -E copy patches/900-squashfs-mode.patch ${CMAKE_BINARY_DIR}/${_dest}/tools/squashfs4/patches
+    # copy flash utility to the tools dir
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/tools/ap51-flash ${CMAKE_BINARY_DIR}/${_dest}/tools
+    COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/copy_patches.done
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/openwrt
+    COMMENT "copy patches"
+    DEPENDS openwrt_feeds
+  )
+
+  add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/apply_patches.done
+    # patch files of the OpenWRT build system
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"900-disable_console.patch"
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"900-setuid-ntpclient.patch"
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"910-set_ttyS0_baud_to_115200.patch"
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"920-add-make-flash-option.patch"
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"921-add-make-publish-option.patch"
+    # patch opkg config to use openwrt.mysmartgrid.de
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"998-opkg-repo.patch"
+    # we don't need rdate, relying on ntpclient instead
+    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/base-files/files/etc/hotplug.d/iface/40-rdate
+    COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/apply_patches.done
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
+    COMMENT "apply patches"
+    DEPENDS openwrt_feeds
+  )
+
+  add_custom_target(openwrt_patch
+    DEPENDS  ${CMAKE_BINARY_DIR}/copy_patches.done ${CMAKE_BINARY_DIR}/apply_patches.done
+  )
+  message(STATUS "   * add checkout-target openwrt_patch")
+endfunction(openwrt_patch)
 
 function(openwrt_host)
   set(_modulesDir ${CMAKE_BINARY_DIR}/${_dest}/staging_dir/host/Modules)
@@ -101,4 +154,5 @@ macro(openwrt_env _dest)
   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest})
   openwrt_checkout(${_dest})
   openwrt_configure(${_dest})
+  openwrt_patch(${_dest})
 endmacro(openwrt_env)
