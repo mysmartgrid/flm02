@@ -13,7 +13,7 @@ PKG_RELEASE:=1
 PKG_CMT:=8d076690cd84702d051a548740dfa0f2102dc28e
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=git://github.com/brimworks/lua-zlib.git
+PKG_SOURCE_URL:=https://github.com/brimworks/lua-zlib.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_VERSION:=$(PKG_CMT)
 PKG_SOURCE_PROTO:=git
