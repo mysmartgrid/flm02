@@ -28,7 +28,8 @@ set(FLM_BUILD_DIR "flm02.${FLM02_MINOR_VERSION}.${FLM02_SUB_VERSION}/" CACHE  FI
 set(FLM_FULL_BUILD_DIR "${CMAKE_BINARY_DIR}/${FLM_BUILD_DIR}" CACHE  FILEPATH "flm build directory")
 include(OpenWRTBuild)
 
-openwrt_env(${FLM_BUILD_DIR})
+openwrt_env(${FLM_BUILD_DIR} ConfigureTarget)
+  message(STATUS "   * add MAIN ${ConfigureTarget}")
 
 
 #execute_process(
@@ -52,6 +53,7 @@ add_custom_target(image ALL
   COMMENT ""
   DEPENDS ${CMAKE_BINARY_DIR}/feeds.done
 )
+add_dependencies(image ${ConfigureTarget})
 
 ### print some output for the user
 message("")

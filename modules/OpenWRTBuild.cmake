@@ -66,7 +66,7 @@ function(openwrt_checkout _dest)
 
 endfunction(openwrt_checkout)
 
-function(openwrt_configure _dest)
+function(openwrt_configure _dest _target)
   message(STATUS "  openwrt configuring")
   file(WRITE ${CMAKE_BINARY_DIR}/${_dest}/feeds.conf
 #    "src-link itwm ${CMAKE_SOURCE_DIR}/openwrt/package
@@ -110,6 +110,7 @@ src-svn packages svn://svn.openwrt.org/openwrt/packages
 
   add_custom_target(openwrt_feeds DEPENDS ${CMAKE_BINARY_DIR}/install.done)
   add_dependencies(openwrt_feeds openwrt_package)
+  set(${_target} "openwrt_feeds" PARENT_SCOPE)
   message(STATUS "   * add checkout-target openwrt_feeds")
 #  configure_file(dot.config_${DEST_TARGET} ${CMAKE_BINARY_DIR}/${_dest}/.config)
 #  file(APPEND ${CMAKE_BINARY_DIR}/${_dest}/.config
@@ -183,9 +184,10 @@ function(openwrt_host)
 
 endfunction(openwrt_host)
 
-macro(openwrt_env _dest)
+macro(openwrt_env _dest _target)
   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest})
   openwrt_checkout(${_dest})
-  openwrt_configure(${_dest})
+  openwrt_configure(${_dest} ${_target})
+  message(STATUS "   * add openwrt_env ${${_target}}")
   #openwrt_host()
 endmacro(openwrt_env)
