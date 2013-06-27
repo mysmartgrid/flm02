@@ -75,7 +75,7 @@ src-svn packages svn://svn.openwrt.org/openwrt/packages
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/install.done
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/openwrt/.config ${CMAKE_BINARY_DIR}/${_dest}
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/openwrt/files ${CMAKE_BINARY_DIR}/${_dest}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/openwrt/files ${CMAKE_BINARY_DIR}/${_dest}/files
     COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/install.done
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/openwrt
     COMMENT "run installation script"
