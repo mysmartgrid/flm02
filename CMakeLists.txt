@@ -47,7 +47,7 @@ if (NOT ${CMAKE_BUILD_TYPE} MATCHES "Release")
 endif (NOT ${CMAKE_BUILD_TYPE} MATCHES "Release")
 
 add_custom_target(image ALL
-  make
+  BUILD_LOG=1 make
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${FLM_BUILD_DIR}/"
   COMMENT ""
   DEPENDS openwrt_patch
