@@ -3,7 +3,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libhexabus
-PKG_VERSION:=0.1
+PKG_VERSION:=0.2
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -71,6 +71,7 @@ define Build/Configure
 			-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
 			-DCMAKE_STRIP=: \
 			-DCMAKE_INSTALL_PREFIX=/usr \
+			-DWITHOUT_CPACK=TRUE \
 			$(CMAKE_OPTIONS) \
 		.. \
 	)
