@@ -14,7 +14,7 @@ include $(INCLUDE_DIR)/cmake.mk
 define Package/hexadaemon
   SECTION:=utils
   CATEGORY:=Network
-  DEPENDS:=+libhexabus +boost-system +boost-regex
+  DEPENDS:=+libhexabus +boost-system +boost-regex +libuci
   TITLE:=HexaDaemon
   URL:=http://www.hexabus.net
   MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>
