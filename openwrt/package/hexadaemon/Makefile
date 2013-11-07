@@ -3,8 +3,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=hexadaemon
-PKG_VERSION:=0.2
-PKG_RELEASE:=2
+PKG_VERSION:=0.3
+PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
@@ -25,12 +25,13 @@ define Package/hexadaemon/description
 endef
 
 define Build/Prepare
-	sh -c 'if [ -d hexabus ]; then cd hexabus; git pull --rebase; cd ..; else git clone http://github.com/mysmartgrid/hexabus.git -b sp-hexadaemon; fi'
+	sh -c 'if [ -d hexabus ]; then cd hexabus; git pull --rebase; cd ..; else git clone http://github.com/mysmartgrid/hexabus.git -b development; fi'
 
 	mkdir -p $(PKG_BUILD_DIR)
-	cp -R hexabus/* $(PKG_BUILD_DIR)
+	$(CP) -R hexabus/* $(PKG_BUILD_DIR)
 
-	cp hexadaemon.init $(PKG_BUILD_DIR)
+	$(CP) hexadaemon.init $(PKG_BUILD_DIR)
+	$(CP) ./config/* $(PKG_BUILD_DIR)/
 
 	$(Build/Patch)
 endef
@@ -78,6 +79,9 @@ define Build/Install
 endef
 
 define Package/hexadaemon/install
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/hexabus.uci $(1)/etc/config/hexabus
+
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/hexadaemon.init $(1)/etc/init.d/hexadaemon
 
