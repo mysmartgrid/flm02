@@ -12,9 +12,9 @@ macro(openwrt_checkout_system _target _workdir _url _output)
   message(STATUS "  checkout ${_url}")
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/${_dest}/${_output}
-    COMMAND svn co ${_openwrt_url}/${_url} -r 27608 .
+    COMMAND svn co ${_openwrt_url}/${_url} .
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_workdir}
-    COMMENT "Checkout openwrt sources ${_url} -r 27608"
+    COMMENT "Checkout openwrt sources ${_url}"
     )
   add_custom_target(${_target} DEPENDS ${CMAKE_BINARY_DIR}/${_dest}/${_output})
   message(STATUS "   * add checkout-target ${_target}")
@@ -36,9 +36,9 @@ endmacro()
 #
 #
 function(openwrt_checkout _dest)
-  openwrt_checkout_system(openwrt_checkout ${_dest} branches/backfire Makefile ${_dest})
+  openwrt_checkout_system(openwrt_checkout ${_dest} branches/attitude_adjustment Makefile ${_dest})
 
-  openwrt_checkout_package(openwrt_package_ntpd ${_dest}/package branches/packages_10.03.1/net/ntpd ntpd package/ntpd/Makefile)
+  openwrt_checkout_package(openwrt_package_ntpd ${_dest}/package branches/packages_12.09/net/ntpd ntpd package/ntpd/Makefile)
 
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/package.done
@@ -93,23 +93,17 @@ function(openwrt_patch _dest)
 
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/copy_patches.done
-    # add patches to the toolchain
-    COMMAND ${CMAKE_COMMAND} -E copy patches/990-add_timerfd_support.patch ${CMAKE_BINARY_DIR}/${_dest}/toolchain/uClibc/patches-0.9.30.1
-    # add patches to the linux atheros target
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"300-set_AR2315_RESET_GPIO_to_6.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"310-hotplug_button_jiffies_calc.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"400-spi_gpio_support.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"410-spi_gpio_enable_cs_line.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"420-tune_spi_bitbanging_for_avr.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    # backport loglevel fix to busybox v1.15.3-2
-    # see: https://bugs.busybox.net/show_bug.cgi?id=681
-    COMMAND ${CMAKE_COMMAND} -E copy patches/820-fix_crond_loglevel.patch ${CMAKE_BINARY_DIR}/${_dest}/package/busybox/patches
+    # add patches to the atheros target
+    COMMAND ${CMAKE_COMMAND} -E copy patches/300-set_AR2315_RESET_GPIO_to_6.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/310-register_gpio_leds.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/320-flm_spi_platform_support.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/330-export_spi_rst_gpio_to_userspace.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/340-tune_spi_bitbanging_for_avr.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/500-early_printk_disable.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+
     # patch the default OpenWRT Lua package
-    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/lua/patches/400-luaposix_5.1.4-embedded.patch
-    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/lua/patches/500-eglibc_config.patch
     COMMAND ${CMAKE_COMMAND} -E copy patches/600-lua-tablecreate.patch ${CMAKE_BINARY_DIR}/${_dest}/package/lua/patches
-    # patch squashfs to support setuid
-    COMMAND ${CMAKE_COMMAND} -E copy patches/900-squashfs-mode.patch ${CMAKE_BINARY_DIR}/${_dest}/tools/squashfs4/patches
+
     # copy flash utility to the tools dir
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/tools/ap51-flash ${CMAKE_BINARY_DIR}/${_dest}/tools
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/copy_patches.done
@@ -121,15 +115,18 @@ function(openwrt_patch _dest)
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/apply_patches.done
     # patch files of the OpenWRT build system
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"900-disable_console.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"900-setuid-ntpclient.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"910-set_ttyS0_baud_to_115200.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"920-add-make-flash-option.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"921-add-make-publish-option.patch"
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/900-disable_console.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/910-redirect-console-to-devnull.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/915-kernel_posix_mqueue_support.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/920-add-make-flash-option.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/921-add-make-publish-option.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/925-add_mac_address_to_radio0.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/930-boot_crond_without_crontabs.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/940-wpa_supd_hook.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/950-ntpd_supd_hook.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/960-remove_default_banner.patch
     # patch opkg config to use openwrt.mysmartgrid.de
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"998-opkg-repo.patch"
-    # we don't need rdate, relying on ntpclient instead
-    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/base-files/files/etc/hotplug.d/iface/40-rdate
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/apply_patches.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "apply patches"

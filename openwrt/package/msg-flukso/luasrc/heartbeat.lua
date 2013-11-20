@@ -34,6 +34,7 @@ local uci        = require 'luci.model.uci'.cursor()
 local luci       = require 'luci'
 luci.sys         = require 'luci.sys'
 luci.json        = require 'luci.json'
+luci.util        = require 'luci.util'
 local httpclient = require 'luci.httpclient'
 
 -- character table string
@@ -74,6 +75,7 @@ local FLUKSO		= uci:get_all('flukso')
 
 -- WAN settings
 local WAN_ENABLED	= (FLUKSO.daemon.enable_wan_branch == '1')
+local UPGRADE_ENABLED = (FLUKSO.daemon.enable_remote_upgrade == '1')
 
 local WAN_BASE_URL	= FLUKSO.daemon.wan_base_url .. 'device/'
 local WAN_KEY		= '0123456789abcdef0123456789abcdef'
@@ -114,6 +116,13 @@ local function collect_mp()
 	local syslog_gz = io.read("*all")
 
 	monitor.syslog = nixio.bin.b64encode(syslog_gz)
+
+--	local defaultroute = luci.sys.net.defaultroute()
+--	if defaultroute then
+--		local device = defaultroute.device
+--		monitor.ip = luci.util.exec("ifconfig " .. device):match("inet addr:([%d\.]*) ")
+--		monitor.port = uci:get('uhttpd', 'restful', 'listen_http')[1]:match(":([%d]*)")
+--	end
 
 	return monitor
 end

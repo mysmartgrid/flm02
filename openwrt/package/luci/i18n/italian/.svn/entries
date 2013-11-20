@@ -1,14 +1,14 @@
 10
 
 dir
-6253
-http://svn.luci.subsignal.org/luci/branches/luci-0.9/i18n/italian
+9934
+http://svn.luci.subsignal.org/luci/branches/luci-0.11/i18n/italian
 http://svn.luci.subsignal.org
 
 
 
-2009-05-19T02:41:14.902661Z
-4562
+2011-11-30T15:11:15.387178Z
+8031
 jow
 has-props
 
@@ -26,28 +26,16 @@ has-props
 
 ab181a69-ba2e-0410-a84d-ff88ab4c47bc
 
-root
-dir
-
-src
-dir
-
-luasrc
-dir
-
-ipkg
-dir
-
 Makefile
 file
 
 
 
 
-2010-09-19T09:58:13.648068Z
-ea02c9243ed71c425e73979cc0ecab04
-2009-05-19T02:41:14.902661Z
-4562
+2013-11-14T11:00:04.880710Z
+f7aca382fda39d2a8d80963bd574d21f
+2009-11-01T14:30:02.324409Z
+5486
 jow
 
 
@@ -70,5 +58,11 @@ jow
 
 
 
-115
+84
+
+root
+dir
+
+ipkg
+dir
 

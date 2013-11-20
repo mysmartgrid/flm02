@@ -1,0 +1,11 @@
+#!/bin/sh
+
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@flukso[-1]
+	add ucitrack flukso
+	set ucitrack.@flukso[-1].init=msg-flukso2
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-indexcache
+exit 0

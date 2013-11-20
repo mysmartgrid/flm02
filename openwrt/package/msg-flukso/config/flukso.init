@@ -14,43 +14,88 @@ set_version()
 
 load_config()
 {
-        uci set system.@system[0].key=$(hexdump -v -e '1/1 "%.2x"' -s $((0x11000)) -n 16 /dev/mtd6)
-        uci set system.@system[0].device=$(hexdump -v -e '1/1 "%.2x"' -s $((0x11020)) -n 16 /dev/mtd6)
-        uci set system.@system[0].hostname=flukso-$(hexdump -v -e '1/1 "%.2x"' -s $((0x11020)) -n 3 /dev/mtd6)
+	MODEL_HEX=$(hexdump -v -e '1/1 "%.2x"' -s $((0x11800)) -n 6 /dev/mtd6)
+	MODEL=$(hexdump -v -e '"%.6s"' -s $((0x11800)) -n 6 /dev/mtd6)
+	SERIAL=$(hexdump -v -e '"%.10s"' -s $((0x11806)) -n 10 /dev/mtd6)
 
-        for i in `seq 6`;
-        do
-                ADDRESS=0x110$((i+2))0
-                uci set flukso.$i.id=$(hexdump -v -e '1/1 "%.2x"' -s $((ADDRESS)) -n 16 /dev/mtd6)
-        done
+	if [ $MODEL_HEX != ffffffffffff ]
+	then
+		uci set system.@system[0].model=$MODEL
+		uci set system.@system[0].serial=$SERIAL
+	fi
 
-	uci set system.@system[0].firstboot='0'
-        uci commit
+	uci set system.@system[0].key=$(hexdump -v -e '1/1 "%.2x"' -s $((0x11000)) -n 16 /dev/mtd6)
+	uci set system.@system[0].device=$(hexdump -v -e '1/1 "%.2x"' -s $((0x11020)) -n 16 /dev/mtd6)
+	uci set system.@system[0].hostname=flukso-$(hexdump -v -e '1/1 "%.2x"' -s $((0x11020)) -n 3 /dev/mtd6)
 
-        logger 'configuring flukso device and sensor ids at firstboot'
+	for i in `seq 64`;
+	do
+		ADDRESS=$((0x11020 + i * 0x10))
+		ID=$(hexdump -v -e '1/1 "%.2x"' -s $ADDRESS -n 16 /dev/mtd6)
+
+		if [ $ID == ffffffffffffffffffffffffffffffff ]
+		then
+			break
+		fi
+		
+		uci set flukso.$i=sensor
+		uci set flukso.$i.id=$ID
+		uci set flukso.main.max_provisioned_sensors=$i
+	done
+
+	uci commit
+
+	logger 'configuring flukso device and sensor ids at firstboot'
+}
+
+set_hw_version()
+{
+	MODEL=$(uci get system.@system[0].model)
+
+	if [ $MODEL == FLM02A ]
+	then
+		MINOR=1
+	elif [ $MODEL == FLM02B ]
+	then
+		MINOR=2
+	fi
+
+	uci set flukso.main.hw_minor=$MINOR
+	uci commit
 }
 
 program_sensor_board()
 {
-	AVRDUDE=fdude
-
-	MCU=atmega168p
-	PROGRAMMER=gpio
-	FLAGS="-p $MCU -c $PROGRAMMER"
-	FUSES="-U lfuse:w:0xEC:m -U hfuse:w:0xD6:m -U efuse:w:0x01:m"
-
-	TARGET=main
-	AVRDIR=/usr/bin/avr
-	HEXFILE="$AVRDIR/$TARGET.hex"
-	EEPFILE="$AVRDIR/$TARGET.eep"
-
-	FLASH="-U flash:w:$HEXFILE"
-	EEPROM="-U eeprom:w:$EEPFILE"
-
-	$AVRDUDE $FLAGS $FUSES $FLASH $EEPROM 2>1 >&- <&-
-
+	fdude 2>1 >&- <&-
 	logger 'flashing the sensor board at firstboot'
 }
+
+test_sensor_board()
+{
+	TEST=/usr/bin/ftest
+	IP=192.168.255.2
+	PORT=8080
+	RESULT=$($TEST; echo $?)
+
+	wget -s -q "http://$IP:$PORT/cgi-bin/test?result=$RESULT"
+}
+
+set_ttyS0_B()
+{
+	stty -F /dev/ttyS0 9600 min 255 time 1 \
+		-icanon -isig -iexten -echo -brkint -icrnl -ignbrk \
+		-igncr -inlcr -inpck -istrip -ixon -opost parenb \
+		inpck -parodd cs7 -cstopb
+}
+
+set_ttyS0_C()
+{
+	stty -F /dev/ttyS0 1200 min 255 time 1 \
+		-icanon -isig -iexten -echo -brkint -icrnl -ignbrk \
+		-igncr -inlcr -inpck -istrip -ixon -opost parenb \
+		inpck -parodd cs7 -cstopb
+}
+
 
 start()
 {
@@ -60,13 +105,50 @@ start()
 	then
 		set_version
 		load_config
+		set_hw_version
 		program_sensor_board
 	fi
 
-	chmod 666 /dev/spidev0.0
+	chmod 666 /dev/spidev1.0
+	chmod 666 /sys/class/leds/globe/trigger
+	/usr/sbin/supd
+	/usr/sbin/spid -u flukso
+	/usr/sbin/fluksod -u flukso
 
-	/usr/sbin/spid
-	/usr/sbin/fluksod
+	MODEL=$(uci get system.@system[0].model)
+
+	if [ $MODEL == FLM02B ]
+	then
+		set_ttyS0_B
+		/usr/sbin/parsed -u flukso
+	fi
+
+	if [ $MODEL == FLM02C ]
+	then
+		set_ttyS0_C
+		/usr/sbin/parsed -u flukso
+	fi
+
+
+	if [ $FIRSTBOOT -eq '1' ]
+	then
+		sleep 1
+		test_sensor_board
+
+		uci set system.@system[0].firstboot='0'
+		uci commit
+	fi
+
+	RESTORE=$(uci get system.@system[0].restore)
+
+	if [ $RESTORE -eq '1' ]
+	then
+		fbackup -r
+		fsync
+
+		uci set system.@system[0].restore='0'
+		uci commit
+	fi
 
 	EVENTS=/usr/bin/events
 	HEARTBEAT=/usr/bin/heartbeat
@@ -77,17 +159,28 @@ start()
 	$HEARTBEAT 1 >&- 2>&- <&-
 
 	# Configure cron
-	echo -e "$MINUTE * * * * $EVENTS\n*/10 * * * * $HEARTBEAT 0\n*/15 * * * * [ \$($FCHECK; echo \$?) -ne 0 ] && reboot" | crontab -
+	echo -e "$MINUTE * * * * $EVENTS\n*/10 * * * * $HEARTBEAT 0\n*/15 * * * * $FCHECK" | crontab -
 }
 
 stop()
 {
 	crontab -r
 
-	/usr/sbin/fluksod -k
-	/usr/sbin/spid -k
+	MODEL=$(uci get system.@system[0].model)
 
-	rm -rf /var/run/spid
+	if [ $MODEL == FLM02B -o $MODEL == FLM02C ]
+	then
+		/usr/sbin/parsed -k
+		rm -rf /var/run/parsed
+	fi
+
+	/usr/sbin/fluksod -k
 	rm -rf /var/run/fluksod
+
+	/usr/sbin/spid -k
+	rm -rf /var/run/spid
+
+	/usr/sbin/supd -k
+	rm -rf /var/run/supd
 }
 

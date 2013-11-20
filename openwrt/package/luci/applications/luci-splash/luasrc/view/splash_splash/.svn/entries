@@ -1,15 +1,15 @@
 10
 
 dir
-6253
-http://svn.luci.subsignal.org/luci/branches/luci-0.9/applications/luci-splash/luasrc/view/splash_splash
+9934
+http://svn.luci.subsignal.org/luci/branches/luci-0.11/applications/luci-splash/luasrc/view/splash_splash
 http://svn.luci.subsignal.org
 
 
 
-2009-02-19T21:31:33.178822Z
-4251
-jow
+2011-05-14T12:55:22.508437Z
+7062
+soma
 
 
 
@@ -26,47 +26,13 @@ jow
 
 ab181a69-ba2e-0410-a84d-ff88ab4c47bc
 
-splash.htm
-file
-
-
-
-
-2010-09-19T09:58:15.380068Z
-eabbef11d61721f84e42c43f1e317f05
-2009-02-19T21:31:33.178822Z
-4251
-jow
-has-props
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-646
-
 index.htm
 file
 
 
 
 
-2010-09-19T09:58:15.380068Z
+2013-11-14T11:00:05.912710Z
 5411410c0dad8f52a7162d7f94105cc5
 2008-07-07T22:08:34.279697Z
 2539
@@ -93,4 +59,38 @@ has-props
 
 
 436
+
+splash.htm
+file
+
+
+
+
+2013-11-14T11:00:05.912710Z
+37a45724e419859350bab37a1d9c45be
+2011-05-14T12:55:22.508437Z
+7062
+soma
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+647
 
