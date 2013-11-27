@@ -3,9 +3,11 @@
 
 START=94
 
+interface=`uci get network.wan.ifname`
+
 start()
 {
-	/usr/bin/hexadaemon
+	/usr/bin/hexadaemon -i 2 -I ${interface}
 }
 
 stop()
