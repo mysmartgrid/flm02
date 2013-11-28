@@ -124,6 +124,7 @@ function(openwrt_patch _dest)
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"900-disable_console.patch"
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"900-setuid-ntpclient.patch"
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"910-set_ttyS0_baud_to_115200.patch"
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"911-enable_ipv6_router_pref.patch"
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"920-add-make-flash-option.patch"
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"921-add-make-publish-option.patch"
     # patch opkg config to use openwrt.mysmartgrid.de
