@@ -541,6 +541,7 @@ save_sensors = function(callback)
 		}, function(jqXHR, textStatus, errorThrown) {
 			$('#msg_wizard-sensor-save').attr('src', "/luci-static/resources/fail.png");
 			$('#msg_wizard-sensor-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+			$('#wizard-form-buttons').find(':reset').removeAttr('disabled');
 		});
 	});
 
