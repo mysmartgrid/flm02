@@ -629,7 +629,20 @@
 								Bitte loggen Sie sich auf der Webseite ein. Dazu geben Sie ihren Benutzernamen und ihr Passwort im Kasten "Benutzeranmeldung" ein. Das System zeigt Ihnen nun ihr Dashboard an - hier können Sie in Zukunft Ihren Stromverbrauch beobachten. Im Moment ist der Graph allerdings noch leer, da Ihr Flukso noch nicht mit dem System verknüpft ist.
 							</li>
 							<li style="margin-bottom: 0.5em">
-								Um den Flukso zu verknüpfen klicken Sie bitte auf "Mein Konto" auf der linken Seite, danach auf "Geräte". Hier können Sie nun Ihren persönlichen Aktivierungscode eingeben. Für Ihr Gerät geben sie nun bitte folgenden Aktivierungscode ein:
+								Um den Flukso zu verknüpfen klicken Sie bitte auf folgenden Link:
+
+								<div>
+									<%
+										local uci = require "luci.model.uci".cursor()
+
+										local DEVICE = '0123456789abcdef0123456789abcdef'
+										uci:foreach('system', 'system', function(x) if x.device ~= nil then DEVICE = x.device end end)
+
+										print("<a href=\"https://www.mysmartgrid.de/device/assign\?code=" .. string.sub(DEVICE, 1, 10) .. "\">https://www.mysmartgrid.de/device/assign\?code=" .. string.sub(DEVICE, 1, 10) .. "</a>")
+									%>
+								</div>
+
+								Falls dies nicht funktioniert klicken sie bitte auf der MySmartgrid-Webseite auf "Mein Konto" auf der linken Seite, danach auf "Geräte". Hier können Sie nun Ihren persönlichen Aktivierungscode eingeben. Für Ihr Gerät geben sie nun bitte folgenden Aktivierungscode ein:
 								<div style="margin: 0.5em 1em; font-weight: bold">
 									<%
 										local uci = require "luci.model.uci".cursor()

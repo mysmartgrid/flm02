@@ -192,6 +192,7 @@ nixio.openlog('heartbeat', 'pid')
 
 local monitor = collect_mp()
 monitor.firmware = collect_firmware()
+monitor.type = "flukso2"
 local monitor_json = luci.json.encode(monitor)
 
 
