@@ -492,6 +492,17 @@ local function phone_home()
 		return luci.json.encode{ config = config }
 	end
 
+	-- collect relevant firmware informations
+	local function collect_firmware()
+		local FIRMWARE = uci:get_all('firmware', 'system')
+		local firmware = {}
+		firmware.tag         = FIRMWARE.tag
+		firmware.build       = FIRMWARE.build
+		firmware.version     = FIRMWARE.version
+		firmware.releasetime = FIRMWARE.releasetime
+		return firmware
+	end
+
 	local headers = {}
 	headers['Content-Type'] = 'application/json'
 	headers['X-Version'] = '1.0'
@@ -512,6 +523,8 @@ local function phone_home()
 
 	local data = {}
 	data.key = WAN_KEY
+	data.firmware = collect_firmware()
+	data.type = "flukso2"
 
 	options.headers['Connection'] = 'keep-alive'
 	options.body = luci.json.encode( data )
