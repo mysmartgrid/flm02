@@ -468,7 +468,7 @@ checkFsyncResult = function(result) {
 	return {'ok' : ok, 'message': message};
 }
 
-save_sensors = function(callback)
+save_sensors = function(callback, error)
 {
 	$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/loading.gif');
 	$('#msg_wizard-sensor-apply').attr('src', '/luci-static/resources/loading.gif');
@@ -518,6 +518,8 @@ save_sensors = function(callback)
 	handleSensorApplyError = function(jqXHR, textStatus, errorThrown) {                                         
 		$('#msg_wizard-sensor-apply').attr('src', "/luci-static/resources/fail.png"); 
 		$('#msg_wizard-sensor-apply').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+		if(error)
+			error();
 	}
 
 	sensor_sync = new Sync(7, function() {
@@ -542,6 +544,8 @@ save_sensors = function(callback)
 			$('#msg_wizard-sensor-save').attr('src', "/luci-static/resources/fail.png");
 			$('#msg_wizard-sensor-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 			$('#wizard-form-buttons').find(':reset').removeAttr('disabled');
+			if (error)
+				error();
 		});
 	});
 
@@ -637,17 +641,43 @@ submit = function()
 	}
 	else if ( step == "sensor" )
 	{
+		$('#msg_wizard-registration-waiting').show();
+		$('#msg_wizard-registration-auto').hide();
+		$('#msg_wizard-registration-manual').hide();
+		$('#msg_wizard-registration-hide').show();
 		sync_task = function()
 		{
 			$(':input').removeAttr('disabled');
+			$('#msg_wizard-registration-waiting').hide();
+			$('#msg_wizard-registration-auto').show();
+			var activationLink = 'https://www.mysmartgrid.de/device/assign?code=';
+			activationLink += $('#msg_wizard-registration-code').val();
+			activationLink += '&callback=' + encodeURI(location.origin + '/cgi-bin/luci/ready');
+			$('#msg_wizard-registration-link').prop('href', activationLink);
+			$('#msg_wizard-registration-link').text(activationLink);
+		}
+		error_handler = function()
+		{
+			$('#msg_wizard-registration-waiting').hide();
+			$('#msg_wizard-registration-error').show();
 		}
 		step = "registration";
-		save_sensors(sync_task);
+		save_sensors(sync_task, error_handler);
 		progress_bar("registration");
 		$("#msg_wizard-sensor").hide();
 		$("#msg_wizard-registration").show();
 		$("#wizard-form-buttons").find(":submit").hide();
 	}
+}
+
+switch_to_manual = function() {
+	$('#msg_wizard-registration-auto').hide();
+	$('#msg_wizard-registration-manual').show().find('button').prop('disabled', false);
+}
+
+switch_to_auto = function() {
+	$('#msg_wizard-registration-manual').hide();
+	$('#msg_wizard-registration-auto').show().find('button').prop('disabled', false);
 }
 
 wizard_reset = function()
