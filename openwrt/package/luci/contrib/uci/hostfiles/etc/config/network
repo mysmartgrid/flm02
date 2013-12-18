@@ -24,4 +24,5 @@ config interface lan
 #### WAN configuration
 config interface	wan
 	option ifname	"wlan0"
+        option accept_ra 1
 	option proto	dhcp
