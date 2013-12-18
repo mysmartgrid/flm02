@@ -454,8 +454,7 @@ errorsMap = {
 							"\.\*Name\\sor\\sservice\\snot\\sknown\.\*": 'The mySmartGrid server is unreachable. Please check your network configuration',
 			}
 
-checkFsyncResult = function(result) {                                                                                   
-																																																																								
+checkFsyncResult = function(result) {
 	var message = 'Unknown';
 	var ok = true;
 	$.each(errorsMap, function(exp, formatted) {                                                                  
@@ -518,6 +517,7 @@ save_sensors = function(callback, error)
 	handleSensorApplyError = function(jqXHR, textStatus, errorThrown) {                                         
 		$('#msg_wizard-sensor-apply').attr('src', "/luci-static/resources/fail.png"); 
 		$('#msg_wizard-sensor-apply').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+		$('#wizard-form-buttons').find(':input').removeAttr('disabled');
 		if(error)
 			error();
 	}
@@ -535,18 +535,11 @@ save_sensors = function(callback, error)
 						callback();
 				} else {
 					handleSensorApplyError(null, 'Failure', check.message);
-					$('#wizard-form-buttons').find(':reset').removeAttr('disabled');
 				}
 				
 			}, handleSensorApplyError)
 
-		}, function(jqXHR, textStatus, errorThrown) {
-			$('#msg_wizard-sensor-save').attr('src', "/luci-static/resources/fail.png");
-			$('#msg_wizard-sensor-save').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
-			$('#wizard-form-buttons').find(':reset').removeAttr('disabled');
-			if (error)
-				error();
-		});
+		}, handleSensorApplyError);
 	});
 
 	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "1", ' + JSON.stringify(config[1]) + ']', "108", function(data) { sensor_sync.run(); });
@@ -660,6 +653,7 @@ submit = function()
 		{
 			$('#msg_wizard-registration-waiting').hide();
 			$('#msg_wizard-registration-error').show();
+			$('#wizard-form-buttons').find(':input').removeAttr('disabled');
 		}
 		step = "registration";
 		save_sensors(sync_task, error_handler);
@@ -671,13 +665,19 @@ submit = function()
 }
 
 switch_to_manual = function() {
-	$('#msg_wizard-registration-auto').hide();
-	$('#msg_wizard-registration-manual').show().find('button').prop('disabled', false);
+	$('#msg_wizard-registration-auto').hide(20, function() {
+		$('#msg_wizard-registration-manual').show(20, function() {
+			$(':input').removeAttr('disabled')
+		});
+	});
 }
 
 switch_to_auto = function() {
-	$('#msg_wizard-registration-manual').hide();
-	$('#msg_wizard-registration-auto').show().find('button').prop('disabled', false);
+	$('#msg_wizard-registration-manual').hide(20, function() {
+		$('#msg_wizard-registration-auto').show(20, function() {
+			$(':input').removeAttr('disabled')
+		});
+	});
 }
 
 wizard_reset = function()
@@ -717,6 +717,7 @@ wizard_reset = function()
 	{
 		load_sensor_config(function() { $(':input').removeAttr('disabled') });
 		$('#msg_wizard-registration').hide(20, function() { $("#msg_wizard-sensor").show(); } );
+		$('.msg_wizard-registration').hide();
 		step = "sensor";
 		progress_bar("sensors");
 		$("#wizard-form-buttons").find(':submit').show();
