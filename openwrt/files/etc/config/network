@@ -9,7 +9,7 @@ config interface loopback
 config interface wan
         option ifname   ath0
         option proto    dhcp
-        option accept_ra 1
+	option accept_ra 1
 
 config interface lan
         option ifname   eth0
