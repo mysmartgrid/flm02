@@ -530,9 +530,11 @@ save_sensors = function(callback, error)
 				var check = checkFsyncResult(data.result);                                                 
 		
 				if (check.ok) {
-					$('#msg_wizard-sensor-apply').attr('src', '/luci-static/resources/ok.png');
-					if(callback)
-						callback();
+					jsonRequest("/cgi-bin/luci/rpc/sys", "exec", '["/etc/init.d/hexadaemon restart"]', function(data) {
+						$('#msg_wizard-sensor-apply').attr('src', '/luci-static/resources/ok.png');
+						if(callback)
+							callback();
+					}, handleSensorApplyError);
 				} else {
 					handleSensorApplyError(null, 'Failure', check.message);
 				}
