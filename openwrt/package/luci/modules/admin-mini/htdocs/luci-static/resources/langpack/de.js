@@ -53,6 +53,7 @@ jquery_lang_js.prototype.lang.de = {
 	'Saving network configuration.': 'Speichere Netzwerkeinstellungen.',
 	'Applying network configuration. (Please be patient)': 'Wende Netzwerkeinstellungen an. (Dies kann mehrere Minuten dauern)',
 	'Loading current sensor configuration.': 'Lade aktuelle Sensoreinstellungen.',
+	'The mySmartGrid server is unreachable. Please check your network configuration.': 'Der mySmartGrid-Server ist nicht erreichbar. Bitte überprüfen sie ihre Netzwerkkonfiguration.',
 	'Bundle phases': 'Phasen bündeln',
 	'When choosing bundled phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When disabling bundled phases, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively.':'Wenn Phasen bündeln ausgewählt ist, werden die drei Klemmen gruppiert und als ein einziger Sensor #1 angezeigt. Die Sensoren #2 und #3 werden automatisch deaktiviert. Wenn Phasen bündeln nicht ausgewählt ist wird jede Klemme einzeln gemessen und entsprechend als Sensoren #1, #2 und #3 angezeigt.',
 	'Enable': 'Aktivieren',
@@ -73,6 +74,7 @@ jquery_lang_js.prototype.lang.de = {
 	'Saving sensor configuration.': 'Speichere Sensoreinstellungen.',
 	'Applying sensor configuration.': 'Wende Sensoreinstellungen an.',
 	//ready page
+	'Ready': 'Fertig',
 	'The setup of your Flukso is now finished.':'Die Installations ihres Flukso ist nur fertig.',
 	'For more information and an overview of mySmartGrid visit':'Für mehr Informationen und einen Überblick über mySmartGrid besuchen sie',
 	//login form

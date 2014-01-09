@@ -451,7 +451,7 @@ save_network = function(callback)
 //TODO: add more error entries
 errorsMap = {
 	"\.\*\\sok\\n$": 'ok',
-							"\.\*Name\\sor\\sservice\\snot\\sknown\.\*": 'The mySmartGrid server is unreachable. Please check your network configuration',
+							"\.\*Name\\sor\\sservice\\snot\\sknown\.\*": 'The mySmartGrid server is unreachable. Please check your network configuration.',
 			}
 
 checkFsyncResult = function(result) {
@@ -516,7 +516,7 @@ save_sensors = function(callback, error)
 	//TODO: adapt this function to be used in other places
 	handleSensorApplyError = function(jqXHR, textStatus, errorThrown) {
 		$('#msg_wizard-sensor-apply').attr('src', "/luci-static/resources/fail.png");
-		$('#msg_wizard-sensor-apply').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
+		$('#msg_wizard-sensor-apply').parent().append('<div class="errorbox apiError" lang="en">' + textStatus + ': ' + errorThrown + '</div>');
 		$('#wizard-form-buttons').find(':input').removeAttr('disabled');
 		if(error)
 			error();
