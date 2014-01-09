@@ -72,6 +72,9 @@ jquery_lang_js.prototype.lang.de = {
 	//registration
 	'Saving sensor configuration.': 'Speichere Sensoreinstellungen.',
 	'Applying sensor configuration.': 'Wende Sensoreinstellungen an.',
+	//ready page
+	'The setup of your Flukso is now finished.':'Die Installations ihres Flukso ist nur fertig.',
+	'For more information and an overview of mySmartGrid visit':'Für mehr Informationen und einen Überblick über mySmartGrid besuchen sie',
 	//login form
 	'Login': 'Einloggen',
 	'Cancel': 'Abbrechen',
