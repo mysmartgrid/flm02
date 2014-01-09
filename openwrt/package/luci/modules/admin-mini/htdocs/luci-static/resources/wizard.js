@@ -232,12 +232,13 @@ load_sensor_config = function(callback)
 	$('#msg_wizard-sensor-load').attr('src', "/luci-static/resources/loading.gif");
 	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["flukso"]', function(data)
 	{
-		$('#flukso-sensor-phases').val(data["result"]["main"]["phase"]);
 		if ( data["result"]["main"]["phase"] == "3" )
 		{
+			$('#flukso-sensor-phases').prop('checked', true);
 			$('#cbi-flukso-2').hide();
 			$('#cbi-flukso-3').hide();
 		} else {
+			$('#flukso-sensor-phases').prop('checked', false);
 			$('#cbi-flukso-2').show();
 			$('#cbi-flukso-3').show();
 		}
@@ -497,7 +498,7 @@ save_sensors = function(callback, error)
 		}
 		config[k] = sensor;
 	});
-	if ( $('#flukso-sensor-phases').val() == 1 )
+	if ( $('#flukso-sensor-phases').prop('checked') == 0 )
 	{
 		config[1]['port'] = ["1"];
 		config[2]['port'] = ["2"];
@@ -817,8 +818,8 @@ toggle_sensor_type = function(config)
 
 toggle_phase_setting = function(config)
 {
-	var setting = $(config).val();
-	if ( setting == 1 )
+	var setting = $(config).prop('checked');
+	if ( setting == 0 )
 	{
 		//$('#flukso-1-enable').prop('checked', true);
 		toggle_sensor_config($('#flukso-1-enable'));

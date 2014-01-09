@@ -272,18 +272,13 @@
 			<fieldset class="cbi-section">
 				<div class="cbi-section-node" id="sensors">
 					<div class="cbi-value" id="sensor-phases">
-						<label class="cbi-value-title">
-							<span lang="en">Number of phases</span>
-						</label>
+						<label class="cbi-value-title" for="flukso-sensor-phases" lang="en">Bundle phases</label>
 						<div class="cbi-value-field">
-							<select id="flukso-sensor-phases" onchange="toggle_phase_setting(this);">
-								<option value="1">1</option>
-								<option value="3">3</option>
-							</select>
+							<input class="cbi-input-checkbox" type="checkbox" id="flukso-sensor-phases" name="flukso-sensor-phases" value="" onchange="toggle_phase_setting(this);" />
 							<br />
 							<div class="cbi-value-description">
 								<span class="cbi-value-helpicon"><img src="/luci-static/resources/cbi/help.gif" alt="" /></span>
-								<span lang="en">When selecting 3 phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When selecting 1 phase, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively.</span>
+								<span lang="en">When choosing bundled phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When disabling bundled phases, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively.</span>
 							</div>
 						</div>
 					</div>
