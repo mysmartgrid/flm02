@@ -5,6 +5,7 @@ wifi_section = "";
 wifis = [];
 login_task = new Array();
 counter = 0;
+jsonId = 100;
 
 function Sync (counter, task) {
 	this.counter = counter;
@@ -40,7 +41,6 @@ login_callback = function(data, username, password) {
 				"/cgi-bin/luci/rpc/auth",
 				"login",
 				'["' + username + '", "' + password + '"]',
-				100,
 				function(data) {
 					login_callback(data);
 				}
@@ -57,7 +57,6 @@ login = function(jsonCall)
 		"/cgi-bin/luci/rpc/auth",
 		"login",
 		'["root", "root"]',
-		100,
 		function(data) {
 			login_task.push(jsonCall);
 			login_callback(data);
@@ -65,7 +64,7 @@ login = function(jsonCall)
 	);
 }
 
-jsonRequest = function(url, method, params, id, callback, error, timeout)
+jsonRequest = function(url, method, params, callback, error, timeout)
 {
 	if (!timeout)
 		timeout = 60000;
@@ -76,7 +75,7 @@ jsonRequest = function(url, method, params, id, callback, error, timeout)
 		
 	$.ajax({
 		'type': "POST",
-		'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + id + '}',
+		'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + (jsonId++) + '}',
 		'dataType': 'json',
 		'url': url + "?auth=" + auth,
 		'success': callback,
@@ -86,7 +85,7 @@ jsonRequest = function(url, method, params, id, callback, error, timeout)
 				login(function() {
 					$.ajax({
 						'type': "POST",
-						'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + id + '}',
+						'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + (jsonId++) + '}',
 						'dataType': 'json',
 						'url': url + "?auth=" + auth,
 						'success': callback,
@@ -107,7 +106,7 @@ load_iface = function(callback)
 	$(':input').attr('disabled', true);
 	$('#msg_wizard-iface-load').attr('src', '/luci-static/resources/loading.gif');
 	//login(function() {
-		jsonRequest("/cgi-bin/luci/rpc/uci", "get", '["network", "wan", "ifname"]', 90, function(data) {
+		jsonRequest("/cgi-bin/luci/rpc/uci", "get", '["network", "wan", "ifname"]', function(data) {
 			if ( data['result'] == "ath0" )
 				$('#msg_wizard_interface').val("wlan");
 			else
@@ -128,7 +127,7 @@ load_wifi = function(callback)
 		if (callback)
 			callback();
 	});
-	jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', "99", function(data) { 
+	jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', function(data) { 
 		var options;
 		for ( var k = 0; k < data.result.length; k++ )
 		{
@@ -148,7 +147,7 @@ load_wifi = function(callback)
 		$('#msg_wizard-wifi-list').attr('src', "/luci-static/resources/fail.png");
 		$('#msg_wizard-wifi-list').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 	});
-	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "102", function(data) {
+	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', function(data) {
 		var ssid, enc, key;
 		if ( wifi_section == "" )
 		{
@@ -194,7 +193,7 @@ load_wifi = function(callback)
 load_network = function(callback)
 {
 	$('#msg_wizard-net-config').attr('src', '/luci-static/resources/loading.gif');
-	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["network", "wan"]', "103", function(data)
+	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["network", "wan"]', function(data)
 		{
 			$('#network-ipaddr').val(data.result.ipaddr);
 			$('#network-netmask').val(data.result.netmask);
@@ -231,7 +230,7 @@ load_sensor_config = function(callback)
 {
 	$('.sensor-value').empty();
 	$('#msg_wizard-sensor-load').attr('src', "/luci-static/resources/loading.gif");
-	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["flukso"]', "110", function(data)
+	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["flukso"]', function(data)
 	{
 		$('#flukso-sensor-phases').val(data["result"]["main"]["phase"]);
 		if ( data["result"]["main"]["phase"] == "3" )
@@ -334,35 +333,35 @@ save_iface = function(callback)
 		if ( $('#msg_wizard_interface').val() == "wlan" )
 		{
 			iface_commit_sync = new Sync(5, function() {
-				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["firewall"]', "96", function(data) {});
-				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "97", function(data) {});
-				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "98", function(data) {});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["firewall"]', function(data) {});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', function(data) {});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', function(data) {});
 				$('#msg_wizard-wifi-iface-set').attr('src', "/luci-static/resources/ok.png");
 				if ( callback )
 					callback();
 			});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["firewall", ' + JSON.stringify(fwzone) + ', "input", "REJECT"]', "91", function(data) {iface_commit_sync.run();});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "wan", "ifname", "ath0"]', "92", function(data) {iface_commit_sync.run();});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", "lan", ' + JSON.stringify({"ifname": "eth0", "ipaddr": "192.168.255.1", "netmask": "255.255.255.0", "proto": "static"}) + ']', "93", function(data) {iface_commit_sync.run();});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["wireless", "wifi0", "disabled", "0"]', "94", function(data) {iface_commit_sync.run();});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"network": "wan", "mode": "sta"}) + ']', "95", function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["firewall", ' + JSON.stringify(fwzone) + ', "input", "REJECT"]', function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "wan", "ifname", "ath0"]', function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", "lan", ' + JSON.stringify({"ifname": "eth0", "ipaddr": "192.168.255.1", "netmask": "255.255.255.0", "proto": "static"}) + ']', function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["wireless", "wifi0", "disabled", "0"]', function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"network": "wan", "mode": "sta"}) + ']', function(data) {iface_commit_sync.run();});
 		} else {
 			iface_commit_sync = new Sync(5, function() {
-				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["firewall"]', "96", function(data) {});
-				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "97", function(data) {});
-				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "98", function(data) {});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["firewall"]', function(data) {});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', function(data) {});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', function(data) {});
 				$('#msg_wizard-net-iface-set').attr('src', "/luci-static/resources/ok.png");
 				if ( callback )
 					callback();
 			});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["firewall", ' + JSON.stringify(fwzone) + ', "input", "ACCEPT"]', "91", function(data) {iface_commit_sync.run();});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "wan", "ifname", "eth0"]', "92", function(data) {iface_commit_sync.run();});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "lan", "ifname", "ath0"]', "93", function(data) {iface_commit_sync.run();});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["wireless", "wifi0", "disabled", "1"]', "94", function(data) {iface_commit_sync.run();});
-			jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"network": "lan", "mode": "ap"}) + ']', "95", function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["firewall", ' + JSON.stringify(fwzone) + ', "input", "ACCEPT"]', function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "wan", "ifname", "eth0"]', function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["network", "lan", "ifname", "ath0"]', function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "set", '["wireless", "wifi0", "disabled", "1"]', function(data) {iface_commit_sync.run();});
+			jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"network": "lan", "mode": "ap"}) + ']', function(data) {iface_commit_sync.run();});
 		}
 	});
-	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["firewall"]', "80", function(data) {
+	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["firewall"]', function(data) {
 		for ( tmpKey in data.result )
 		{
 			if ( data.result[tmpKey].name == "wan" )
@@ -370,7 +369,7 @@ save_iface = function(callback)
 		}
 		iface_sync.run();
 	});
-	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', "81", function(data) {
+	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', function(data) {
 		if ( wifi_section == "" )
 		{
 			for ( tmpKey in data.result )
@@ -402,8 +401,8 @@ save_wifi = function(callback)
 	else
 		key = $('#wifi-key-input').val();
 
-	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"ssid": ssid , "encryption": enc, "key": key}) + ']', "104", function(data) {
-		jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', "105", function(data) {
+	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["wireless", ' + JSON.stringify(wifi_section) + ', ' + JSON.stringify({"ssid": ssid , "encryption": enc, "key": key}) + ']', function(data) {
+		jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["wireless"]', function(data) {
 			$('#msg_wizard-wifi-save').attr('src', '/luci-static/resources/ok.png');
 			callback();
 		}, function(jqXHR, textStatus, errorThrown) {
@@ -433,8 +432,8 @@ save_network = function(callback)
 		config = {'proto': 'static', 'ipaddr': $('#network-ipaddr').val(), 'netmask': $('#network-netmask').val(), 'gateway': $('#network-gateway').val(), 'dns': $('#network-dns').val()};
 	}
 
-	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", "wan", ' + JSON.stringify(config) + ']', "106", function(data) {
-		jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', "107", function(data) {
+	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["network", "wan", ' + JSON.stringify(config) + ']', function(data) {
+		jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["network"]', function(data) {
 			$('#msg_wizard-net-save').attr('src', '/luci-static/resources/ok.png');
 			if(callback)
 				callback();
@@ -523,9 +522,9 @@ save_sensors = function(callback, error)
 	}
 
 	sensor_sync = new Sync(7, function() {
-		jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["flukso"]', "109", function(data) {
+		jsonRequest("/cgi-bin/luci/rpc/uci", "commit", '["flukso"]', function(data) {
 			$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/ok.png');
-			jsonRequest("/cgi-bin/luci/rpc/sys", "exec", '["fsync"]', "109", function(data) {
+			jsonRequest("/cgi-bin/luci/rpc/sys", "exec", '["fsync"]', function(data) {
 			
 				var check = checkFsyncResult(data.result);                                                 
 		
@@ -542,13 +541,13 @@ save_sensors = function(callback, error)
 		}, handleSensorApplyError);
 	});
 
-	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "1", ' + JSON.stringify(config[1]) + ']', "108", function(data) { sensor_sync.run(); });
-	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "2", ' + JSON.stringify(config[2]) + ']', "108", function(data) { sensor_sync.run(); });
-	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "3", ' + JSON.stringify(config[3]) + ']', "108", function(data) { sensor_sync.run(); });
-	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "4", ' + JSON.stringify(config[4]) + ']', "108", function(data) { sensor_sync.run(); });
-	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "5", ' + JSON.stringify(config[5]) + ']', "108", function(data) { sensor_sync.run(); });
-	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "6", ' + JSON.stringify(config[6]) + ']', "108", function(data) { sensor_sync.run(); });
-	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "main", ' + JSON.stringify(config['main']) + ']', "108", function(data) { sensor_sync.run(); });
+	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "1", ' + JSON.stringify(config[1]) + ']', function(data) { sensor_sync.run(); });
+	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "2", ' + JSON.stringify(config[2]) + ']', function(data) { sensor_sync.run(); });
+	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "3", ' + JSON.stringify(config[3]) + ']', function(data) { sensor_sync.run(); });
+	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "4", ' + JSON.stringify(config[4]) + ']', function(data) { sensor_sync.run(); });
+	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "5", ' + JSON.stringify(config[5]) + ']', function(data) { sensor_sync.run(); });
+	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "6", ' + JSON.stringify(config[6]) + ']', function(data) { sensor_sync.run(); });
+	jsonRequest("/cgi-bin/luci/rpc/uci", "tset", '["flukso", "main", ' + JSON.stringify(config['main']) + ']', function(data) { sensor_sync.run(); });
 }
 
 progress_bar = function(step)
@@ -623,7 +622,7 @@ submit = function()
 		save_network(
 			function() {
 				submit_sync.run();
-				jsonRequest("/cgi-bin/luci/rpc/uci", "apply", '["network", "wireless"]', "108", function(data) {});
+				jsonRequest("/cgi-bin/luci/rpc/uci", "apply", '["network", "wireless"]', function(data) {});
 				window.setTimeout("poll_device(function() {submit_sync.run();})", 10000);
 			}
 		);
