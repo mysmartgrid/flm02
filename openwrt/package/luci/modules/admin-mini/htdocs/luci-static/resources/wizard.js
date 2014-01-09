@@ -1,5 +1,7 @@
 step = "interface";
 iface = "";
+oldIface = "";
+ifacechanged = false;
 auth = "";
 wifi_section = "";
 wifis = [];
@@ -111,6 +113,8 @@ load_iface = function(callback)
 				$('#msg_wizard_interface').val("wlan");
 			else
 				$('#msg_wizard_interface').val("lan");
+
+			oldIface = $('#msg_wizard_interface').val();
 
 			$('#msg_wizard-iface-load').attr('src', '/luci-static/resources/ok.png');
 			$(':input').removeAttr('disabled');
@@ -421,10 +425,6 @@ save_network = function(callback)
 	$('#msg_wizard-net-save').attr('src', '/luci-static/resources/loading.gif');
 	$('#msg_wizard-net-apply').attr('src', '/luci-static/resources/loading.gif');
 	var section, config;
-	/*if ( iface == "wifi" )
-		section = "wan";
-	else
-		section = "lan";*/
 
 	if ( $('#dhcp').prop('checked') == true )
 		config = {'proto': 'dhcp'};
@@ -579,6 +579,9 @@ submit = function()
 	{
 		if ( $('#msg_wizard_interface').val() == "wlan" )
 		{
+			if ( oldIface != "wlan" )
+				ifacechanged = true;
+
 			save_iface(function() {
 				load_wifi()
 			});
@@ -588,6 +591,9 @@ submit = function()
 			$("#msg_wizard-net-iface-set-div").hide();
 			$("#msg_wizard-wifi-iface-set-div").show();
 		} else {
+			if ( oldIface != "lan" )
+				ifacechanged = true;
+
 			save_iface(function() {
 				load_network()
 			});
@@ -618,7 +624,12 @@ submit = function()
 	{
 		submit_sync = new Sync(3, function()
 		{
-			$(':input').removeAttr('disabled');
+			if ( ifacechanged )
+			{
+				alert("Bitte trennen sie ihren Flukso vom Strom und verbinden sie ihn anschließend wieder. Laden sie anschließend die Seite neu.\n\nPlease disconnect and reconnect the power of your flukso and reload the page.");
+			} else {
+				$(':input').removeAttr('disabled');
+			}
 		});
 		step = "sensor";
 		load_sensor_config(function() {submit_sync.run();});
