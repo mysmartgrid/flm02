@@ -72,7 +72,7 @@ jsonRequest = function(url, method, params, callback, error, timeout)
 	//var auth = new RegExp('(?:^|; )sysauth=([^;]*)').exec(document.cookie);
 	//if (!auth)
 	//	auth = legacy_auth;
-		
+
 	$.ajax({
 		'type': "POST",
 		'data': '{"method": "' + method + '", "params": ' + params + ', "id": ' + (jsonId++) + '}',
@@ -127,7 +127,7 @@ load_wifi = function(callback)
 		if (callback)
 			callback();
 	});
-	jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', function(data) { 
+	jsonRequest("/cgi-bin/luci/rpc/sys", "wifi.iwscan", '["ath0"]', function(data) {
 		var options;
 		for ( var k = 0; k < data.result.length; k++ )
 		{
@@ -449,15 +449,15 @@ save_network = function(callback)
 }
 
 //TODO: add more error entries
-errorsMap = {                                                                                                         
-	"\.\*\\sok\\n$": 'ok',                                                                                              
+errorsMap = {
+	"\.\*\\sok\\n$": 'ok',
 							"\.\*Name\\sor\\sservice\\snot\\sknown\.\*": 'The mySmartGrid server is unreachable. Please check your network configuration',
 			}
 
 checkFsyncResult = function(result) {
 	var message = 'Unknown';
 	var ok = true;
-	$.each(errorsMap, function(exp, formatted) {                                                                  
+	$.each(errorsMap, function(exp, formatted) {
 		if ((new RegExp(exp)).test(result)) {
 			message = formatted;
 			ok = false;
@@ -514,8 +514,8 @@ save_sensors = function(callback, error)
 	}
 
 	//TODO: adapt this function to be used in other places
-	handleSensorApplyError = function(jqXHR, textStatus, errorThrown) {                                         
-		$('#msg_wizard-sensor-apply').attr('src', "/luci-static/resources/fail.png"); 
+	handleSensorApplyError = function(jqXHR, textStatus, errorThrown) {
+		$('#msg_wizard-sensor-apply').attr('src', "/luci-static/resources/fail.png");
 		$('#msg_wizard-sensor-apply').parent().append('<div class="errorbox apiError">' + textStatus + ': ' + errorThrown + '</div>');
 		$('#wizard-form-buttons').find(':input').removeAttr('disabled');
 		if(error)
@@ -527,7 +527,7 @@ save_sensors = function(callback, error)
 			$('#msg_wizard-sensor-save').attr('src', '/luci-static/resources/ok.png');
 			jsonRequest("/cgi-bin/luci/rpc/sys", "exec", '["fsync"]', function(data) {
 			
-				var check = checkFsyncResult(data.result);                                                 
+				var check = checkFsyncResult(data.result);
 		
 				if (check.ok) {
 					jsonRequest("/cgi-bin/luci/rpc/sys", "exec", '["/etc/init.d/hexadaemon restart"]', function(data) {
