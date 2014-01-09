@@ -149,7 +149,7 @@ load_wifi = function(callback)
 	});
 	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', function(data) {
 		var ssid, enc, key;
-		if ( wifi_section == "" )
+		if ( wifi_section == "" || !data.result[wifi_section] )
 		{
 			for ( tmpKey in data.result )
 			{
@@ -371,7 +371,7 @@ save_iface = function(callback)
 		iface_sync.run();
 	});
 	jsonRequest("/cgi-bin/luci/rpc/uci", "get_all", '["wireless"]', function(data) {
-		if ( wifi_section == "" )
+		if ( wifi_section == "" || !data.result[wifi_section] )
 		{
 			for ( tmpKey in data.result )
 			{
