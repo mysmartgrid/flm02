@@ -1,7 +1,6 @@
 step = "interface";
 iface = "";
 oldIface = "";
-ifacechanged = false;
 auth = "";
 wifi_section = "";
 wifis = [];
@@ -579,10 +578,12 @@ submit = function()
 	{
 		if ( $('#msg_wizard_interface').val() == "wlan" )
 		{
-			if ( oldIface != "wlan" )
-				ifacechanged = true;
-
 			save_iface(function() {
+				if ( oldIface != "wlan" )
+				{
+					alert("Bitte trennen sie ihren Flukso vom Strom und verbinden sie ihn anschließend wieder. Laden sie anschließend die Seite neu.\n\nPlease disconnect and reconnect the power of your flukso and reload the page.");
+					return;
+				}
 				load_wifi()
 			});
 			step = "wifi";
@@ -591,10 +592,12 @@ submit = function()
 			$("#msg_wizard-net-iface-set-div").hide();
 			$("#msg_wizard-wifi-iface-set-div").show();
 		} else {
-			if ( oldIface != "lan" )
-				ifacechanged = true;
-
 			save_iface(function() {
+				if ( oldIface != "lan" )
+				{
+					alert("Bitte trennen sie ihren Flukso vom Strom und verbinden sie ihn anschließend wieder. Laden sie anschließend die Seite neu.\n\nPlease disconnect and reconnect the power of your flukso and reload the page.");
+					return;
+				}
 				load_network()
 			});
 			iface = "lan";
@@ -624,12 +627,7 @@ submit = function()
 	{
 		submit_sync = new Sync(3, function()
 		{
-			if ( ifacechanged )
-			{
-				alert("Bitte trennen sie ihren Flukso vom Strom und verbinden sie ihn anschließend wieder. Laden sie anschließend die Seite neu.\n\nPlease disconnect and reconnect the power of your flukso and reload the page.");
-			} else {
-				$(':input').removeAttr('disabled');
-			}
+			$(':input').removeAttr('disabled');
 		});
 		step = "sensor";
 		load_sensor_config(function() {submit_sync.run();});
