@@ -7,7 +7,11 @@ interface=`uci get network.wan.ifname`
 
 start()
 {
-	/usr/bin/hexadaemon -i 2 -I ${interface}
+	ADDR="";
+	for x in `ip -6 a show scope global | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
+		do ADDR="$ADDR-a $x ";
+	done;
+	/usr/bin/hexadaemon -i 2 -I ${interface} ${ADDR}
 }
 
 stop()
