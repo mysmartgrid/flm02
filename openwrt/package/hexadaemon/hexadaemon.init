@@ -15,7 +15,7 @@ start()
 	if [ $(grep -c 'hexadaemon' /etc/crontabs/root) -le '0' ]
 	then
 		# Configure cron
-		echo -e '*/5 * * * * [ $(ps w | grep -c hexadaemon) -gt 1 ] || /etc/init.d/hexadaemon restart' >> /etc/crontabs/root
+		echo -e '*/5 * * * * [ $(ps w | grep -c hexadaemon) -le 1 ] || /etc/init.d/hexadaemon restart' >> /etc/crontabs/root
 	fi
 
 	if [ "x$interface" != "x" ];
