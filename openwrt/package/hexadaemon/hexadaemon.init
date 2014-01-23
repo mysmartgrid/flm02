@@ -1,7 +1,7 @@
 #!/bin/sh /etc/rc.common
 # Copyright (c) 2013 Stephan Platz
 
-START=94
+START=99
 
 interface=`uci get network.wan.ifname`
 
@@ -11,10 +11,24 @@ start()
 	for x in `ip -6 a show scope global | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
 		do ADDR="$ADDR-a $x ";
 	done;
-	/usr/bin/hexadaemon -i 2 -I ${interface} ${ADDR}
+
+	if [ $(grep -c 'hexadaemon' /etc/crontabs/root) -le '0' ]
+	then
+		# Configure cron
+		echo -e '*/5 * * * * [ $(ps w | grep -c hexadaemon) -gt 1 ] || /etc/init.d/hexadaemon restart' >> /etc/crontabs/root
+	fi
+
+	if [ "x$interface" != "x" ];
+	then
+		/usr/bin/hexadaemon -i 2 -I ${interface} ${ADDR}
+	fi
 }
 
 stop()
 {
+	cp /etc/crontabs/root /tmp/ct
+	grep -v "hexadaemon" /tmp/ct > /etc/crontabs/root
+	rm /tmp/ct
+
 	killall hexadaemon
 }

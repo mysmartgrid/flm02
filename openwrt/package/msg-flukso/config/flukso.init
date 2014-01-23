@@ -68,21 +68,30 @@ start()
 	/usr/sbin/spid
 	/usr/sbin/fluksod
 
-	EVENTS=/usr/bin/events
-	HEARTBEAT=/usr/bin/heartbeat
-	FCHECK=/usr/bin/fcheck
-	MINUTE=$(date '+%M')
+	if [ $FIRSTBOOT -eq '1' ]
+	then
+		EVENTS=/usr/bin/events
+		HEARTBEAT=/usr/bin/heartbeat
+		FCHECK=/usr/bin/fcheck
+		MINUTE=$(date '+%M')
 
-	# Tell the server we've had a reset
-	$HEARTBEAT 1 >&- 2>&- <&-
+		# Tell the server we've had a reset
+		$HEARTBEAT 1 >&- 2>&- <&-
 
-	# Configure cron
-	echo -e "$MINUTE * * * * $EVENTS\n*/10 * * * * $HEARTBEAT 0\n*/15 * * * * [ \$($FCHECK; echo \$?) -ne 0 ] && reboot" | crontab -
+		# Configure cron
+		echo -e "$MINUTE * * * * $EVENTS\n*/10 * * * * $HEARTBEAT 0\n*/15 * * * * [ \$($FCHECK; echo \$?) -ne 0 ] && reboot" | crontab -
+	fi
 }
 
 stop()
 {
-	crontab -r
+	EVENTS=/usr/bin/events
+	HEARTBEAT=/usr/bin/heartbeat
+	FCHECK=/usr/bin/fcheck
+
+	cp /etc/crontabs/root /tmp/ct
+	grep -v -e "$EVENTS" -e "$HEARTBEAT" -e "$FCHECK" /tmp/ct > /etc/crontabs/root
+	rm /tmp/ct
 
 	/usr/sbin/fluksod -k
 	/usr/sbin/spid -k
