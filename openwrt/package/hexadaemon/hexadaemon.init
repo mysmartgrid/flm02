@@ -12,10 +12,11 @@ start()
 		do ADDR="$ADDR-a $x ";
 	done;
 
-	if [ $(grep -c 'hexadaemon' /etc/crontabs/root) -le '0' ]
+	if [ ! -f /etc/cron.d/hexadaemon ]
 	then
 		# Configure cron
-		echo -e '*/5 * * * * [ $(ps w | grep -c hexadaemon) -le 1 ] || /etc/init.d/hexadaemon restart' >> /etc/crontabs/root
+		echo -e '*/5 * * * * [ $(ps w | grep -c hexadaemon) -le 1 ] || /etc/init.d/hexadaemon restart' > /etc/cron.d/hexadaemon
+		cat /etc/cron.d/* > /etc/crontabs/root
 	fi
 
 	if [ "x$interface" != "x" ];
@@ -26,9 +27,11 @@ start()
 
 stop()
 {
-	cp /etc/crontabs/root /tmp/ct
-	grep -v "hexadaemon" /tmp/ct > /etc/crontabs/root
-	rm /tmp/ct
+	if [ -f /etc/cron.d/hexadaemon ]
+	then
+		rm /etc/cron.d/hexadaemon
+		cat /etc/cron.d/* > /etc/crontabs/root
+	fi
 
 	killall hexadaemon
 }

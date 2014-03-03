@@ -76,8 +76,12 @@ start()
 	# Tell the server we've had a reset
 	$HEARTBEAT 1 >&- 2>&- <&-
 
-	# Configure cron
-	echo -e "$MINUTE * * * * $EVENTS\n*/10 * * * * $HEARTBEAT 0\n*/15 * * * * [ \$($FCHECK; echo \$?) -ne 0 ] && reboot" | crontab -
+	if [ ! -f /etc/cron.d/fluksod ];
+	then
+		# Configure cron
+		echo -e "$MINUTE * * * * $EVENTS\n*/10 * * * * $HEARTBEAT 0\n*/15 * * * * [ \$($FCHECK; echo \$?) -ne 0 ] && reboot" > /etc/cron.d/fluksod
+		cat /etc/cron.d/* > /etc/crontabs/root
+	fi
 }
 
 stop()
@@ -86,9 +90,11 @@ stop()
 	HEARTBEAT=/usr/bin/heartbeat
 	FCHECK=/usr/bin/fcheck
 
-	cp /etc/crontabs/root /tmp/ct
-	grep -v -e "$EVENTS" -e "$HEARTBEAT" -e "$FCHECK" /tmp/ct > /etc/crontabs/root
-	rm /tmp/ct
+	if [ -f /etc/cron.d/fluksod ];
+	then
+		rm /etc/cron.d/fluksod
+		cat /etc/cron.d/* > /etc/crontabs/root
+	fi
 
 	/usr/sbin/fluksod -k
 	/usr/sbin/spid -k

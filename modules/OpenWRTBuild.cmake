@@ -127,6 +127,7 @@ function(openwrt_patch _dest)
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"911-enable_ipv6_router_pref.patch"
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"920-add-make-flash-option.patch"
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"921-add-make-publish-option.patch"
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"950-crond.patch"
     # patch opkg config to use openwrt.mysmartgrid.de
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"998-opkg-repo.patch"
     # we don't need rdate, relying on ntpclient instead
