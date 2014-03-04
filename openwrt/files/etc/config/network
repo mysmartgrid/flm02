@@ -12,7 +12,18 @@ config interface wan
 
 config interface lan
 	option ifname	eth0
-	option type 	bridge
+	option proto	dhcp
+
+config interface lan2
+	option ifname	eth0
 	option proto	static
 	option ipaddr	192.168.255.1
 	option netmask	255.255.255.0
+
+config interface wan6
+	option ifname	@wan
+	option proto	dhcpv6
+
+config interface lan6
+	option ifname	@lan
+	option proto	dhcpv6
