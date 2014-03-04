@@ -1,0 +1,17 @@
+--- feeds/luci/libs/web/luasrc/sauth.lua	2014-03-05 14:34:38.621289737 +0100
++++ feeds/luci/libs/web/luasrc/sauth.lua	2014-03-05 16:00:44.341128000 +0100
+@@ -40,9 +40,13 @@
+ end
+ 
+ local function _write(id, data)
+-	local f = nixio.open(sessionpath .. "/" .. id, "w", 600)
++	local tempid = luci.sys.uniqueid(16)
++	local tempfile = sessionpath .. "/" .. tempid
++	local sessfile = sessionpath .. "/" .. id
++	local f = nixio.open(tempfile, "w", 600)
+ 	f:writeall(data)
+ 	f:close()
++	fs.rename(tempfile, sessfile)
+ end
+ 
+ local function _checkid(id)

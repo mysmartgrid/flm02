@@ -58,7 +58,8 @@ function(openwrt_configure _dest)
   message(STATUS "  openwrt configuring")
   file(WRITE ${CMAKE_BINARY_DIR}/${_dest}/feeds.conf
 "src-link msgflukso ${CMAKE_SOURCE_DIR}/openwrt/package
-src-svn packages svn://svn.openwrt.org/openwrt/packages
+src-git packages git://git.openwrt.org/packages.git
+src-git luci git://nbd.name/luci.git
 ")
 
 
@@ -66,6 +67,7 @@ src-svn packages svn://svn.openwrt.org/openwrt/packages
     OUTPUT ${CMAKE_BINARY_DIR}/feeds.done
     COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds update
     COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds install -a -p msgflukso
+    COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds install luci
     COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/feeds.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "Update feeds"
@@ -125,8 +127,15 @@ function(openwrt_patch _dest)
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/940-wpa_supd_hook.patch
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/950-ntpd_supd_hook.patch
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/960-remove_default_banner.patch
-    # patch opkg config to use openwrt.mysmartgrid.de
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"998-opkg-repo.patch"
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/965-sauth.patch
+
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/970-nixio_timerfd.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/971-nixio_spi.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/972-nixio_numexp.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/973-nixio_binary.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/974-httpclient_create_persistent.patch
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/975-sys_iwinfo.patch
+
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/apply_patches.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "apply patches"
