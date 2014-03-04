@@ -18,7 +18,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/msg-flukso2
 	SECTION:=flukso
 	CATEGORY:=Flukso
-	DEPENDS:=+libdaemon +ntpclient +liblua +luci-nixio +rrdtool1
+	DEPENDS:=+libdaemon +ntpclient +liblua +luci-lib-nixio +luci-lib-web +rrdtool1 +gpioctl
 	TITLE:=Flukso - community metering
 	URL:=http://www.mysmartgrid.de
 	MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>

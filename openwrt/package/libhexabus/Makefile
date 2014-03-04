@@ -3,7 +3,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libhexabus
-PKG_VERSION:=0.2
+PKG_VERSION:=0.3
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -38,7 +38,7 @@ define Package/hexaswitch/description
 endef
 
 define Build/Prepare
-	sh -c 'if [ -d hexabus ]; then cd hexabus; git pull --rebase; cd ..; else git clone http://github.com/mysmartgrid/hexabus.git -b sp-hexadaemon; fi'
+	sh -c 'if [ -d hexabus ]; then cd hexabus; git pull --rebase; cd ..; else git clone http://github.com/mysmartgrid/hexabus.git -b development; fi'
 
 	mkdir -p $(PKG_BUILD_DIR)
 	cp -R hexabus/* $(PKG_BUILD_DIR)
