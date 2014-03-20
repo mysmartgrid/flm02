@@ -88,6 +88,7 @@ define Package/msg-flukso2/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/parsed.lua $(1)/usr/sbin/
 	$(LN) /usr/sbin/luad $(1)/usr/sbin/supd
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/supd.lua $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/heartbeat_handler.sh $(1)/usr/sbin/heartbeat_handler
 
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/event.lua $(1)/usr/bin/event

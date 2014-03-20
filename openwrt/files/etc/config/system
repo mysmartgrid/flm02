@@ -19,7 +19,7 @@ config timeserver ntp
 config button
 	option button	reset
 	option action	released
-	option handler	net_toggle
+	option handler	heartbeat_handler
 	option min	2
 	option max	5
  
