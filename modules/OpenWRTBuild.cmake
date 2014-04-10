@@ -148,6 +148,18 @@ function(openwrt_patch _dest)
   message(STATUS "   * add checkout-target openwrt_patch")
 endfunction(openwrt_patch)
 
+function(openwrt_update _dest)
+  message(STATUS "   openwrt updating")
+
+  add_custom_target(openwrt_update
+    COMMAND svn up
+    DEPENDS openwrt_patch
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
+    COMMENT "update OpenWRT sources"
+  )
+  message(STATUS "   * add target openwrt_update")
+endfunction(openwrt_update)
+
 function(openwrt_host)
   set(_modulesDir ${CMAKE_BINARY_DIR}/${_dest}/staging_dir/host/Modules)
   file(MAKE_DIRECTORY ${_modulesDir})
@@ -161,4 +173,5 @@ macro(openwrt_env _dest)
   openwrt_checkout(${_dest})
   openwrt_configure(${_dest})
   openwrt_patch(${_dest})
+  openwrt_update(${_dest})
 endmacro(openwrt_env)
