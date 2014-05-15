@@ -100,6 +100,8 @@ endef
 define Package/libhexabus/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libhexabus.a $(1)/usr/lib
+	$(INSTALL_DIR) $(1)/usr/share/libhexabus
+	$(CP) $(PKG_INSTALL_DIR)/usr/share/libhexabus/endpoint_registry $(1)/usr/share/libhexabus
 endef
 
 define Package/hexaswitch/install
