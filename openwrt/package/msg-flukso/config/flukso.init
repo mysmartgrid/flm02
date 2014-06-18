@@ -159,12 +159,20 @@ start()
 	$HEARTBEAT 1 >&- 2>&- <&-
 
 	# Configure cron
-	echo -e "$MINUTE * * * * $EVENTS\n*/10 * * * * $HEARTBEAT 0\n*/15 * * * * $FCHECK" | crontab -
+	if [ ! -f /etc/cron.d/fluksod ];
+	then
+		echo -e "$MINUTE * * * * $EVENTS\n*/10 * * * * $HEARTBEAT 0\n*/15 * * * * $FCHECK" > /etc/cron.d/fluksod
+		cat /etc/cron.d/* > /etc/crontabs/root
+	fi
 }
 
 stop()
 {
-	crontab -r
+	if [ -f /etc/crond.d/fluksod ];
+	then
+		rm /etc/crond.d/fluksod
+		cat /etc/cron.d/* > /etc/crontabs/root
+	fi
 
 	MODEL=$(uci get system.@system[0].model)
 

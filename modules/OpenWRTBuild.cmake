@@ -136,6 +136,8 @@ function(openwrt_patch _dest)
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/974-httpclient_create_persistent.patch
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/975-sys_iwinfo.patch
 
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/990-crond.patch
+
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/apply_patches.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "apply patches"
