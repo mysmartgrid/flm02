@@ -23,6 +23,7 @@ config settings daemon
 	option wan_base_url https://api.mysmartgrid.de:8443/
 	option upgrade_url http://www.mysmartgrid.de/files/upgrade/
 	option cacert /etc/ssl/certs/msg.ca.crt
+	option wan_registered 0
 
 config mysmartgrid events
 	option brownouts 0

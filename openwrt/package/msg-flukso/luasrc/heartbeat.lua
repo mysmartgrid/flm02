@@ -292,11 +292,13 @@ local function get_sensor(sensor, idmap)
       uci:set("flukso", idmap[sensor], "enable", enable)
       uci:set("flukso", idmap[sensor], "function", response.config["function"])
       --uci:set("flukso", idmap[sensor], "unit", response.config["unit"]) --not needed
-      --uci:set("flukso", idmap[sensor], "class", response.config["class"]) --not implemented yet
-      --uci:set("flukso", idmap[sensor], "type", response.config["type"]) --not implemented yet
-      --uci:set("flukso", idmap[sensor], "voltage", response.config["voltage"]) --not implemented yet
-      --uci:set("flukso", idmap[sensor], "current", response.config["current"]) --not implemented yet
-      --uci:set("flukso", idmap[sensor], "constant", response.config["constant"]) --not implemented yet
+      uci:set("flukso", idmap[sensor], "class", response.config["class"])
+      if response.config["class"] == "analog" then
+        uci:set("flukso", idmap[sensor], "voltage", response.config["voltage"])
+        uci:set("flukso", idmap[sensor], "current", response.config["current"])
+      else
+        uci:set("flukso", idmap[sensor], "constant", response.config["constant"])
+      end
       --uci:set("flukso", idmap[sensor], "phase", response.config["phase"]) --not implemented yet
       uci:commit("flukso")
 
@@ -325,8 +327,12 @@ monitor.type = "flukso2"
 local config = collect_config()
 --TODO: remove debug output
 print_table(config)
-if config ~= nil then
-	monitor.config = config
+if FLUKSO.daemon.wan_registered ~= '1' then
+  monitor.key = WAN_KEY
+else
+  if config ~= nil then
+    monitor.config = config
+  end
 end
 
 local monitor_json = luci.json.encode(monitor)
@@ -364,10 +370,18 @@ local url = WAN_BASE_URL .. DEVICE
 local response_json, code, call_info = http_persist(url, options)
 
 if code == 200 then
-	nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
-	uci:set("flukso", "daemon", "configchanged", 0)
+  nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
+  uci:set("flukso", "daemon", "configchanged", 0)
+  if FLUKSO.daemon.wan_registered ~= '1' then
+    FLUKSO.daemon.wan_registered = 1
+    -- when we just registered the device we also have to inform all known sensors
+    -- fsync is unsuitable here as it only informs activated sensors
+    os.execute('/usr/bin/fsync')
+  end
+elseif code == 481 then
+  nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
 else
-	nixio.syslog('err', string.format('%s %s: %s', options.method, url, code))
+  nixio.syslog('err', string.format('%s %s: %s', options.method, url, code))
 
         print('failed, code=', code)
         if type(call_info) == 'table' then
