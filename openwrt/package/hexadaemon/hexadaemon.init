@@ -3,18 +3,50 @@
 
 START=94
 
-interface=`uci get network.wan.ifname`
+waninterface=`uci get network.wan.ifname`
+laninterface=`uci get network.lan.ifname`
 
 start()
 {
-	ADDR="";
-	for x in `ip -6 a show scope global permanent | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
-		do ADDR="$ADDR-a $x ";
+	LANADDR="";
+	for x in `ip -6 a show scope global permanent "${laninterface}" | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
+		do LANADDR="${LANADDR}-a $x ";
 	done;
-	/usr/bin/hexadaemon -i 2 -I "${interface}" ${ADDR}
+	WANADDR="";
+	for x in `ip -6 a show scope global permanent "${waninterface}" | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
+		do WANADDR="${WANADDR}-a $x ";
+	done;
+	ADDR="";
+	if [ -n "${LANADDR}" ]; then
+		INTERFACES="${INTERFACES}-I ${laninterface} ";
+		ADDR="${ADDR}${LANADDR}";
+	fi
+	if [ -n "${WANADDR}" ]; then
+		INTERFACES="${INTERFACES}-I ${waninterface} ";
+		ADDR="${ADDR}${WANADDR}";
+	fi
+	if [ -n "${ADDR}" ] && [ -n "${INTERFACES}" ];
+	then
+		/usr/bin/hexadaemon -i 2 ${INTERFACES} ${ADDR};
+	else
+		echo "Unable to determine addresses and interfaces to use.";
+		exit 1;
+	fi
+
+	if [ ! -f /etc/cron.d/hexadaemon ];
+	then
+		echo -e '*/5 * * * * [ $(ps w | grep -c hexadaemon) -le 1 ] && /etc/init.d/hexadaemon restart' > /etc/cron.d/hexadaemon
+		cat /etc/cron.d/* > /etc/crontabs/root
+	fi
 }
 
 stop()
 {
 	killall hexadaemon
+
+	if [ -f /etc/cron.d/hexadaemon ];
+	then
+		rm /etc/cron.d/hexadaemon
+		cat /etc/cron.d/* > /etc/crontabs/root
+	fi
 }
