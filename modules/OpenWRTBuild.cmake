@@ -159,6 +159,12 @@ function(openwrt_update _dest)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "update OpenWRT sources"
   )
+  add_custom_target(openwrt_feeds_update
+    COMMAND ./scripts/feeds update
+    DEPENDS openwrt_update
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
+    COMMENT "update feeds"
+  )
   message(STATUS "   * add target openwrt_update")
 endfunction(openwrt_update)
 
