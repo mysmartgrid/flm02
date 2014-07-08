@@ -14,7 +14,7 @@ include $(INCLUDE_DIR)/cmake.mk
 define Package/hexadaemon
   SECTION:=utils
   CATEGORY:=Network
-  DEPENDS:=+libhexabus +boost-system +boost-regex +libuci
+  DEPENDS:=+libhexabus +boost-system +boost-regex +libuci +ip
   TITLE:=HexaDaemon
   URL:=http://www.hexabus.net
   MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>
@@ -39,6 +39,7 @@ endef
 define Build/Configure
 	(cd $(PKG_BUILD_DIR)/hostsoftware/hexadaemon; \
 	mkdir build; cd build; \
+		UCI_HOME=$(STAGING_DIR)/usr \
 		CFLAGS="$(TARGET_CFLAGS) $(EXTRA_CFLAGS)" \
 		CXXFLAGS="$(TARGET_CFLAGS) $(EXTRA_CFLAGS)" \
 		cmake \
