@@ -455,11 +455,10 @@ local function publish(child)
 
 			for sensor_id, json in pairs(measurements_json) do
 				local file = LAN_PUBLISH_PATH .. '/' .. sensor_id
+				local tmpfile = '/tmp/.' .. sensor_id .. ".tmp"
 				
-				nixio.fs.unlink(file)
-				fd = nixio.open(file, O_RDWR_CREAT)
-				fd:write(json)
-				fd:close()
+				nixio.fs.writefile(tmpfile, json)
+				nixio.fs.move(tmpfile, file)
 			end
 
 			resume(child, measurements)
