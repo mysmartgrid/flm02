@@ -5,6 +5,7 @@ START=94
 
 waninterface=`uci get network.wan.ifname`
 laninterface=`uci get network.lan.ifname`
+OPTIONS="-l /dev/null"
 
 start()
 {
@@ -33,7 +34,7 @@ start()
 	fi
 	if [ -n "${ADDR}" ] && [ -n "${INTERFACES}" ];
 	then
-		/usr/bin/hexadaemon -i 2 ${INTERFACES} ${ADDR};
+		/usr/bin/hexadaemon ${OPTIONS} -i 1 ${INTERFACES} ${ADDR};
 	else
 		echo "Unable to determine addresses and interfaces to use.";
 		exit 1;
