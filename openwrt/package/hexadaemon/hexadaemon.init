@@ -9,6 +9,12 @@ OPTIONS="-l /dev/null"
 
 start()
 {
+	if [ ! -f /etc/cron.d/hexadaemon ];
+	then
+		echo -e '*/5 * * * * [ -z "$(ps | grep \"hexadaemo[n]\")" ] && /etc/init.d/hexadaemon restart' > /etc/cron.d/hexadaemon
+		cat /etc/cron.d/* | crontab -
+	fi
+
 	LANADDR="";
 	for x in `ip -6 a show scope global "${laninterface}" | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
 		do LANADDR="${LANADDR}-a $x ";
@@ -33,21 +39,15 @@ start()
 		echo "Unable to determine addresses and interfaces to use.";
 		exit 1;
 	fi
-
-	if [ ! -f /etc/cron.d/hexadaemon ];
-	then
-		echo -e '*/5 * * * * [ $(ps w | grep -c hexadaemon) -le 1 ] && /etc/init.d/hexadaemon restart' > /etc/cron.d/hexadaemon
-		cat /etc/cron.d/* > /etc/crontabs/root
-	fi
 }
 
 stop()
 {
-	killall hexadaemon
-
 	if [ -f /etc/cron.d/hexadaemon ];
 	then
 		rm /etc/cron.d/hexadaemon
-		cat /etc/cron.d/* > /etc/crontabs/root
+		cat /etc/cron.d/* | crontab -
 	fi
+
+	killall hexadaemon
 }
