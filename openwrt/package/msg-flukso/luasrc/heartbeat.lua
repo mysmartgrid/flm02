@@ -154,7 +154,7 @@ end
 
 -- collect the parts of the network configuration that changed since the last run
 local function collect_config()
-	if uci:get("flukso", "daemon", "configchanged") == 0 then
+	if uci:get("flukso", "daemon", "configchanged") == '0' then
 		return
 	end
 
@@ -166,10 +166,11 @@ local function collect_config()
 	local config = {}
 	config.lan = {}
 	config.lan.enabled = (LAN_CONFIG.proto ~= "none") and 1 or 0
-	config.lan.protocol = LAN_CONFIG.proto
+	config.lan.protocol = (LAN_CONFIG.proto ~= "none") and LAN_CONFIG.proto or undefined
 	config.lan.ip = LAN_CONFIG.ipaddr
 	config.lan.netmask = LAN_CONFIG.netmask
 	config.lan.gateway = LAN_CONFIG.gateway
+	config.lan.nameserver = LAN_CONFIG.dns
 	config.wifi = {}
 	config.wifi.essid = uci:get("wireless", wifidevs[1], "ssid")
 	local enc = uci:get("wireless", wifidevs[1], "encryption")
@@ -184,10 +185,11 @@ local function collect_config()
 	end
 	config.wifi.psk = uci:get("wireless", wifidevs[1], "key")
 	config.wifi.enabled = (WAN_CONFIG.proto ~= "none") and 1 or 0
-	config.wifi.protocol = WAN_CONFIG.proto
+	config.wifi.protocol = (WAN_CONFIG.proto ~= "none") and WAN_CONFIG.proto or undefined
 	config.wifi.ip = WAN_CONFIG.ipaddr
 	config.wifi.netmask = WAN_CONFIG.netmask
 	config.wifi.gateway = WAN_CONFIG.gateway
+	config.wifi.nameserver = WAN_CONFIG.dns
 	local c = {}
 	c.network = config
 	return c
@@ -390,6 +392,7 @@ if code == 200 then
     -- fsync is unsuitable here as it only informs activated sensors
     os.execute('/usr/bin/fsync')
   end
+  uci:commit("flukso")
 elseif code == 481 then
   nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
 else
@@ -499,6 +502,7 @@ if response.config then
 					uci:set("network", "lan", "ipaddr", network.lan.ip)
 					uci:set("network", "lan", "netmask", network.lan.netmask)
 					uci:set("network", "lan", "gateway", network.lan.gateway)
+					uci:set("network", "lan", "dns", network.lan.nameserver)
 				elseif network.lan.protocol == 'dhcp' then
 					debug("lan dhcp")
 					--set protocol dhcp and remove the other fields
@@ -506,6 +510,7 @@ if response.config then
 					uci:delete("network", "lan", "ipaddr")
 					uci:delete("network", "lan", "netmask")
 					uci:delete("network", "lan", "gateway")
+					uci:delete("network", "lan", "dns")
 				else
 					debug("lan protocol " .. network.lan.protocol .. " unknown")
 					--unknown protocol
@@ -513,6 +518,7 @@ if response.config then
 					uci:delete("network", "lan", "ipaddr")
 					uci:delete("network", "lan", "netmask")
 					uci:delete("network", "lan", "gateway")
+					uci:delete("network", "lan", "dns")
 				end
 			else
 				debug("lan disabled")
@@ -521,7 +527,9 @@ if response.config then
 				uci:delete("network", "lan", "ipaddr")
 				uci:delete("network", "lan", "netmask")
 				uci:delete("network", "lan", "gateway")
+				uci:delete("network", "lan", "dns")
 			end
+			uci:save("network")
 			uci:commit("network")
 		end
 		if network.wifi then
@@ -555,18 +563,21 @@ if response.config then
 					uci:set("network", "wan", "ipaddr", network.wifi.ip)
 					uci:set("network", "wan", "netmask", network.wifi.netmask)
 					uci:set("network", "wan", "gateway", network.wifi.gateway)
+					uci:set("network", "wan", "dns", network.wifi.nameserver)
 				elseif network.wifi.protocol == 'dhcp' then
 					--set protocol dhcp and ignore the reset
 					uci:set("network", "wan", "proto", "dhcp")
 					uci:delete("network", "wan", "ipaddr")
 					uci:delete("network", "wan", "netmask")
 					uci:delete("network", "wan", "gateway")
+					uci:delete("network", "wan", "dns")
 				else
 					--unknown protocol
 					uci:set("network", "wan", "proto", "none")
 					uci:delete("network", "wan", "ipaddr")
 					uci:delete("network", "wan", "netmask")
 					uci:delete("network", "wan", "gateway")
+					uci:delete("network", "wan", "dns")
 				end
 			else
 				debug("wifi disabled")
@@ -575,12 +586,18 @@ if response.config then
 				uci:delete("network", "wan", "ipaddr")
 				uci:delete("network", "wan", "netmask")
 				uci:delete("network", "wan", "gateway")
+				uci:delete("network", "wan", "dns")
 				uci:set("wireless", "radio0", "disabled", 1)
+				uci:delete("wireless", wifidevs[1], "ssid")
 				uci:delete("wireless", wifidevs[1], "key")
+				uci:delete("wireless", wifidevs[1], "encryption")
 			end
+			uci:save("network")
+			uci:save("wireless")
 			uci:commit("network")
 			uci:commit("wireless")
 		end
+		uci:apply({"network", "wireless"})
 	end
 	if config.sensors then
 		local sensormap = {}
