@@ -102,13 +102,26 @@ local CACERT		= FLUKSO.daemon.cacert
 local SYSLOG_TMP	= '/tmp/syslog.gz'
 local SYSLOG_GZIP	= 'logread | gzip > ' .. SYSLOG_TMP
 
-local function print_table(t)
-	for k,v in pairs(t) do
-		if (type(v) == "table") then
-			print(k)
-			print_table(v)
+local function debug(value)
+	local debug = false
+	if (debug) then
+		if (type(value) == 'table') then
+			print_table(value)
 		else
-			print(k,v)
+			print(value)
+		end
+	end
+end
+
+local function print_table(t)
+	if t ~= nil then
+		for k,v in pairs(t) do
+			if (type(v) == "table") then
+				print(k)
+				print_table(v)
+			else
+				print(k,v)
+			end
 		end
 	end
 end
@@ -222,7 +235,7 @@ local function download_upgrade(upgrade)
    hash:update(options.body)
    options.headers['X-Digest'] = hash:final()
 
-   print('cacert: ', CACERT)
+   debug('cacert: ', CACERT)
 
    local httpclient = require 'luci.httpclient'
    local http_persist = httpclient.create_persistent()
@@ -244,7 +257,7 @@ local function download_upgrade(upgrade)
 end
 
 local function get_sensor(sensor, idmap)
-   print("get_sensor(" .. sensor .. ", _)")
+   debug("get_sensor(" .. sensor .. ", _)")
    local headers = {}
    headers['X-Version'] = '1.0'
    headers['User-Agent'] = USER_AGENT
@@ -277,7 +290,7 @@ local function get_sensor(sensor, idmap)
    local response_json, code, call_info = http_persist(url, options)
 
    if code == 200 then
-      print(response_json)
+      debug(response_json)
       local response = luci.json.decode(response_json)[1]
       if response == nil then
         return 1
@@ -325,8 +338,7 @@ monitor.firmware = collect_firmware()
 monitor.type = "flukso2"
 
 local config = collect_config()
---TODO: remove debug output
-print_table(config)
+debug(config)
 if FLUKSO.daemon.wan_registered ~= '1' then
   monitor.key = WAN_KEY
 else
@@ -337,7 +349,7 @@ end
 
 local monitor_json = luci.json.encode(monitor)
 
-print("Json: " .. monitor_json)
+debug("Json: " .. monitor_json)
 
 
 -- phone home
@@ -424,7 +436,7 @@ if call_info.headers['X-Digest'] ~= hash:final() then
 	os.exit(4)
 end
 
-print("Response_json: " .. response_json)
+debug("Response_json: " .. response_json)
 local response = luci.json.decode(response_json)
 
 if response.support then
@@ -432,9 +444,7 @@ if response.support then
 	md5 = nixio.crypto.hmac('md5', support.devicekey)
 	hash = md5:final()
 
-	for i, v in pairs(support) do
-		print(i, v)
-	end
+	debug(support)
 
 	if not FLUKSO.support or FLUKSO.support.hash ~= hash then
 		uci:set("flukso", "support", "mysmartgrid")
@@ -469,30 +479,35 @@ else
 	os.remove("/root/.ssh/id_dss")
 end
 
-print("Response:")
-print(response.config)
+debug("Response:")
+debug(response.config)
+-- TODO: sanity checks
 if response.config then
 	uci:set("flukso", "daemon", "configchanged", 1)
 	uci:commit("flukso")
 	local config = response.config
-	print_table(config)
 	if config.network then
+		debug("network found")
 		local network = config.network
 		if network.lan then
 			if network.lan.enabled > 0 then
+				debug("lan enabled")
 				if network.lan.protocol == 'static' then
+					debug("lan static")
 					--parse further settings
 					uci:set("network", "lan", "proto", "static")
 					uci:set("network", "lan", "ipaddr", network.lan.ip)
 					uci:set("network", "lan", "netmask", network.lan.netmask)
 					uci:set("network", "lan", "gateway", network.lan.gateway)
 				elseif network.lan.protocol == 'dhcp' then
+					debug("lan dhcp")
 					--set protocol dhcp and remove the other fields
 					uci:set("network", "lan", "proto", "dhcp")
 					uci:delete("network", "lan", "ipaddr")
 					uci:delete("network", "lan", "netmask")
 					uci:delete("network", "lan", "gateway")
 				else
+					debug("lan protocol " .. network.lan.protocol .. " unknown")
 					--unknown protocol
 					uci:set("network", "lan", "proto", "none")
 					uci:delete("network", "lan", "ipaddr")
@@ -500,6 +515,7 @@ if response.config then
 					uci:delete("network", "lan", "gateway")
 				end
 			else
+				debug("lan disabled")
 				--disable lan
 				uci:set("network", "lan", "proto", "none")
 				uci:delete("network", "lan", "ipaddr")
@@ -509,9 +525,11 @@ if response.config then
 			uci:commit("network")
 		end
 		if network.wifi then
+			debug("wifi found")
 			local wifidevs = {}
 			uci:foreach("wireless", "wifi-iface", function(section) table.insert(wifidevs, section[".name"]) end)
 			if network.wifi.enabled > 0 then
+				debug("wifi enabled")
 				uci:set("wireless", "radio0", "disabled", 0)
 				--set essid
 				uci:set("wireless", wifidevs[1], "ssid", network.wifi.essid)
@@ -551,6 +569,7 @@ if response.config then
 					uci:delete("network", "wan", "gateway")
 				end
 			else
+				debug("wifi disabled")
 				--disable wifi
 				uci:set("network", "wan", "proto", "none")
 				uci:delete("network", "wan", "ipaddr")
@@ -569,7 +588,7 @@ if response.config then
 		--for each sensor pull configuration via seperate API call -- do we want some kind of worker queue for this task?
 		--afterwards call fsync to update the configuration (also on the sensor board) and inform the server of the new configuration
 		for _, sensor in ipairs(config.sensors) do
-			print(sensor)
+			debug(sensor)
 			if get_sensor(sensor, sensormap) == 1 then -- something went wrong, try again next time
 				return
 			end
