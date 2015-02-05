@@ -18,7 +18,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/msg-flukso2
 	SECTION:=flukso
 	CATEGORY:=Flukso
-	DEPENDS:=+libdaemon +ntpclient +liblua +luci-lib-nixio +luci-lib-web +rrdtool1 +gpioctl
+	DEPENDS:=+libdaemon +ntpclient +liblua +luci-lib-nixio +luci-lib-web +gpioctl
 	TITLE:=Flukso - community metering
 	URL:=http://www.mysmartgrid.de
 	MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>
@@ -71,8 +71,6 @@ define Package/msg-flukso2/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/reverse-ssh.init $(1)/etc/init.d/reverse-ssh
 	$(INSTALL_DIR) $(1)/usr/lib/lua
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/dbg.lua $(1)/usr/lib/lua/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/rrd
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/rrd/*.lua $(1)/usr/lib/lua/rrd/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/flukso
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/flukso/*.lua $(1)/usr/lib/lua/flukso/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/flukso/decoder
