@@ -12,9 +12,9 @@ macro(openwrt_checkout_system _target _workdir _url _output)
   message(STATUS "  checkout ${_url}")
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/${_dest}/${_output}
-    COMMAND svn co ${_openwrt_url}/${_url} -r 27608 .
+    COMMAND svn co ${_openwrt_url}/${_url} .
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_workdir}
-    COMMENT "Checkout openwrt sources ${_url} -r 27608"
+    COMMENT "Checkout openwrt sources ${_url}"
     )
   add_custom_target(${_target} DEPENDS ${CMAKE_BINARY_DIR}/${_dest}/${_output})
   message(STATUS "   * add checkout-target ${_target}")
@@ -58,7 +58,7 @@ function(openwrt_configure _dest)
   message(STATUS "  openwrt configuring")
   file(WRITE ${CMAKE_BINARY_DIR}/${_dest}/feeds.conf
 "src-link msgflukso ${CMAKE_SOURCE_DIR}/openwrt/package
-src-svn packages svn://svn.openwrt.org/openwrt/packages
+src-svn packages svn://svn.openwrt.org/openwrt/branches/packages_10.03.2 svn://svn.openwrt.org/openwrt/packages
 ")
 
 
@@ -128,8 +128,6 @@ function(openwrt_patch _dest)
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"920-add-make-flash-option.patch"
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"921-add-make-publish-option.patch"
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"950-crond.patch"
-    # patch opkg config to use openwrt.mysmartgrid.de
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"998-opkg-repo.patch"
     # we don't need rdate, relying on ntpclient instead
     COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/base-files/files/etc/hotplug.d/iface/40-rdate
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/apply_patches.done
