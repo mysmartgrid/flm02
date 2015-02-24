@@ -72,6 +72,7 @@ define Build/Configure
 			-DCMAKE_STRIP=: \
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DWITHOUT_CPACK=TRUE \
+			-DWITHOUT_HEXAJUICE=TRUE \
 			$(CMAKE_OPTIONS) \
 		.. \
 	)
