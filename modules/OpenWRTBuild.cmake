@@ -112,26 +112,26 @@ function(openwrt_patch _dest)
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/apply_patches.done
     # patch files of the OpenWRT build system
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/900-disable_console.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/910-redirect-console-to-devnull.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/915-kernel_posix_mqueue_support.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/920-add-make-flash-option.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/921-add-make-publish-option.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/925-add_mac_address_to_radio0.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/930-boot_crond_without_crontabs.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/940-wpa_supd_hook.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/950-ntpd_supd_hook.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/960-remove_default_banner.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/965-sauth.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/900-disable_console.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/910-redirect-console-to-devnull.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/915-kernel_posix_mqueue_support.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/920-add-make-flash-option.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/921-add-make-publish-option.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/925-add_mac_address_to_radio0.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/930-boot_crond_without_crontabs.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/940-wpa_supd_hook.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/950-ntpd_supd_hook.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/960-remove_default_banner.patch
 
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/970-nixio_timerfd.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/971-nixio_spi.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/972-nixio_numexp.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/973-nixio_binary.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/974-httpclient_create_persistent.patch
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/975-sys_iwinfo.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/965-sauth.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/970-nixio_timerfd.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/971-nixio_spi.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/972-nixio_numexp.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/973-nixio_binary.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/974-httpclient_create_persistent.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/975-sys_iwinfo.patch
 
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/990-crond.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/990-crond.patch
 
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/apply_patches.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
