@@ -29,6 +29,7 @@ local uci        = require 'luci.model.uci'.cursor()
 local httpclient = require 'luci.httpclient'
 local data       = require 'flukso.data'
 local mosq       = require 'mosquitto'
+local ntp        = require 'flukso.ntpd'
 
 -- parse and load /etc/config/flukso
 local FLUKSO            = uci:get_all('flukso')
@@ -201,8 +202,8 @@ local function dispatch(wan_child, lan_child)
 						end
 						if diff > MAX_TIME_OFFSET or diff < 0 then
 							nixio.syslog('info', 'trying to set correct time')
-							local output = io.popen('ntpclient -c 1 -s -h pool.ntp.org')
-							nixio.syslog('info', 'output of ntpclient: ' .. output:read('*all'))
+							local output = ntp.ntpd()
+							nixio.syslog('info', 'output of ntpd: ' .. output:read('*all'))
 							output:close()
 							sync_timestamp = timestamp
 						end
@@ -336,8 +337,8 @@ local function send(child)
 					-- in all these cases we call ntpclient to synchronize our local time
 					if code == SSL_NOT_YET_VALID or code == SSL_EXPIRED or code == API_TIME_ERROR then
 						nixio.syslog('info', 'trying to set correct time')
-						local output = io.popen('ntpclient -c 1 -s -h pool.ntp.org')
-						nixio.syslog('info', 'output of ntpclient: ' .. output:read('*all'))
+						local output = ntp.ntpd()
+						nixio.syslog('info', 'output of ntpd: ' .. output:read('*all'))
 						output:close()
 					end
 				end

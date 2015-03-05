@@ -412,8 +412,8 @@ else
 	-- in all these cases we call ntpclient to synchronize our local time
 	if code == SSL_NOT_YET_VALID or code == SSL_EXPIRED then
 	nixio.syslog('info', 'trying to set correct time')
-	local output = io.popen('ntpclient -c 1 -s -h pool.ntp.org')
-	nixio.syslog('info', 'output of ntpclient: ' .. output:read('*all'))
+	local output = io.popen('ntpd -n -q -d -p pool.ntp.org')
+	nixio.syslog('info', 'output of ntpd: ' .. output:read('*all'))
 output:close()
 	end
 
