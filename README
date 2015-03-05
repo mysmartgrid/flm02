@@ -1,5 +1,8 @@
-This git repo contains the code needed for builing an OpenWRT Backfire-based
+This git repo contains the code needed for builing an OpenWRT Attitude Adjustment-based
 firmware for the Fluksometer v2, aka FLM02.
+
+This firmware is a fork of the original Flukso firmware [github.com/flukso/flm02]
+tailored for the use with the mySmartGrid platform.
 
 tree:
 .
@@ -13,24 +16,25 @@ tree:
 |   `-- prj
 |       |-- flukso.sensor.board.v2.0
 |       `-- flukso.sensor.board.v2.1
+|-- modules
 |-- openwrt
 |   |-- files
 |   |   `-- etc
 |   |-- package
 |   |   |-- avahi
 |   |   |-- avrdude
-|   |   |-- button
-|   |   |-- expat
-|   |   |-- flukso
+|   |   |-- flm-button
+|   |   |-- flm-ui
 |   |   |-- gdbm
 |   |   |-- intltool
 |   |   |-- libdaemon
-|   |   |-- luaprofiler
-|   |   |-- luci
-|   |   |-- mii-tool
-|   |   |-- ntpclient
-|   |   |-- remote-update
-|   |   `-- rrdtool-1.0.x
+|   |   |-- libhexabus
+|   |   |-- lua-mosquitto
+|   |   |-- luazlib
+|   |   |-- luazmq
+|   |   |-- mosquitto
+|   |   |-- msg-flukso
+|   |   |-- zeromq
 |   `-- patches
 `-- tools
 
@@ -41,12 +45,15 @@ docs: LaTeX sources of the Fluksometer Manual
 eagle: Eagle schematic, board and BOM files for building a v2 Flukso sensor
 board
 
+modules: CMake modules for initializing the OpenWRT SDK
+
 openwrt: the modules, patches and scripts needed to tailor a stock OpenWRT
-Backfire to the Fluksometer hardware.
+Attitude Adjustment to the Fluksometer hardware.
 
 tools: a set of helper tools for flashing, generating boardconfigs, etc.
 
-
-$forum = www.flukso.net/forum
-$mailing_list = flukso-dev-join@lists.flukso.net
-$irc = #flukso on freenode
+To build the firmware create a directory outside the source directory and
+run 'cmake $SOURCEDIR' where $SOURCEDIR is the path to the directory
+containing this README.
+Make sure you ran 'git submodule init && git submodule update' before building
+the firmware.
