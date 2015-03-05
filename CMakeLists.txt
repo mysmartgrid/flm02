@@ -59,6 +59,12 @@ add_custom_target(image ALL
   DEPENDS openwrt_update
 )
 
+add_custom_target(clean
+  BUILD_LOG=1 make clean
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${FLM_BUILD_DIR}/"
+  COMMENT ""
+)
+
 ### print some output for the user
 message("")
 message("        ***** Configuration parameters *****")
