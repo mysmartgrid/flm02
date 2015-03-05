@@ -123,13 +123,15 @@ function(openwrt_patch _dest)
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/950-ntpd_supd_hook.patch
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/960-remove_default_banner.patch
 
-    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/965-sauth.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/965-nixio_tls.patch
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/970-nixio_timerfd.patch
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/971-nixio_spi.patch
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/972-nixio_numexp.patch
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/973-nixio_binary.patch
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/974-httpclient_create_persistent.patch
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/975-sys_iwinfo.patch
+
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/976-rpc.patch
 
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/990-crond.patch
 

@@ -1,5 +1,5 @@
---- feeds/luci/libs/nixio/src/binary.c	2014-03-03 17:49:45.038483855 +0100
-+++ feeds/luci/libs/nixio/src/binary.c	2014-03-03 17:54:32.158474866 +0100
+--- feeds/luci/libs/luci-lib-nixio/src/binary.c	2014-03-03 17:49:45.038483855 +0100
++++ feeds/luci/libs/luci-lib-nixio/src/binary.c	2014-03-03 17:54:32.158474866 +0100
 @@ -94,6 +94,41 @@
  	0x2d02ef8dU
  };

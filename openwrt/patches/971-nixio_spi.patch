@@ -1,5 +1,5 @@
---- feeds/luci/libs/nixio/src/nixio.c	2014-03-03 14:16:58.822883560 +0100
-+++ feeds/luci/libs/nixio/src/nixio.c	2014-03-03 14:19:16.530879243 +0100
+--- feeds/luci/libs/luci-lib-nixio/src/nixio.c
++++ feeds/luci/libs/luci-lib-nixio/src/nixio.c
 @@ -143,6 +143,7 @@
  	nixio_open_bin(L);
  	nixio_open_fs(L);
@@ -8,8 +8,8 @@
  
  #ifndef NO_TLS
  	nixio_open_tls_crypto(L);
---- feeds/luci/libs/nixio/src/nixio.h	2014-03-03 14:16:58.822883560 +0100
-+++ feeds/luci/libs/nixio/src/nixio.h	2014-03-03 14:18:22.858880929 +0100
+--- feeds/luci/libs/luci-lib-nixio/src/nixio.h
++++ feeds/luci/libs/luci-lib-nixio/src/nixio.h
 @@ -121,6 +121,7 @@
  void nixio_open_bin(lua_State *L);
  void nixio_open_fs(lua_State *L);
@@ -18,8 +18,8 @@
  
  #ifndef NO_TLS
  void nixio_open_tls_crypto(lua_State *L);
---- feeds/luci/libs/nixio/src/spi.c	1970-01-01 01:00:00.000000000 +0100
-+++ feeds/luci/libs/nixio/src/spi.c	2014-03-03 14:17:33.034882487 +0100
+--- feeds/luci/libs/luci-lib-nixio/src/spi.c
++++ feeds/luci/libs/luci-lib-nixio/src/spi.c
 @@ -0,0 +1,89 @@
 +/*
 + * nixio - Linux I/O library for lua
@@ -110,14 +110,14 @@
 +	luaL_register(L, NULL, R);
 +	lua_setfield(L, -2, "spi");
 +}
---- feeds/luci/libs/nixio/Makefile	2014-03-03 16:37:08.000000000 +0100
-+++ feeds/luci/libs/nixio/Makefile	2014-03-03 17:16:29.250546343 +0100
+--- feeds/luci/libs/luci-lib-nixio/src/Makefile
++++ feeds/luci/libs/luci-lib-nixio/src/Makefile
 @@ -22,7 +22,7 @@
  
- NIXIO_OBJ = src/nixio.o src/socket.o src/sockopt.o src/bind.o src/address.o \
- 	    src/protoent.o src/poll.o src/io.o src/file.o src/splice.o src/process.o \
--	    src/syslog.o src/bit.o src/binary.o src/fs.o src/user.o \
-+	    src/syslog.o src/bit.o src/binary.o src/fs.o src/user.o src/spi.o \
- 	    $(if $(NIXIO_TLS),src/tls-crypto.o src/tls-context.o src/tls-socket.o,)
+ NIXIO_OBJ = nixio.o socket.o sockopt.o bind.o address.o \
+ 	    protoent.o poll.o io.o file.o splice.o process.o \
+-	    syslog.o bit.o binary.o fs.o user.o \
++	    syslog.o bit.o binary.o fs.o user.o spi.o \
+ 	    $(if $(NIXIO_TLS),tls-crypto.o tls-context.o tls-socket.o,)
  
  ifeq ($(NIXIO_TLS),axtls)

@@ -27,7 +27,7 @@ local dbg 			= require 'dbg'
 local nixio			= require 'nixio'
 nixio.fs			= require 'nixio.fs'
 local uci			= require 'luci.model.uci'.cursor()
-local luci			= require 'luci'
+local luci			= {}
 luci.json			= require 'luci.json'
 local httpclient	= require 'luci.httpclient'
 

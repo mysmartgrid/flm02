@@ -1,6 +1,6 @@
---- feeds/luci/libs/httpclient/luasrc/httpclient.lua	2014-03-03 16:37:08.202620266 +0100
-+++ feeds/luci/libs/httpclient/luasrc/httpclient.lua	2014-03-03 18:25:29.618416709 +0100
-@@ -18,6 +18,8 @@
+--- feeds/luci/libs/luci-lib-httpclient/luasrc/httpclient.lua
++++ feeds/luci/libs/luci-lib-httpclient/luasrc/httpclient.lua
+@@ -7,6 +7,8 @@ local nixio = require "nixio"
  local ltn12 = require "luci.ltn12"
  local util = require "luci.util"
  local table = require "table"
@@ -9,7 +9,7 @@
  local http = require "luci.http.protocol"
  local date = require "luci.http.protocol.date"
  
-@@ -102,6 +102,58 @@
+@@ -91,6 +93,58 @@ function request_to_source(uri, options)
  	end
  end
  
@@ -68,3 +68,12 @@
  --
  -- GET HTTP-resource
  --
+@@ -333,7 +387,7 @@ function request_raw(uri, options)
+ 		end
+ 	end
+ 	
+-	return response.code, response, linesrc(true)..sock:readall(), sock
++	return response.code, response, linesrc(true)..(sock:readall() or ""), sock
+ end
+ 
+ function cookie_parse(cookiestr)

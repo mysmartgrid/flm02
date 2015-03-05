@@ -1,5 +1,5 @@
---- feeds/luci/libs/nixio/src/poll.c	2010-05-23 18:35:59.000000000 +0200
-+++ feeds/luci/libs/nixio/src/poll.c	2014-01-15 11:03:16.815047613 +0100
+--- feeds/luci/libs/luci-lib-nixio/src/poll.c
++++ feeds/luci/libs/luci-lib-nixio/src/poll.c
 @@ -169,13 +169,10 @@
  
  	status = poll(fds, (nfds_t)len, timeout);

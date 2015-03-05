@@ -31,7 +31,7 @@ local dbg        = require 'dbg'
 local nixio      = require 'nixio'
 nixio.fs         = require 'nixio.fs'
 local uci        = require 'luci.model.uci'.cursor()
-local luci       = require 'luci'
+local luci       = {}
 luci.sys         = require 'luci.sys'
 luci.json        = require 'luci.json'
 luci.util        = require 'luci.util'
@@ -134,7 +134,11 @@ local function collect_mp()
 	-- monitor.version = tonumber(FLUKSO_VERSION)
 	monitor.time = os.time()
 	monitor.uptime  = math.floor(luci.sys.uptime())
-	system, model, monitor.memtotal, monitor.memcached, monitor.membuffers, monitor.memfree = luci.sys.sysinfo()
+	local sysinfo = nixio.sysinfo()
+	monitor.memtotal = sysinfo.totalram
+	monitor.memcached = sysinfo.sharedram
+	monitor.membuffers = sysinfo.bufferram
+	monitor.memfree = sysinfo.freeram
 
 	os.execute(SYSLOG_GZIP)
 	io.input(SYSLOG_TMP)
