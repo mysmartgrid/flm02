@@ -149,7 +149,7 @@ endfunction(openwrt_patch)
 function(openwrt_update _dest)
   message(STATUS "   openwrt updating")
 
-  add_custom_target(openwrt_update
+  add_custom_target(openwrt_system_update
     COMMAND svn up
     DEPENDS openwrt_patch
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
@@ -157,10 +157,20 @@ function(openwrt_update _dest)
   )
   add_custom_target(openwrt_feeds_update
     COMMAND ./scripts/feeds update
-    DEPENDS openwrt_update
+    DEPENDS openwrt_system_update
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "update feeds"
   )
+  add_custom_target(openwrt_config_update
+    COMMAND make oldconfig
+    DEPENDS openwrt_feeds_update
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
+    COMMENT "update .config"
+  )
+
+  add_custom_target(openwrt_update
+    DEPENDS openwrt_config_update)
+
   message(STATUS "   * add target openwrt_update")
 endfunction(openwrt_update)
 
