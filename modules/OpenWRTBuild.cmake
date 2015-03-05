@@ -54,7 +54,7 @@ function(openwrt_configure _dest)
   message(STATUS "  openwrt configuring")
   file(WRITE ${CMAKE_BINARY_DIR}/${_dest}/feeds.conf
 "src-link msgflukso ${CMAKE_SOURCE_DIR}/openwrt/package
-src-git packages http://git.openwrt.org/packages.git
+src-git packages https://github.com/openwrt/packages.git
 src-git luci http://git.openwrt.org/project/luci.git
 ")
 
@@ -63,7 +63,6 @@ src-git luci http://git.openwrt.org/project/luci.git
     OUTPUT ${CMAKE_BINARY_DIR}/feeds.done
     COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds update
     COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds install -a -p msgflukso
-    COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds install luci
     COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/feeds.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "Update feeds"
