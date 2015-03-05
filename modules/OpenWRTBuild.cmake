@@ -38,19 +38,15 @@ endmacro()
 function(openwrt_checkout _dest)
   openwrt_checkout_system(openwrt_checkout ${_dest} branches/attitude_adjustment Makefile ${_dest})
 
-  openwrt_checkout_package(openwrt_package_ntpd ${_dest}/package branches/packages_12.09/net/ntpd ntpd package/ntpd/Makefile)
-
   add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/package.done
-    COMMAND touch  ${CMAKE_BINARY_DIR}/package.done
-    DEPENDS
-    ${CMAKE_BINARY_DIR}/${_dest}/package/ntpd/Makefile
+    OUTPUT ${CMAKE_BINARY_DIR}/checkout.done
+    COMMAND touch  ${CMAKE_BINARY_DIR}/checkout.done
+    DEPENDS openwrt_checkout
   )
-  add_custom_target(openwrt_package
-    DEPENDS  ${CMAKE_BINARY_DIR}/package.done
+  add_custom_target(openwrt_system_checkout
+    DEPENDS  ${CMAKE_BINARY_DIR}/checkout.done
   )
-  add_dependencies(openwrt_package openwrt_checkout)
-  message(STATUS "   * add checkout-target openwrt_package")
+  message(STATUS "   * add checkout-target openwrt_system_checkout")
 
 endfunction(openwrt_checkout)
 
@@ -71,7 +67,7 @@ src-git luci http://git.openwrt.org/project/luci.git
     COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/feeds.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "Update feeds"
-    DEPENDS ${CMAKE_BINARY_DIR}/package.done
+    DEPENDS ${CMAKE_BINARY_DIR}/checkout.done
     )
 
   add_custom_command(
