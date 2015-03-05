@@ -102,17 +102,6 @@ local CACERT		= FLUKSO.daemon.cacert
 local SYSLOG_TMP	= '/tmp/syslog.gz'
 local SYSLOG_GZIP	= 'logread | gzip > ' .. SYSLOG_TMP
 
-local function debug(value)
-	local debug = false
-	if (debug) then
-		if (type(value) == 'table') then
-			print_table(value)
-		else
-			print(value)
-		end
-	end
-end
-
 local function print_table(t)
 	if t ~= nil then
 		for k,v in pairs(t) do
@@ -122,6 +111,17 @@ local function print_table(t)
 			else
 				print(k,v)
 			end
+		end
+	end
+end
+
+local function debug(value)
+	local debug = true
+	if (debug) then
+		if (type(value) == 'table') then
+			print_table(value)
+		else
+			print(value)
 		end
 	end
 end
@@ -296,29 +296,35 @@ local function get_sensor(sensor, idmap)
    local response_json, code, call_info = http_persist(url, options)
 
    if code == 200 then
-      debug(response_json)
+      debug("Sensor response: " .. response_json)
       local response = luci.json.decode(response_json)[1]
       if response == nil then
         return 1
       end
 
-      local enable = "0"
       if response.config["function"] ~= "undefined" then
         print("Sensor " .. idmap[sensor] .. " enabled as " .. response.config["function"])
-        enable = "1"
-      end
 
-      uci:set("flukso", idmap[sensor], "enable", enable)
-      uci:set("flukso", idmap[sensor], "function", response.config["function"])
-      --uci:set("flukso", idmap[sensor], "unit", response.config["unit"]) --not needed
-      uci:set("flukso", idmap[sensor], "class", response.config["class"])
-      if response.config["class"] == "analog" then
-        uci:set("flukso", idmap[sensor], "voltage", response.config["voltage"])
-        uci:set("flukso", idmap[sensor], "current", response.config["current"])
+        uci:set("flukso", idmap[sensor], "enable", 1)
+        uci:set("flukso", idmap[sensor], "function", response.config["function"])
+        --uci:set("flukso", idmap[sensor], "unit", response.config["unit"]) --not needed
+        if response.config["class"] == "analog" then
+          uci:set("flukso", idmap[sensor], "class", response.config["class"])
+          uci:set("flukso", idmap[sensor], "voltage", response.config["voltage"])
+          uci:set("flukso", idmap[sensor], "current", response.config["current"])
+        elseif response.config["class"] == "pulse" then
+          uci:set("flukso", idmap[sensor], "class", response.config["class"])
+          uci:set("flukso", idmap[sensor], "constant", response.config["constant"])
+        else
+          print("Invalid response.")
+          return 1
+        end
+        --uci:set("flukso", idmap[sensor], "phase", response.config["phase"]) --not implemented yet
       else
-        uci:set("flukso", idmap[sensor], "constant", response.config["constant"])
+        print("Sensor " .. idmap[sensor] .. " disabled.")
+        uci:set("flukso", idmap[sensor], "enable", 0)
       end
-      --uci:set("flukso", idmap[sensor], "phase", response.config["phase"]) --not implemented yet
+      uci:save("flukso")
       uci:commit("flukso")
 
       return 0
@@ -392,11 +398,14 @@ if code == 200 then
   uci:set("flukso", "daemon", "configchanged", 0)
   if FLUKSO.daemon.wan_registered ~= '1' then
     FLUKSO.daemon.wan_registered = 1
+    uci:set('flukso', 'daemon', 'wan_registered', 1)
+    uci:save("flukso")
+    uci:commit("flukso")
     -- when we just registered the device we also have to inform all known sensors
-    -- fsync is unsuitable here as it only informs activated sensors
+    -- TODO: fsync is unsuitable here as it only informs activated sensors
     os.execute('/usr/bin/fsync')
   end
-  uci:commit("flukso")
+  debug(FLUKSO.daemon)
 elseif code == 481 then
   nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
 else
@@ -464,6 +473,7 @@ if response.support then
 		uci:set("flukso", "support", "hostkey", support.hostkey)
 		uci:set("flukso", "support", "techkey", support.techkey)
 
+		uci:save("flukso")
 		uci:commit("flukso")
 
 		os.execute("mkdir -p /root/.ssh")
@@ -481,6 +491,7 @@ else
 	os.execute("/etc/init.d/reverse-ssh disable")
 
 	uci:delete("flukso", "support")
+	uci:save("flukso")
 	uci:commit("flukso")
 
 	os.remove("/root/.ssh/id_dss")
@@ -491,6 +502,7 @@ debug(response.config)
 -- TODO: sanity checks
 if response.config then
 	uci:set("flukso", "daemon", "configchanged", 1)
+	uci:save("flukso")
 	uci:commit("flukso")
 	local config = response.config
 	if config.network then
@@ -569,7 +581,7 @@ if response.config then
 					uci:set("network", "wan", "gateway", network.wifi.gateway)
 					uci:set("network", "wan", "dns", network.wifi.nameserver)
 				elseif network.wifi.protocol == 'dhcp' then
-					--set protocol dhcp and ignore the reset
+					--set protocol dhcp and ignore the rest
 					uci:set("network", "wan", "proto", "dhcp")
 					uci:delete("network", "wan", "ipaddr")
 					uci:delete("network", "wan", "netmask")
@@ -610,7 +622,7 @@ if response.config then
 		--afterwards call fsync to update the configuration (also on the sensor board) and inform the server of the new configuration
 		for _, sensor in ipairs(config.sensors) do
 			debug(sensor)
-			if get_sensor(sensor, sensormap) == 1 then -- something went wrong, try again next time
+			if get_sensor(sensor, sensormap) > 0 then -- something went wrong, try again next time
 				return
 			end
 		end
