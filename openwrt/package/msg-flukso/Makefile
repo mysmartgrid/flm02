@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=msg-flukso2
-PKG_VERSION:=2.3.0
+PKG_VERSION:=2.2.9
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -18,7 +18,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/msg-flukso2
 	SECTION:=flukso
 	CATEGORY:=Flukso
-	DEPENDS:=+libdaemon +ntpd +liblua +luci-lib-nixio +luci-lib-httpclient +gpioctl
+	DEPENDS:=+libdaemon +busybox-ntpd +liblua +luci-lib-nixio +luci-lib-httpclient +gpioctl
 	TITLE:=Flukso - community metering
 	URL:=http://www.mysmartgrid.de
 	MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>
