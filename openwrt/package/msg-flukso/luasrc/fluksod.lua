@@ -26,10 +26,15 @@ local dbg        = require 'dbg'
 local nixio      = require 'nixio'
 nixio.fs         = require 'nixio.fs'
 local uci        = require 'luci.model.uci'.cursor()
+local json       = require 'luci.json'
 local httpclient = require 'luci.httpclient'
 local data       = require 'flukso.data'
 local mosq       = require 'mosquitto'
 local ntp        = require 'flukso.ntpd'
+local wsapi      = require 'flukso.wsapi'
+local buffer     = require 'flukso.buffer'
+
+require 'nixio.util'
 
 -- parse and load /etc/config/flukso
 local FLUKSO            = uci:get_all('flukso')
@@ -40,18 +45,23 @@ local DEBUG             = (arg[1] == '-d')
 local LOGMASK           = FLUKSO.daemon.logmask or 'info'
 nixio.setlogmask(LOGMASK)
 
-local DAEMON 		    = os.getenv('DAEMON') or 'fluksod'
-local DAEMON_PATH 	    = os.getenv('DAEMON_PATH') or '/var/run/' .. DAEMON
+local DAEMON            = os.getenv('DAEMON') or 'fluksod'
+local DAEMON_PATH       = os.getenv('DAEMON_PATH') or '/var/run/' .. DAEMON
+local WS_IN             = DAEMON_PATH .. '/ws_in'
+local WS_OUT            = DAEMON_PATH .. '/ws_out'
 
 local DELTA_PATH        = '/var/run/spid/delta'
-local DELTA_PATH_IN	    = DELTA_PATH .. '/in'
+local DELTA_PATH_IN     = DELTA_PATH .. '/in'
 local DELTA_PATH_OUT    = DELTA_PATH .. '/out'
 
-local O_RDWR		    = nixio.open_flags('rdwr')
+local O_RDWR            = nixio.open_flags('rdwr')
+local O_RD_NONBLOCK     = nixio.open_flags('rdonly', 'nonblock')
+local O_WR              = nixio.open_flags('wronly')
 local O_RDWR_NONBLOCK   = nixio.open_flags('rdwr', 'nonblock')
-local O_RDWR_CREAT	    = nixio.open_flags('rdwr', 'creat')
+local O_RDWR_CREAT      = nixio.open_flags('rdwr', 'creat')
 
 local POLLIN            = nixio.poll_flags('in')
+local POLLHUP           = nixio.poll_flags('hup')
 
 -- set WAN parameters
 local WAN_ENABLED       = (FLUKSO.daemon.enable_wan_branch == '1')
@@ -60,16 +70,11 @@ local MAX_TIME_OFFSET   = 300
 local SSL_NOT_YET_VALID = -150
 local SSL_EXPIRED       = -151
 local API_TIME_ERROR    = 470
-local TIMESTAMP_MIN	= 1234567890
-local WAN_INTERVAL	= 300
+local TIMESTAMP_MIN     = 1234567890
+local WAN_INTERVAL      = 300
 
-local WAN_FILTER        = { [1] = {}, [2] = {}, [3] = {} }
-WAN_FILTER[1].span      = 60
-WAN_FILTER[1].offset    = 0
-WAN_FILTER[2].span      = 900
-WAN_FILTER[2].offset    = 7200
-WAN_FILTER[3].span      = 86400
-WAN_FILTER[3].offset    = 172800
+local DEVICE		= '0123456789abcdef0123456789abcdef'
+uci:foreach('system', 'system', function(x) DEVICE = x.device end)
 
 local WAN_BASE_URL      = FLUKSO.daemon.wan_base_url .. 'sensor/'
 local WAN_KEY           = '0123456789abcdef0123456789abcdef'
@@ -107,6 +112,14 @@ local LAN_UNIT = {
 local LAN_ID_TO_UNIT = { }
 uci:foreach('flukso', 'sensor', function(x) LAN_ID_TO_UNIT[x.id] = LAN_UNIT[x['type']] end)
 
+local WS_CONFIG = { }
+uci:foreach('flukso', 'api', function(x)
+	WS_CONFIG.url = x['server']
+	WS_CONFIG.port = x['port']
+	WS_CONFIG.user = x['user']
+	WS_CONFIG.cacert = x['cacert']
+end)
+
 function resume(...)
 	local status, err = coroutine.resume(...)
 
@@ -114,6 +127,8 @@ function resume(...)
 		error(err, 0)
 	end
 end
+
+local ws = wsapi.new_device_client(WS_CONFIG.url, WS_CONFIG.port, WS_CONFIG.user, DEVICE, WAN_KEY, WS_CONFIG.cacert, WS_IN, WS_OUT)
 
 -- mosquitto client params
 local MOSQ_ID           = DAEMON
@@ -133,9 +148,8 @@ mqtt:connect(MOSQ_HOST, MOSQ_PORT, MOSQ_KEEPALIVE)
 
 local function dispatch(wan_child, lan_child)
 	return coroutine.create(function()
-		local sync_timestamp = 0
 		local delta = { fdin  = nixio.open(DELTA_PATH_IN, O_RDWR_NONBLOCK),
-                                fdout = nixio.open(DELTA_PATH_OUT, O_RDWR) }
+		                fdout = nixio.open(DELTA_PATH_OUT, O_RDWR_NONBLOCK) }
 
 		if delta.fdin == nil or delta.fdout == nil then
 			nixio.syslog('alert', 'cannot open the delta fifos')
@@ -157,7 +171,7 @@ local function dispatch(wan_child, lan_child)
 
 			local function create_file(sensor_id)
 				local file = LAN_PUBLISH_PATH .. '/' .. sensor_id
-				
+
 				nixio.fs.unlink(file)
 				fd = nixio.open(file, O_RDWR_CREAT)
 				fd:close()
@@ -170,61 +184,132 @@ local function dispatch(wan_child, lan_child)
 			return num + 1
 		end
 
-		for line in delta.fdout:linesource() do
-			-- service the mosquitto loop
-			if not mqtt:loop(MOSQ_TIMEOUT, MOSQ_MAX_PKTS) then
-				mqtt:reconnect()
-			end
-
-			if DEBUG then
-				print(line)
-			end
-
-			local timestamp, data = line:match('^(%d+)%s+([%-%d%s]+)$')
-			timestamp = tonumber(timestamp)
-
-			for i, counter, extra in data:gmatch('(%d+)%s+([%-%d]+)%s+([%-%d]+)') do
-				i = tonumber(i)
-				counter = tonumber(counter)
-				extra = tonumber(extra)
-
-				-- map index(+1!) to sensor id and sensor type
-				local sensor_id = FLUKSO[tostring(tolua(i))]['id']
-				local sensor_class = FLUKSO[tostring(tolua(i))]['class']
-				local sensor_derive = (FLUKSO[tostring(tolua(i))]['derive'] == '1')
-
-				-- resume both branches
-				if WAN_ENABLED then
-					if timestamp < TIMESTAMP_MIN or timestamp < sync_timestamp then
-						local diff = timestamp - sync_timestamp
-						if DEBUG then
-							print(timestamp .. " - " .. sync_timestamp .. " = " .. diff)
-						end
-						if diff > MAX_TIME_OFFSET or diff < 0 then
-							nixio.syslog('info', 'trying to set correct time')
-							local output = ntp.ntpd()
-							nixio.syslog('info', 'output of ntpd: ' .. output:read('*all'))
-							output:close()
-							sync_timestamp = timestamp
-						end
-					end
-					resume(wan_child, sensor_id, timestamp, counter)
+		local function process_delta()
+			for line in delta.fdout:linesource() do
+				-- service the mosquitto loop
+				if not mqtt:loop(MOSQ_TIMEOUT, MOSQ_MAX_PKTS) then
+					mqtt:reconnect()
 				end
 
-				if LAN_ENABLED then
-					if sensor_class == 'analog' then
-						resume(lan_child, sensor_id, timestamp, extra)
+				if DEBUG then
+					print(line)
+				end
 
-					elseif sensor_class == 'pulse' or (sensor_class == 'cosem' and not sensor_derive) then
-						resume(lan_child, sensor_id, timestamp, false, counter, extra)
+				local timestamp, data = line:match('^(%d+)%s+([%-%d%s]+)$')
+				timestamp = tonumber(timestamp)
+
+				for i, counter, extra in data:gmatch('(%d+)%s+([%-%d]+)%s+([%-%d]+)') do
+					i = tonumber(i)
+					counter = tonumber(counter)
+					extra = tonumber(extra)
+
+					-- map index(+1!) to sensor id and sensor type
+					local sensor_id = FLUKSO[tostring(tolua(i))]['id']
+					local sensor_class = FLUKSO[tostring(tolua(i))]['class']
+					local sensor_derive = (FLUKSO[tostring(tolua(i))]['derive'] == '1')
+
+					-- resume both branches
+					if WAN_ENABLED then
+						resume(wan_child, sensor_id, sensor_class, timestamp, counter, extra)
+					end
+
+					if LAN_ENABLED then
+						if sensor_class == 'analog' then
+							resume(lan_child, sensor_id, timestamp, extra)
+						elseif sensor_class == 'pulse' or (sensor_class == 'cosem' and not sensor_derive) then
+							resume(lan_child, sensor_id, timestamp, false, counter, extra)
+						end
 					end
 				end
-			end 
+			end
+		end
+
+		while true do
+			local delta_p = { fd = delta.fdout, events = POLLIN, revents = 0 }
+			local ws_p = { fd = ws.input_fd(), events = POLLIN, revents = 0 }
+			local pollfds = { delta_p }
+			if ws.valid then
+				pollfds[#pollfds + 1] = ws_p
+			end
+			local poll = nixio.poll(pollfds, -1)
+			if poll > 0 then
+				if delta_p.revents == POLLIN then
+					process_delta()
+				end
+				if ws_p.revents == POLLIN then
+					resume(wan_child)
+				elseif ws_p.revents == POLLHUP then
+					ws.valid = false
+				end
+			end
 		end
 	end)
 end
 
-local function wan_buffer(child)
+local function wan_handler(child)
+	return coroutine.create(function(sensor_id, sensor_class, timestamp, counter, extra)
+		local BIN_WIDTH = 60
+		local BIN_COUNT = 1440
+		local TRANSMIT_LOWER_LIMIT = 5
+
+		local backoff_exp = 1
+		local try_again_at = nil
+		local MAX_BACKOFF_EXP = 4
+
+		local bwh = buffer.new(BIN_WIDTH, BIN_COUNT, buffer.aggregates.max)
+
+		local function send_values(buffer, sensor_id, suffix)
+			if try_again_at and try_again_at > os.time() then
+				return
+			end
+
+			local update_cmd = ws:new_update_value_command(sensor_id .. suffix)
+			local values_used = 0
+			while buffer:get_point_count(sensor_id) > values_used + 1 do
+				local ts, value = buffer:peek_oldest_value(sensor_id, values_used)
+				if not update_cmd:append(ts, value) then
+					break
+				end
+				values_used = values_used + 1
+			end
+			if update_cmd:run() then
+				try_again_at = nil
+				backoff_exp = 1
+				for i = 1, values_used do
+					buffer:get_oldest_value(sensor_id)
+				end
+			else
+				if backoff_exp < MAX_BACKOFF_EXP then
+					backoff_exp = backoff_exp + 1
+				end
+				try_again_at = 2^(backoff_exp - 1) * (1 + math.random())
+				print("could not send values, try again in " .. try_again_at .. "s")
+				try_again_at = try_again_at + os.time()
+			end
+		end
+
+		local last_value_of = {}
+
+		while true do
+			if sensor_class == "analog" and
+					(not last_value_of[sensor_id] or last_value_of[sensor_id] < counter) then
+				last_value_of[sensor_id] = counter
+				bwh:add_value(sensor_id, timestamp, counter)
+			end
+
+			if sensor_id ~= nil then
+				if bwh:get_point_count(sensor_id) > TRANSMIT_LOWER_LIMIT then
+					send_values(bwh, sensor_id, "")
+				end
+
+				resume(child, sensor_id, timestamp, counter)
+				sensor_id, sensor_class, timestamp, counter, extra = coroutine.yield()
+			end
+		end
+	end)
+end
+
+local function mqtt_publish(child)
 	return coroutine.create(function(sensor_id, timestamp, counter)
 		local measurements = data.new()
 		local threshold = os.time() + WAN_INTERVAL
@@ -243,7 +328,7 @@ local function wan_buffer(child)
 
 			if timestamp > TIMESTAMP_MIN
 				and timestamp > (previous[sensor_id].timestamp or 0)
-				and counter ~= (previous[sensor_id].counter or 0) 
+				and counter ~= (previous[sensor_id].counter or 0)
 				then
 
 				nixio.syslog('info', string.format('processed pulse %s:%s:%s', sensor_id, timestamp, counter))
@@ -270,108 +355,6 @@ local function wan_buffer(child)
 			end
 
 			sensor_id, timestamp, counter = coroutine.yield()
-		end
-	end)
-end
-
-local function filter(child, span, offset)
-	return coroutine.create(function(measurements)
-		while true do
-			measurements:filter(span, offset)
-			resume(child, measurements)
-			measurements = coroutine.yield()
-		end
-	end)
-end
-
-
-local function send(child)
-	return coroutine.create(function(measurements)
-		local headers = {}
-  		headers['Content-Type'] = 'application/json'
-		headers['X-Version'] = '1.0'
-		headers['User-Agent'] = USER_AGENT
-
-		local options = {}
-		options.sndtimeo = 5
-		options.rcvtimeo = 5
-		options.method  = 'POST'
-		options.tls_context_set_verify = 'peer'
-		options.cacert = CACERT
-		options.headers = headers
-
-		while true do
-			local sensors = measurements:get_sensors()
-			local measurements_json = measurements:json_encode()
-			local http_persist = httpclient.create_persistent()
-
-			for i, sensor_id in ipairs(sensors) do
-				if i ~= #sensors then
-					options.headers['Connection'] = 'keep-alive'
-				else
-					options.headers['Connection'] = 'close'
-				end
-
-				options.body = '{"measurements":' .. measurements_json[sensor_id] .. '}'
-				options.headers['Content-Length'] = tostring(#options.body)
-				
-				local hash = nixio.crypto.hmac('sha1', WAN_KEY)
-				hash:update(options.body)
-				options.headers['X-Digest'] = hash:final()
-
-				local url = WAN_BASE_URL .. sensor_id
-				local response, code, call_info = http_persist(url, options)
-
-				local level
-
-				-- flush the sensor's measurement buffer in case of a successful HTTP POST
-				if code == 200 then
-					measurements:clear(sensor_id)
-					level = 'info'
-				else
-					level = 'err'
-					-- SSL_EXPIRED: The certificate presented by the server is expired
-					-- SSL_NOT_YET_VALID: The certificate presented by the server will be valid in the future but is not yet valid
-					-- those two errors are most likely caused by an incorrect local time
-					-- API_TIME_ERROR: Invalid data, this code is returned by the api server when the timestamps of the transmitted data are incorrect
-					-- in all these cases we call ntpclient to synchronize our local time
-					if code == SSL_NOT_YET_VALID or code == SSL_EXPIRED or code == API_TIME_ERROR then
-						nixio.syslog('info', 'trying to set correct time')
-						local output = ntp.ntpd()
-						nixio.syslog('info', 'output of ntpd: ' .. output:read('*all'))
-						output:close()
-					end
-				end
-
-				nixio.syslog(level, string.format('%s %s: %s', options.method, url, code))
-
-				-- if available, send additional error info to the syslog
-				if type(call_info) == 'string' then
-					nixio.syslog('err', call_info)
-				elseif type(call_info) == 'table'  then
-					local auth_error = call_info.headers['WWW-Authenticate']
-
-					if auth_error then
-						nixio.syslog('err', string.format('WWW-Authenticate: %s', auth_error))
-					end
-				end
-			end
-
-			-- allow coroutine to be gc'ed
-			http_persist = nil
-
-			resume(child, measurements)
-			measurements = coroutine.yield()
-		end
-	end)
-end
-
-local function gc(child)
-	return coroutine.create(function(measurements)
-		while true do
-			collectgarbage() -- force a complete garbage collection cycle
-			resume(child, measurements)
-			measurements = coroutine.yield()
 		end
 	end)
 end
@@ -485,18 +468,10 @@ local function debug(child)
 end
 
 local wan_chain =
-	wan_buffer(
-		filter(
-			filter(
-				filter(
-					send(
-						gc(
-							debug(nil)
-						)
-					)
-				, WAN_FILTER[3].span, WAN_FILTER[3].offset)
-			, WAN_FILTER[2].span, WAN_FILTER[2].offset)
-		, WAN_FILTER[1].span, WAN_FILTER[1].offset)
+	wan_handler(
+		mqtt_publish(
+			debug(nil)
+		)
 	)
 
 local lan_chain =

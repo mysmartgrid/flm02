@@ -36,6 +36,7 @@ luci.sys         = require 'luci.sys'
 luci.json        = require 'luci.json'
 luci.util        = require 'luci.util'
 local httpclient = require 'luci.httpclient'
+local crypto     = require 'crypto'
 
 -- character table string
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
@@ -70,6 +71,11 @@ function dec(data)
 		end))
 end
 
+function dec_hex(data)
+	local result = data:gsub('..', function(x) return string.char(tonumber("0x" .. x)) end)
+	return result
+end
+
 -- parse and load /etc/config/flukso
 local FLUKSO		= uci:get_all('flukso')
 
@@ -83,6 +89,10 @@ uci:foreach('system', 'system', function(x) WAN_KEY = x.key end) -- quirky but i
 
 local DEVICE		= '0123456789abcdef0123456789abcdef'
 uci:foreach('system', 'system', function(x) DEVICE = x.device end)
+
+local REGDEV_BASE = uci:get('flukso', 'api', 'regdev_url') .. '/'
+local REGDEV_CERT = uci:get('flukso', 'api', 'cacert')
+local REGDEV_URL  = REGDEV_BASE .. DEVICE
 
 local UPGRADE_URL	= FLUKSO.daemon.upgrade_url
 local DOWNLOAD_URL      = FLUKSO.daemon.wan_base_url .. 'firmware/'
@@ -336,6 +346,89 @@ local function get_sensor(sensor, idmap)
    end
 end
 
+local http_request_with_ntp = (function()
+	local http_client = httpclient.create_persistent()
+	local ntp_done = false
+
+	return function(url, options)
+		local response, code, resp_info = http_client(url, options)
+
+		if (code == SSL_EXPIRED or code == SSL_NOT_YET_VALID) and not ntp_done then
+			nixio.syslog('info', 'trying to set correct time')
+			local output = ntp.ntpd()
+			nixio.syslog('info', 'output of ntpd: ' .. output:read('*all'))
+			output:close()
+			ntp_done = true
+
+			response, code, resp_info = http_client(url, options)
+		end
+
+		return response, code, resp_info
+	end
+end)()
+
+local function register_device()
+	local options = {
+		sndtimeo = 5,
+		rcvtimeo = 5,
+		tls_context_set_verify = 'peer',
+		cacert = CACERT,
+		method = 'POST',
+		headers = {
+			['X-Key'] = WAN_KEY
+		}
+	}
+
+	local response, code, resp_info = http_request_with_ntp(REGDEV_URL, options)
+
+	if code ~= 200 then
+		nixio.syslog('error', 'device registration failed: ' .. err_info)
+		return false
+	end
+
+	return true
+end
+
+local function update_from_server_device_record()
+	local options = {
+		tls_context_set_verify = 'peer',
+		cacert = REGDEV_CERT,
+		method = 'GET'
+	}
+
+	local response, code, resp_info = http_request_with_ntp(REGDEV_URL, options)
+
+	if code == 200 then
+		local iv = resp_info.headers['X-IV']
+		local nonce = resp_info.headers['X-Nonce']
+		local hmac = resp_info.headers['X-HMAC']
+
+		local key = crypto.hmac.digest('sha256', dec_hex(nonce), dec_hex(WAN_KEY), true):sub(1, 16)
+
+		response = crypto.decrypt('aes-128-cfb', dec_hex(response), key, dec_hex(iv))
+		response = luci.json.decode(response)
+
+		if not response.linkedTo then
+			uci:delete('flukso', 'api', 'user')
+			uci:save('flukso')
+			uci:commit('flukso')
+		elseif uci:get('flukso', 'api', 'user') ~= response.linkedTo then
+			uci:set('flukso', 'api', 'user', response.linkedTo)
+			uci:save('flukso')
+			uci:commit('flukso')
+		end
+
+		return true
+	elseif code == 404 then
+		if not register_device() then
+			return false
+		end
+
+		return update_from_server_device_record()
+	else
+		return false, "failed to query device record", response
+	end
+end
 
 -- terminate when WAN reporting is not set
 if not WAN_ENABLED then
@@ -344,6 +437,17 @@ end
 
 -- open the connection to the syslog deamon, specifying our identity
 nixio.openlog('heartbeat', 'pid')
+
+--local success, err, extra = update_from_server_device_record()
+--if not success and err then
+--	nixio.syslog('error', err .. ' (' .. extra .. ')')
+--	os.exit(1)
+--end
+--os.exit(0)
+
+
+
+
 
 local monitor = collect_mp()
 monitor.firmware = collect_firmware()

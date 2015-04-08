@@ -18,7 +18,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/msg-flukso2
 	SECTION:=flukso
 	CATEGORY:=Flukso
-	DEPENDS:=+libdaemon +busybox-ntpd +liblua +luci-lib-nixio +luci-lib-httpclient +gpioctl
+	DEPENDS:=+libdaemon +liblua +luci-lib-nixio +luci-lib-httpclient +gpioctl
 	TITLE:=Flukso - community metering
 	URL:=http://www.mysmartgrid.de
 	MAINTAINER:=Stephan Platz <stephan.platz@itwm.fraunhofer.de>
@@ -51,11 +51,11 @@ FLUKSO_BUILD_DATE:=$(shell date +%Y%m%d_%H%M )
 
 define Package/msg-flukso2/install
 	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/etc/banner $(1)/etc/banner
+	#$(INSTALL_DATA) $(PKG_BUILD_DIR)/files/etc/banner $(1)/etc/banner
 
-	$(SED) 's,$$$$R,$(REVISION),g' $(1)/etc/banner
-	$(SED) 's,$$$$F,$(PKG_VERSION)-$(PKG_RELEASE),g' $(1)/etc/banner
-	$(SED) 's,$$$$G,$(FLUKSO_COMMIT),g' $(1)/etc/banner
+	#$(SED) 's,$$$$R,$(REVISION),g' $(1)/etc/banner
+	#$(SED) 's,$$$$F,$(PKG_VERSION)-$(PKG_RELEASE),g' $(1)/etc/banner
+	#$(SED) 's,$$$$G,$(FLUKSO_COMMIT),g' $(1)/etc/banner
 
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/flukso.uci $(1)/etc/config/flukso

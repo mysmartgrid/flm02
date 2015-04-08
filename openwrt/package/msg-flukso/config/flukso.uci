@@ -11,6 +11,7 @@ config settings main
 	option uart_tx_invert 0
 	option uart_rx_invert 0
 	option max_sensors 6
+	option max_provisioned_sensors 6
 	option max_analog_sensors 3
 	option reset_counters 0
 	option phase 1
@@ -28,6 +29,13 @@ config settings daemon
 config mysmartgrid events
 	option brownouts 0
 	option apply 0
+
+config api api
+	option server dev4.mysmartgrid.de
+	option port 10004
+	option user user
+	option cacert /etc/ssl/certs/msgp.ca.crt
+	option regdev_url 'https://dev4.mysmartgrid.de:10004/ws/regdevice'
 
 ### sensor config options
 # config sensor 1..6
