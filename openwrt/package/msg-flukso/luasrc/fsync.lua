@@ -278,16 +278,13 @@ local function set_phy_to_log(ctrl)
 				exit(5)
 			end
 
-			local ports = flukso[tostring(i)].port or {}
+			local port = flukso[tostring(i)].port
 
-			for j = 1, #ports do
-				if tonumber(ports[j]) > MAX_SENSORS then
-					print(string.format('Error. Port numbering in sensor %s should be less than or equal to max_sensors (%s)', i, MAX_SENSORS))
-					exit(6)
-
-				else
-					phy_to_log[toc(tonumber(ports[j]))] = toc(i)
-				end
+			if tonumber(port) > MAX_SENSORS then
+				print(string.format('Error. Port numbering in sensor %s should be less than or equal to max_sensors (%s)', i, MAX_SENSORS))
+				exit(6)
+			else
+				phy_to_log[toc(tonumber(port))] = toc(i)
 			end
 		end
 	end
@@ -479,15 +476,7 @@ local function phone_home()
 		config["current"]  = tonumber(flukso[i]["current"])
 		config["constant"] = tonumber(flukso[i]["constant"])
 		config["enable"]   = tonumber(flukso[i]["enable"])
-
-		if config["class"] == "analog" then
-			local phase = tonumber(flukso.main.phase)
-
-			if phase == 1 or 
-			   phase == 3 and i == "1" then
-				config["phase"] = phase
-			end
-		end
+		config["port"]     = tonumber(flukso[i]["port"])
 
 		return luci.json.encode{ config = config }
 	end

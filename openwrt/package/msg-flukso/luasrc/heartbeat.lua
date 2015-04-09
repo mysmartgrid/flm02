@@ -303,7 +303,7 @@ local function get_sensor(sensor, idmap)
       end
 
       if response.config["function"] ~= "undefined" then
-        print("Sensor " .. idmap[sensor] .. " enabled as " .. response.config["function"])
+        debug("Sensor " .. idmap[sensor] .. " enabled as " .. response.config["function"])
 
         uci:set("flukso", idmap[sensor], "enable", 1)
         uci:set("flukso", idmap[sensor], "function", response.config["function"])
@@ -623,7 +623,8 @@ if response.config then
 		for _, sensor in ipairs(config.sensors) do
 			debug(sensor)
 			if get_sensor(sensor, sensormap) > 0 then -- something went wrong, try again next time
-				return
+				nixio.syslog('warning', string.format('Fetching settings for sensor %s failed.', sensor))
+				print("Fetching setting for sensor " .. sensor .. " failed.")
 			end
 		end
 		os.execute('/usr/bin/fsync')
