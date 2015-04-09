@@ -12,6 +12,10 @@ config uhttpd main
 	# Server document root
 	option home		/www
 
+	# Prevent default redirect
+	list index_page default.html
+	option no_dirlists 1
+
 	# Reject requests from RFC1918 IP addresses
 	# directed to the servers public IP(s).
 	# This is a DNS rebinding countermeasure.
@@ -74,6 +78,7 @@ config uhttpd restful
 	option cgi_prefix	/sensor
 	option script_timeout	5
 	option network_timeout	5
+	option no_dirlists 1
 
 # Certificate defaults for px5g key generator
 config cert px5g
