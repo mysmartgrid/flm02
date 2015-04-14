@@ -24,7 +24,6 @@ URL_R="${URL}/registration"
 #
 VERBOSE="${VERBOSE-0}"
 flukso_serial=$1
-[ -z "${flukso_serial}" ] && read -r -p "Please enter the serial number of your flukso: " flukso_serial
 install_date=`date +%Y%m%d`
 logfile="flukso_install.log"
 
@@ -44,20 +43,21 @@ flukso_alive() {
     max=10
     while [ ${c} -le ${max} ];
     do
-	echo "Test ${c}/${max};"
-	sleep 5
-	c=`expr $c + 1`
-	flukso_login
-	if [ -n ${json_authkey} ]; then
-	    break
-	fi
+      echo "Test ${c}/${max};"
+      sleep 5
+      c=`expr $c + 1`
+      flukso_login
+      if [ "x${json_authkey}" != "x" ]; then
+        echo "flusko_alive: \"${json_authkey}\""
+        break
+      fi
     done
     if [ ${c} -ge ${max} ]; then
-	echo "Failed either to flash the flukso or the flukso is not coming up."
-	rc=1
+      echo "Failed either to flash the flukso or the flukso is not coming up."
+      rc=1
     else
-	echo "Flukso is flashed and running"
-	rc=0
+      echo "Flukso is flashed and running"
+      rc=0
     fi
 }
 
@@ -194,19 +194,18 @@ flukso_login() {
     # curl -X POST -d '{"method": "login", "params": ["root", "root"], "id": 100}' --url $auth_url
     echo curl -X POST -d "${post}" $auth_url
     local answer=`curl -X POST -d "${post}" $auth_url 2> /dev/null`
+    local curl_res=$?
 
     #json_authkey=`echo ${answer} | tokenize | parse`
-    if [ $? -eq 0 ]; then
+    if [ ${curl_res} -eq 0 -a "x${answer}" != "x" ]; then
         json_split "${answer}"
-        if [ -n ${json_result} ]; then
-            if [ ${json_result} != "null" ]; then
-                json_authkey="${json_result}"
-                echo "Key: ${json_authkey}"
-            fi
+        if [ "x${json_result}" != "x" ]; then
+            json_authkey="${json_result}"
+            echo "Key: ${json_authkey}"
         fi
     fi
 
-    if [ -n ${json_authkey} ]; then
+    if [ "x${json_authkey}" == "x" ]; then
         echo "Authentication failed: ${answer}"
     fi
 # answer has the form
@@ -225,7 +224,7 @@ flukso_uci() {
     flukso_version="${json_result_version}"
     flukso_key="${json_result_key}"
 
-    if [ -n "${flukso_serial}" ]; then
+    if [ "x${flukso_serial}" != "x" ]; then
         local setserialpost="{\"method\": \"set\", \"params\": [\"system\", \"${json_result_name}\", \"serial\", \"${flukso_serial}\"], \"id\": 102}"
         echo curl -X POST -d "${setserialpost}" $auth_url
         answer=`curl -X POST -d "${setserialpost}" $auth_url 2> /dev/null`
