@@ -8,6 +8,8 @@ set(ENV{http_proxy} "http://squid.itwm.fhg.de:3128/")
 set(_openwrt_url "svn://svn.openwrt.org/openwrt/")
 #set(_openwrt_url "svn://localhost/openwrt/")
 
+option(openwrt_update_feeds "Update OpenWRT package feeds from upstream repositories" ON)
+
 macro(openwrt_checkout_system _target _workdir _url _output)
   message(STATUS "  checkout ${_url}")
   add_custom_command(
@@ -156,8 +158,14 @@ function(openwrt_update _dest)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "update OpenWRT sources"
   )
+  if(${openwrt_update_feeds} STREQUAL "ON")
+    set(_openwrt_feeds_update_options "")
+  else()
+    set(_openwrt_feeds_update_options "-i")
+  endif()
+  message("Openwrt Feeds Update Command: ./scripts/feeds update ${_openwrt_feeds_update_options}")
   add_custom_target(openwrt_feeds_update
-    COMMAND ./scripts/feeds update
+    COMMAND ./scripts/feeds update ${_openwrt_feeds_update_options}
     DEPENDS openwrt_system_update
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "update feeds"
