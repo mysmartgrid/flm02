@@ -30,6 +30,7 @@ local uci			= require 'luci.model.uci'.cursor()
 local luci			= {}
 luci.json			= require 'luci.json'
 local httpclient	= require 'luci.httpclient'
+local api			= require 'api'
 
 
 local HW_CHECK_OVERRIDE = (arg[1] == '-f')
@@ -86,22 +87,6 @@ local COMMIT			= 'ct'
 local API_PATH		= '/www/sensor/'
 local CGI_SCRIPT	= '/usr/bin/restful'
 local AVAHI_PATH	= '/etc/avahi/services/flukso.service'
-
--- WAN settings
-local WAN_BASE_URL	 = flukso.daemon.wan_base_url .. 'sensor/'
-local DEVICE_BASE_URL	 = flukso.daemon.wan_base_url .. 'device/'
-local WAN_KEY		 = '0123456789abcdef0123456789abcdef'
-uci:foreach('system', 'system', function(x) WAN_KEY = x.key end) -- quirky but it works
-
-local DEVICE		= '0123456789abcdef0123456789abcdef'
-uci:foreach('system', 'system', function(x) DEVICE = x.device end)
-
--- https header helpers
-local FLUKSO_VERSION = '000'
-uci:foreach('system', 'system', function(x) FLUKSO_VERSION = x.version end)
-
-local USER_AGENT	= 'Fluksometer v' .. FLUKSO_VERSION
-local CACERT		= flukso.daemon.cacert
 
 -- map exit codes to strings
 local EXIT_STRING	 = { [-1] = "no synchronisation",
@@ -465,22 +450,6 @@ end
 --- POST each sensor's parameters to the /sensor/xyz endpoint
 -- @return		none
 local function phone_home()
-	local function json_config(i) -- type(i) --> "string"
-		local config = {}
-
-		config["device"]   = DEVICE
-		config["class"]    = flukso[i]["class"]
-		config["type"]     = flukso[i]["type"]
-		config["function"] = flukso[i]["function"]
-		config["voltage"]  = tonumber(flukso[i]["voltage"])
-		config["current"]  = tonumber(flukso[i]["current"])
-		config["constant"] = tonumber(flukso[i]["constant"])
-		config["enable"]   = tonumber(flukso[i]["enable"])
-		config["port"]     = tonumber(flukso[i]["port"])
-
-		return luci.json.encode{ config = config }
-	end
-
 	-- collect relevant firmware informations
 	local function collect_firmware()
 		local FIRMWARE = uci:get_all('firmware', 'system')
@@ -564,14 +533,14 @@ local function phone_home()
 				options.headers['Connection'] = 'close'
 			end
 
-			options.body = json_config(tostring(i))
+			options.body = sensor_json(flukso, tostring(i))
 			options.headers['Content-Length'] = tostring(#options.body)
 
 			local hash = nixio.crypto.hmac('sha1', WAN_KEY)
 			hash:update(options.body)
 			options.headers['X-Digest'] = hash:final()
 
-			local url = WAN_BASE_URL .. sensor_id
+			local url = SENSOR_BASE_URL .. sensor_id
 			local response, code, call_info = http_persist(url, options)
 
 			local level

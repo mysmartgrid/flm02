@@ -36,6 +36,7 @@ luci.sys         = require 'luci.sys'
 luci.json        = require 'luci.json'
 luci.util        = require 'luci.util'
 local httpclient = require 'luci.httpclient'
+local api        = require 'api'
 
 -- character table string
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
@@ -77,26 +78,12 @@ local FLUKSO		= uci:get_all('flukso')
 local WAN_ENABLED	= (FLUKSO.daemon.enable_wan_branch == '1')
 local UPGRADE_ENABLED = (FLUKSO.daemon.enable_remote_upgrade == '1')
 
-local WAN_BASE_URL	= FLUKSO.daemon.wan_base_url .. 'device/'
-local WAN_KEY		= '0123456789abcdef0123456789abcdef'
-uci:foreach('system', 'system', function(x) WAN_KEY = x.key end) -- quirky but it works
-
-local DEVICE		= '0123456789abcdef0123456789abcdef'
-uci:foreach('system', 'system', function(x) DEVICE = x.device end)
-
 local UPGRADE_URL	= FLUKSO.daemon.upgrade_url
 local DOWNLOAD_URL      = FLUKSO.daemon.wan_base_url .. 'firmware/'
 local SENSOR_URL	= FLUKSO.daemon.wan_base_url .. 'sensor/'
 
--- https header helpers
-local FLUKSO_VERSION	= '000'
-uci:foreach('system', 'system', function(x) FLUKSO_VERSION = x.version end)
-
 local SSL_NOT_YET_VALID = -150
 local SSL_EXPIRED       = -151
-
-local USER_AGENT	= 'Fluksometer v' .. FLUKSO_VERSION
-local CACERT		= FLUKSO.daemon.cacert
 
 -- gzipped syslog tmp file
 local SYSLOG_TMP	= '/tmp/syslog.gz'
@@ -390,12 +377,12 @@ hash:update(options.body)
 options.headers['X-Digest'] = hash:final()
 
 local http_persist = httpclient.create_persistent()
-local url = WAN_BASE_URL .. DEVICE
+local url = DEVICE_BASE_URL .. DEVICE
 local response_json, code, call_info = http_persist(url, options)
 
 if code == 200 then
   nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
-  uci:set("flukso", "daemon", "configchanged", 0)
+  uci:set('flukso', 'daemon', 'configchanged', 0)
   if FLUKSO.daemon.wan_registered ~= '1' then
     FLUKSO.daemon.wan_registered = 1
     uci:set('flukso', 'daemon', 'wan_registered', 1)
