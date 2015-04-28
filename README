@@ -70,3 +70,10 @@ cd $BUILDDIR
 cmake -Dopenwrt_update_feeds=OFF $SOURCEDIR
 make
 
+In order to get back to upstream you have to execute the following steps
+
+cd $BUILDDIR/feeds/packages
+git checkout master
+cd $BUILDDIR
+cmake -Dopenwrt_update_feeds=ON $SOURCEDIR
+make
