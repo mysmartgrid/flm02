@@ -306,9 +306,13 @@ local function get_sensor(sensor, idmap)
           print("Invalid response.")
           return 1
         end
-        --uci:set("flukso", idmap[sensor], "phase", response.config["phase"]) --not implemented yet
+        -- we do not want to enable reconfiguring of sensor ports. Aggregation can happen in the
+        -- presentation layer.
+        --if response.config["port"] ~= nil then
+        --  uci:set_list("flukso", idmap[sensor], "phase", {response.config["port"]})
+        --end
       else
-        print("Sensor " .. idmap[sensor] .. " disabled.")
+        debug("Sensor " .. idmap[sensor] .. " disabled.")
         uci:set("flukso", idmap[sensor], "enable", 0)
       end
       uci:save("flukso")
@@ -323,6 +327,50 @@ local function get_sensor(sensor, idmap)
    end
 end
 
+-- Register sensor at the server
+local function register_sensors(http_persist, options)
+	local MAX_PROV_SENSORS		= tonumber(FLUKSO.main.max_provisioned_sensors)
+	for i = 1, MAX_PROV_SENSORS do
+		if FLUKSO[tostring(i)] ~= nil and FLUKSO[tostring(i)].id then
+			local sensor_id = FLUKSO[tostring(i)].id
+
+			options.body = sensor_json(FLUKSO, tostring(i))
+			options.headers['Content-Length'] = tostring(#options.body)
+
+			local hash = nixio.crypto.hmac('sha1', WAN_KEY)
+			hash:update(options.body)
+			options.headers['X-Digest'] = hash:final()
+
+			local url = SENSOR_BASE_URL .. sensor_id
+			local response, code, call_info = http_persist(url, options)
+
+			local level
+
+			if code == 200 or code == 204 then
+				level = 'info'
+			else
+				level = 'err'
+				err = true
+			end
+
+			nixio.syslog(level, string.format('%s %s: %s', options.method, url, code))
+			print(string.format('%s %s: %s', options.method, url, code))
+
+			-- if available, send additional error info to the syslog
+			if type(call_info) == 'string' then
+				nixio.syslog('err', call_info)
+				print(call_info)
+			elseif type(call_info) == 'table'  then
+				local auth_error = call_info.headers['WWW-Authenticate']
+
+				if auth_error then
+					nixio.syslog('err', string.format('WWW-Authenticate: %s', auth_error))
+					print(string.format('WWW-Authenticate: %s', auth_error))
+				end
+			end
+		end
+	end
+end
 
 -- terminate when WAN reporting is not set
 if not WAN_ENABLED then
@@ -389,8 +437,7 @@ if code == 200 then
     uci:save("flukso")
     uci:commit("flukso")
     -- when we just registered the device we also have to inform all known sensors
-    -- TODO: fsync is unsuitable here as it only informs activated sensors
-    os.execute('/usr/bin/fsync')
+    register_sensors(http_persist, options)
   end
   debug(FLUKSO.daemon)
 elseif code == 481 then
