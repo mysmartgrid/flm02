@@ -30,7 +30,7 @@ local uci			= require 'luci.model.uci'.cursor()
 local luci			= {}
 luci.json			= require 'luci.json'
 local httpclient	= require 'luci.httpclient'
-local api			= require 'api'
+local api			= require 'flukso.api'
 
 
 local HW_CHECK_OVERRIDE = (arg[1] == '-f')

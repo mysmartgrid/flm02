@@ -36,7 +36,7 @@ luci.sys         = require 'luci.sys'
 luci.json        = require 'luci.json'
 luci.util        = require 'luci.util'
 local httpclient = require 'luci.httpclient'
-local api        = require 'api'
+local api        = require 'flukso.api'
 
 -- character table string
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
