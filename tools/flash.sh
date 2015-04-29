@@ -23,8 +23,8 @@ URL_R="${URL}/registration"
 
 #
 VERBOSE="${VERBOSE-0}"
+TIMEOUT="${TIMEOUT-120}"
 flukso_serial=$1
-[ -z "${flukso_serial}" ] && read -r -p "Please enter the serial number of your flukso: " flukso_serial
 install_date=`date +%Y%m%d`
 logfile="flukso_install.log"
 
@@ -36,28 +36,28 @@ flash_flukso() {
 }
 
 flukso_alive() {
-    echo "waiting  90sec for flukso to come up."
-	read -t 90 -p "Waiting 90s for flukso to come up. (Press any key to continue immediatly)"
+	read -t ${TIMEOUT} -p "Waiting ${TIMEOUT}s for flukso to come up. (Press any key to continue immediatly)"
 
     # check if web-api is running
     c=1
     max=10
     while [ ${c} -le ${max} ];
     do
-	echo "Test ${c}/${max};"
-	sleep 5
-	c=`expr $c + 1`
-	flukso_login
-	if [ -n ${json_authkey} ]; then
-	    break
-	fi
+      echo "Test ${c}/${max};"
+      sleep 5
+      c=`expr $c + 1`
+      flukso_login
+      if [ "x${json_authkey}" != "x" ]; then
+        echo "flusko_alive: \"${json_authkey}\""
+        break
+      fi
     done
     if [ ${c} -ge ${max} ]; then
-	echo "Failed either to flash the flukso or the flukso is not coming up."
-	rc=1
+      echo "Failed either to flash the flukso or the flukso is not coming up."
+      rc=1
     else
-	echo "Flukso is flashed and running"
-	rc=0
+      echo "Flukso is flashed and running"
+      rc=0
     fi
 }
 
@@ -194,19 +194,18 @@ flukso_login() {
     # curl -X POST -d '{"method": "login", "params": ["root", "root"], "id": 100}' --url $auth_url
     echo curl -X POST -d "${post}" $auth_url
     local answer=`curl -X POST -d "${post}" $auth_url 2> /dev/null`
+    local curl_res=$?
 
     #json_authkey=`echo ${answer} | tokenize | parse`
-    if [ $? -eq 0 ]; then
+    if [[ ${curl_res} -eq 0 && "x${answer}" != "x" ]]; then
         json_split "${answer}"
-        if [ -n ${json_result} ]; then
-            if [ ${json_result} != "null" ]; then
-                json_authkey="${json_result}"
-                echo "Key: ${json_authkey}"
-            fi
+        if [ "x${json_result}" != "x" ]; then
+            json_authkey="${json_result}"
+            echo "Key: ${json_authkey}"
         fi
     fi
 
-    if [ -n ${json_authkey} ]; then
+    if [ "x${json_authkey}" == "x" ]; then
         echo "Authentication failed: ${answer}"
     fi
 # answer has the form
@@ -219,13 +218,20 @@ flukso_uci() {
     local auth_url="${URL}/rpc/uci?auth=${authkey}"
     local post='{"method": "foreach", "params": ["system", "system"], "id": 101}'
     echo curl -X POST -d ${post} $auth_url
-    answer=`curl -X POST -d "${post}" $auth_url 2> /dev/null`
-    json_split ${answer}
-    flukso_device="${json_result_device}"
-    flukso_version="${json_result_version}"
-    flukso_key="${json_result_key}"
+    flukso_device="0123456789abcdef0123456789abcdef"
+    local counter=0
+    while [[ ( "${flukso_device}" = "0123456789abcdef0123456789abcdef" || "x${flukso_device}" = "x" ) && $counter -lt 25 ]]; do
+      sleep 5;
+      echo "Try $counter"
+      answer=`curl -X POST -d "${post}" $auth_url 2> /dev/null`
+      json_split ${answer}
+      flukso_device="${json_result_device}"
+      flukso_version="${json_result_version}"
+      flukso_key="${json_result_key}"
+      counter=$(($counter + 1))
+    done
 
-    if [ -n "${flukso_serial}" ]; then
+    if [ "x${flukso_serial}" != "x" ]; then
         local setserialpost="{\"method\": \"set\", \"params\": [\"system\", \"${json_result_name}\", \"serial\", \"${flukso_serial}\"], \"id\": 102}"
         echo curl -X POST -d "${setserialpost}" $auth_url
         answer=`curl -X POST -d "${setserialpost}" $auth_url 2> /dev/null`
@@ -256,7 +262,7 @@ fi
 flukso_uci ${json_authkey}
 
 echo "Flusko is running"
-echo "${flukso_serial};${install_date};${json_result_device};${json_result_version};${json_result_key}" | tee -a ${logfile}
+echo "${flukso_serial};${install_date};${flukso_device};${flukso_version};${flukso_key}" | tee -a ${logfile}
 exit ${rc}
 
 #curl -X POST -d '{"method": "login", "params": ["root", "root"], "id": 100}' http://192.168.255.1/cgi-bin/luci/rpc/auth

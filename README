@@ -52,8 +52,28 @@ Attitude Adjustment to the Fluksometer hardware.
 
 tools: a set of helper tools for flashing, generating boardconfigs, etc.
 
+### OpenWRT build instructions ###
 To build the firmware create a directory outside the source directory and
 run 'cmake $SOURCEDIR' where $SOURCEDIR is the path to the directory
 containing this README.
 Make sure you ran 'git submodule init && git submodule update' before building
 the firmware.
+
+#### Troubleshooting ####
+In case the build process fails due to errors in the packages feed of OpenWRT
+one can execute the following steps to revert back to a working commit.
+
+cd $BUILDDIR/feeds/packages
+git fetch --unshallow
+git checkout $COMMITHASH
+cd $BUILDDIR
+cmake -Dopenwrt_update_feeds=OFF $SOURCEDIR
+make
+
+In order to get back to upstream you have to execute the following steps
+
+cd $BUILDDIR/feeds/packages
+git checkout master
+cd $BUILDDIR
+cmake -Dopenwrt_update_feeds=ON $SOURCEDIR
+make
