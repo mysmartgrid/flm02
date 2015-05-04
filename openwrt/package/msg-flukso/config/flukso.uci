@@ -34,7 +34,7 @@ config api api
 	option server dev4.mysmartgrid.de
 	option port 10004
 	option user user
-	option cacert /etc/ssl/certs/msgp.ca.crt
+	option cacert /etc/ssl/certs/msg.ca.crt
 	option regdev_url 'https://dev4.mysmartgrid.de:10004/ws/regdevice'
 
 ### sensor config options

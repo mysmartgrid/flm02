@@ -248,13 +248,13 @@ end
 
 local function wan_handler(child)
 	return coroutine.create(function(sensor_id, sensor_class, timestamp, counter, extra)
-		local BIN_WIDTH = 60
-		local BIN_COUNT = 1440
-		local TRANSMIT_LOWER_LIMIT = 5
+		local BIN_WIDTH = 30
+		local BIN_COUNT = 1440 * (60 / BIN_WIDTH)
+		local TRANSMIT_LOWER_LIMIT = 5 * (60 / BIN_WIDTH)
 
 		local backoff_exp = 1
 		local try_again_at = nil
-		local MAX_BACKOFF_EXP = 4
+		local MAX_BACKOFF_EXP = 6
 
 		local bwh = buffer.new(BIN_WIDTH, BIN_COUNT, buffer.aggregates.max)
 
