@@ -224,12 +224,17 @@ local function dispatch(wan_child, lan_child)
 			end
 		end
 
+		local delta_p = { fd = delta.fdout, events = POLLIN, revents = 0 }
+		local ws_p = { fd = ws.input_fd(), events = POLLIN, revents = 0 }
+		local pollfds = { delta_p, ws_p }
+
 		while true do
-			local delta_p = { fd = delta.fdout, events = POLLIN, revents = 0 }
-			local ws_p = { fd = ws.input_fd(), events = POLLIN, revents = 0 }
-			local pollfds = { delta_p }
 			if ws.valid then
-				pollfds[#pollfds + 1] = ws_p
+				ws_p.fd = ws.input_fd()
+				ws_p.events = POLLIN
+			else
+				ws_p.fd = delta_p.fd
+				ws_p.events = 0
 			end
 			local poll = nixio.poll(pollfds, -1)
 			if poll > 0 then
@@ -248,7 +253,7 @@ end
 
 local function wan_handler(child)
 	return coroutine.create(function(sensor_id, sensor_class, timestamp, counter, extra)
-		local BIN_WIDTH = 30
+		local BIN_WIDTH = 60
 		local BIN_COUNT = 1440 * (60 / BIN_WIDTH)
 		local TRANSMIT_LOWER_LIMIT = 5 * (60 / BIN_WIDTH)
 
@@ -266,8 +271,8 @@ local function wan_handler(child)
 			local update_cmd = ws:new_update_value_command(sensor_id .. suffix)
 			local values_used = 0
 			while buffer:get_point_count(sensor_id) > values_used + 1 do
-				local ts, value = buffer:peek_oldest_value(sensor_id, values_used)
-				if not update_cmd:append(ts, value) then
+				local _, val = buffer:peek_oldest_value(sensor_id, values_used)
+				if val.ts and not update_cmd:append(val.ts, val.value) then
 					break
 				end
 				values_used = values_used + 1
@@ -286,6 +291,7 @@ local function wan_handler(child)
 				print("could not send values, try again in " .. try_again_at .. "s")
 				try_again_at = try_again_at + os.time()
 			end
+			collectgarbage()
 		end
 
 		local last_value_of = {}

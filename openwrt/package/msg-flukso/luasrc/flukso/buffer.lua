@@ -186,10 +186,13 @@ end
 
 function aggregates.max(state, timestamp, value)
 	if timestamp == nil then
-		return state.value
+		return state
 	end
 
-	state.value = math.max(state.value or -math.huge, value)
+	if (state.value or -math.huge) < value then
+		state.value = value
+		state.ts = timestamp
+	end
 end
 
 return {
