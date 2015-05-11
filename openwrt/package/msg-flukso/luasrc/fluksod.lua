@@ -29,7 +29,6 @@ local uci        = require 'luci.model.uci'.cursor()
 local json       = require 'luci.json'
 local httpclient = require 'luci.httpclient'
 local data       = require 'flukso.data'
-local mosq       = require 'mosquitto'
 local ntp        = require 'flukso.ntpd'
 local wsapi      = require 'flukso.wsapi'
 local buffer     = require 'flukso.buffer'
@@ -130,22 +129,6 @@ end
 
 local ws = wsapi.new_device_client(WS_CONFIG.url, WS_CONFIG.port, WS_CONFIG.user, DEVICE, WAN_KEY, WS_CONFIG.cacert, WS_IN, WS_OUT)
 
--- mosquitto client params
-local MOSQ_ID           = DAEMON
-local MOSQ_CLN_SESSION  = true
-local MOSQ_HOST         = 'localhost'
-local MOSQ_PORT         = 1883
-local MOSQ_KEEPALIVE    = 300
-local MOSQ_TIMEOUT      = 0 -- return instantly from select call
-local MOSQ_MAX_PKTS     = 10 -- packets
-local MOSQ_QOS          = 0
-local MOSQ_RETAIN       = true
-
--- connect to the MQTT broker
-mosq.init()
-local mqtt = mosq.new(MOSQ_ID, MOSQ_CLN_SESSION)
-mqtt:connect(MOSQ_HOST, MOSQ_PORT, MOSQ_KEEPALIVE)
-
 local function dispatch(wan_child, lan_child)
 	return coroutine.create(function()
 		local delta = { fdin  = nixio.open(DELTA_PATH_IN, O_RDWR_NONBLOCK),
@@ -186,11 +169,6 @@ local function dispatch(wan_child, lan_child)
 
 		local function process_delta()
 			for line in delta.fdout:linesource() do
-				-- service the mosquitto loop
-				if not mqtt:loop(MOSQ_TIMEOUT, MOSQ_MAX_PKTS) then
-					mqtt:reconnect()
-				end
-
 				if DEBUG then
 					print(line)
 				end
@@ -291,76 +269,26 @@ local function wan_handler(child)
 				print("could not send values, try again in " .. try_again_at .. "s")
 				try_again_at = try_again_at + os.time()
 			end
-			collectgarbage()
 		end
 
 		local last_value_of = {}
 
 		while true do
-			if sensor_class == "analog" and
+			if (sensor_class == "analog" or sensor_class == "pulse") and
 					(not last_value_of[sensor_id] or last_value_of[sensor_id] < counter) then
 				last_value_of[sensor_id] = counter
 				bwh:add_value(sensor_id, timestamp, counter)
 			end
 
-			if sensor_id ~= nil then
-				if bwh:get_point_count(sensor_id) > TRANSMIT_LOWER_LIMIT then
-					send_values(bwh, sensor_id, "")
+			for _, sensor in pairs(bwh:get_sensors()) do
+				if bwh:get_point_count(sensor) > TRANSMIT_LOWER_LIMIT then
+					send_values(bwh, sensor, "")
 				end
-
-				resume(child, sensor_id, timestamp, counter)
-				sensor_id, sensor_class, timestamp, counter, extra = coroutine.yield()
-			end
-		end
-	end)
-end
-
-local function mqtt_publish(child)
-	return coroutine.create(function(sensor_id, timestamp, counter)
-		local measurements = data.new()
-		local threshold = os.time() + WAN_INTERVAL
-		local previous = {}
-
-		local topic_fmt = '/sensor/%s/counter'
-		local payload_fmt = '[%d,%d,"%s"]'
-
-		while true do
-			if not previous[sensor_id] then
-				previous[sensor_id] = {}
-				-- use the first received counter value as guard
-				previous[sensor_id].timestamp = timestamp
-				previous[sensor_id].counter = counter
 			end
 
-			if timestamp > TIMESTAMP_MIN
-				and timestamp > (previous[sensor_id].timestamp or 0)
-				and counter ~= (previous[sensor_id].counter or 0)
-				then
-
-				nixio.syslog('info', string.format('processed pulse %s:%s:%s', sensor_id, timestamp, counter))
-
-				if (timestamp - (previous[sensor_id].timestamp or 0)) > MAX_TIME_OFFSET then
-					nixio.syslog('info', 'time warp detected. removing old sensor data')
-					measurements:clear(sensor_id)
-					collectgarbage()
-				end
-	
-				local topic = string.format(topic_fmt, sensor_id)
-				local unit = LAN_ID_TO_UNIT[sensor_id].counter
-				local payload = string.format(payload_fmt, timestamp, counter, unit)
-				mqtt:publish(topic, payload, MOSQ_QOS, MOSQ_RETAIN)
-
-				measurements:add(sensor_id, timestamp, counter)
-				previous[sensor_id].timestamp = timestamp
-				previous[sensor_id].counter = counter
-			end
-
-			if timestamp > threshold and next(measurements) then  --checking whether table is not empty
-				resume(child, measurements)
-				threshold = os.time() + WAN_INTERVAL
-			end
-
-			sensor_id, timestamp, counter = coroutine.yield()
+			collectgarbage()
+			resume(child, sensor_id, timestamp, counter)
+			sensor_id, sensor_class, timestamp, counter, extra = coroutine.yield()
 		end
 	end)
 end
@@ -414,7 +342,6 @@ local function lan_buffer(child)
 					local topic = string.format(topic_fmt, sensor_id)
 					local unit = LAN_ID_TO_UNIT[sensor_id].gauge
 					local payload = string.format(payload_fmt, timestamp, power, unit)
-					mqtt:publish(topic, payload, MOSQ_QOS, MOSQ_RETAIN)
 
 					measurements:add(sensor_id, timestamp, power)
 					previous[sensor_id].timestamp = timestamp
@@ -475,9 +402,7 @@ end
 
 local wan_chain =
 	wan_handler(
-		mqtt_publish(
-			debug(nil)
-		)
+		debug(nil)
 	)
 
 local lan_chain =
