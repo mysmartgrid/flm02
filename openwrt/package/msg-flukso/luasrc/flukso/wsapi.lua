@@ -13,6 +13,7 @@ local os = os
 module("wsapi")
 
 local POLLIN            = nixio.poll_flags('in')
+local POLLHUP           = nixio.poll_flags('hup')
 
 local function start_ws_proxy(config)
 	local cmdline = "lua-ws-wrapper "
@@ -62,7 +63,7 @@ local function ws_client_handler(config, sock)
 				while not servfail and not line and (err == nixio.const.EAGAIN or err == nixio.const.EINTR) and wait_for_eol do
 					local pollfd = { { fd = fd_out, events = POLLIN, revents = 0 } }
 					local res, err = nixio.poll(pollfd, 10000)
-					if res == 0 then
+					if res == 0 or pollfd[1].revents == POLLHUP then
 						servfail = true
 					elseif res == 1 then
 						line, err = fd_out_lines()
