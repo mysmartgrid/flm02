@@ -248,7 +248,7 @@ local function wan_handler(child)
 
 			local update_cmd = ws:new_update_value_command(sensor_id .. suffix)
 			local values_used = 0
-			while buffer:get_point_count(sensor_id) > values_used + 1 do
+			while buffer:get_point_count(sensor_id) >= values_used + 1 do
 				local _, val = buffer:peek_oldest_value(sensor_id, values_used)
 				if val.ts and not update_cmd:append(val.ts, val.value) then
 					break
