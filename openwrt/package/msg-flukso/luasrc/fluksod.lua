@@ -207,6 +207,7 @@ local function dispatch(wan_child, lan_child)
 		local pollfds = { delta_p, ws_p }
 
 		while true do
+			collectgarbage()
 			if ws.valid then
 				ws_p.fd = ws.input_fd()
 				ws_p.events = POLLIN
@@ -232,7 +233,7 @@ end
 local function wan_handler(child)
 	return coroutine.create(function(sensor_id, sensor_class, timestamp, counter, extra)
 		local BIN_WIDTH = 60
-		local BIN_COUNT = 1440 * (60 / BIN_WIDTH)
+		local BIN_COUNT = 3  *1440 * (60 / BIN_WIDTH)
 		local TRANSMIT_LOWER_LIMIT = 5 * (60 / BIN_WIDTH)
 
 		local backoff_exp = 1
@@ -269,6 +270,7 @@ local function wan_handler(child)
 				print("could not send values, try again in " .. try_again_at .. "s")
 				try_again_at = try_again_at + os.time()
 			end
+			collectgarbage()
 		end
 
 		local last_value_of = {}
@@ -286,7 +288,6 @@ local function wan_handler(child)
 				end
 			end
 
-			collectgarbage()
 			resume(child, sensor_id, timestamp, counter)
 			sensor_id, sensor_class, timestamp, counter, extra = coroutine.yield()
 		end
