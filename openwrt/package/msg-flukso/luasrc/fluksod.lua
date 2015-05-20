@@ -129,6 +129,14 @@ end
 
 local ws = wsapi.new_device_client(WS_CONFIG.url, WS_CONFIG.port, WS_CONFIG.user, DEVICE, WAN_KEY, WS_CONFIG.cacert, WS_IN, WS_OUT)
 
+local realtimeUpdatesForUntil = {}
+
+ws.on.requestRealtimeUpdates = function(cmd, args)
+	for _, sensor in pairs(args) do
+		realtimeUpdatesForUntil[sensor] = os.time() + 60
+	end
+end
+
 local function dispatch(wan_child, lan_child)
 	return coroutine.create(function()
 		local delta = { fdin  = nixio.open(DELTA_PATH_IN, O_RDWR_NONBLOCK),
@@ -221,7 +229,7 @@ local function dispatch(wan_child, lan_child)
 					process_delta()
 				end
 				if ws_p.revents == POLLIN then
-					resume(wan_child)
+					ws:process_command()
 				elseif ws_p.revents == POLLHUP then
 					ws.valid = false
 				end
@@ -284,8 +292,13 @@ local function wan_handler(child)
 
 			for _, sensor in pairs(bwh:get_sensors()) do
 				if bwh:get_point_count(sensor) > TRANSMIT_LOWER_LIMIT then
-					send_values(bwh, sensor, "")
+					send_values(bwh, sensor, "/wh")
 				end
+			end
+			if (realtimeUpdatesForUntil[sensor_id .. "/w"] or -math.huge) > os.time() then
+				local w_update = ws:new_update_value_command(sensor_id .. "/w")
+				w_update:append(timestamp, extra)
+				w_update:run()
 			end
 
 			resume(child, sensor_id, timestamp, counter)

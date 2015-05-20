@@ -95,21 +95,42 @@ function ws_client_ops.read(self, wait_for_eol)
 	return self[".handler"](nil, wait_for_eol)
 end
 
+function ws_client_ops.__read_json(self)
+	local line, err = self:read(true)
+	if line == nil then
+		return line, err
+	end
+	line = json.decode(line)
+	if not line then
+		return line, "bad response"
+	end
+	return line, nil
+end
+
 function ws_client_ops.write(self, line)
 	return self[".handler"](line)
 end
 
 function ws_client_ops.process_command(self, command)
+	if not command then
+		local err
+		command, err = self:__read_json()
+		if err then
+			return err
+		end
+	end
+	if self.on[command.cmd] then
+		return self.on[command.cmd](command.cmd, command.args)
+	end
+	return nil
 end
 
 function ws_client_ops.wait_for_response(self)
 	while true do
-		local line, err = self:read(true)
-		if line == nil then
+		local line, err = self:__read_json()
+		if not line then
 			return line, err
-		end
-		line = json.decode(line)
-		if line.cmd then
+		elseif line.cmd then
 			self:process_command(line)
 		elseif line.error then
 			return nil, line.error
@@ -190,6 +211,7 @@ function new_device_client(url, port, user, device, key, cacert, in_fifo, out_fi
 			return config.fds.out
 		end,
 		[".handler"] = coroutine.wrap(ws_client_handler),
+		on = {},
 	}
 
 	sock[".handler"](config, sock)
