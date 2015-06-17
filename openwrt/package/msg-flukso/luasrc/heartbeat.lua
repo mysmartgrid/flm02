@@ -451,6 +451,9 @@ else
         elseif type(call_info) == 'string' then
                 print('failed, info=', print(call_info))
         end
+	if code == 404 then
+		os.execute('/usr/bin/fsync')
+	end
         print('failed, response=', response_json)
 
 	-- SSL_EXPIRED: The certificate presented by the server is expired
