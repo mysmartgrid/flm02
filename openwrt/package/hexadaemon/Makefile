@@ -25,7 +25,7 @@ define Package/hexadaemon/description
 endef
 
 define Build/Prepare
-	sh -c 'if [ -d hexabus ]; then cd hexabus; git pull --rebase; cd ..; else git clone http://github.com/mysmartgrid/hexabus.git -b development; fi'
+	sh -c 'if [ -d hexabus ]; then cd hexabus; git pull --rebase; cd ..; else git clone http://github.com/mysmartgrid/hexabus.git -b rel_0.6; fi'
 
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) -R hexabus/* $(PKG_BUILD_DIR)
