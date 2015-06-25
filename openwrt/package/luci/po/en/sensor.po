@@ -73,23 +73,28 @@ msgstr "Voltage"
 msgid "flm_current"
 msgstr "Current"
 
-#. Constant
+#. pulses/kWh
 #: i18n/english/luasrc/i18n/sensor.en.lua:16
-msgid "flm_constant"
-msgstr "Constant"
+msgid "flm_imppkwh"
+msgstr "pulses/kWh"
+
+#. L/pulse
+#: i18n/english/luasrc/i18n/sensor.en.lua:17
+msgid "flm_lpimp"
+msgstr "L/pulse"
 
 #. An enabled sensor should have a function/name assigned.
-#: i18n/english/luasrc/i18n/sensor.en.lua:17
+#: i18n/english/luasrc/i18n/sensor.en.lua:18
 msgid "flm_err_no_name"
 msgstr "An enabled sensor should have a function/name assigned."
 
 #. An enabled sensor should have a type assigned.
-#: i18n/english/luasrc/i18n/sensor.en.lua:18
+#: i18n/english/luasrc/i18n/sensor.en.lua:19
 msgid "flm_err_no_type"
 msgstr "An enabled sensor should have a type assigned."
 
 #. When selecting 3 phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When selecting 1 phase, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively.
-#: i18n/english/luasrc/i18n/sensor.en.lua:19
+#: i18n/english/luasrc/i18n/sensor.en.lua:20
 msgid "flm_ct_descr"
 msgstr "When selecting 3 phases, the three current clamp ports will be grouped and presented as a single sensor #1. Sensors #2 and #3 will be disabled automatically after saving. When selecting 1 phase, each clamp port will be sampled seperately and mapped to sensors #1, #2 and #3 respectively."
 

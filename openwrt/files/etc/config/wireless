@@ -1,7 +1,8 @@
 config wifi-device  wifi0
         option type        atheros
         option channel     auto
-	option mode        11bg
+        option country     276
+        option mode        11bg
         option diversity   0
         option txantenna   1
         option rxantenna   1

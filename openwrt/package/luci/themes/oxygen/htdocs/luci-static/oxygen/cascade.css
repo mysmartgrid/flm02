@@ -103,6 +103,26 @@ code {
 	text-align: right;
 }
 
+.preferencebar {          
+       clear: both;       
+       width: 80%;        
+       margin: 0.7em auto;
+       background: transparent;                 
+       color: #000000;                
+       font-size: 80%;    
+       text-align: right;
+                                                                                               
+       border-radius: 1em;       
+       -khtml-border-radius: 1em; 
+       -moz-border-radius: 1em;   
+       -webkit-border-radius: 1em;
+       -opera-border-radius: 1em;
+}
+
+.preferencebar img { 
+    border: none;
+}
+
 .menubar {
 	clear: both;
 	width: 80%;
@@ -113,6 +133,7 @@ code {
 	color: #000000;
 	border-width: 1px solid #444444;
 	font-size: 80%;
+	display: none;
 
 	border-radius: 1em;
 	-khtml-border-radius: 1em;

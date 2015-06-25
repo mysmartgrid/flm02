@@ -15,8 +15,17 @@ $Id$
 <div class="clear"></div>
 </div>
 
+<p class="luci" style="text-align: right; width: 100%; font-size: 70%;" >Firmware Version:
+	<%
+		local ipkg = require "luci.model.ipkg"
+		local msgflukso = ipkg.info("msg-flukso2")
+		print(msgflukso['msg-flukso2']['Version'])
+	-%>
+</p>
+
 <p class="luci"><a href="<%=controller%>/about">Powered by LuCI</a></p>
 
 </div>
+
 </body>
 </html>

@@ -1,0 +1,5 @@
+config 'settings' system
+	option build        $I
+	option releasetime  $D
+	option version      $F
+	option tag          $T

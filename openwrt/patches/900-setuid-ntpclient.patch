@@ -1,0 +1,11 @@
+--- include/image.mk	2013-05-24 09:53:04.922477001 +0200
++++ include/image.mk	2013-05-24 11:29:30.247441128 +0200
+@@ -127,7 +127,7 @@
+ 
+ define Image/mkfs/prepare/default
+ 	- $(FIND) $(TARGET_DIR) -type f -not -perm +0100 -not -name 'ssh_host*' -print0 | $(XARGS) -0 chmod 0644
+-	- $(FIND) $(TARGET_DIR) -type f -perm +0100 -print0 | $(XARGS) -0 chmod 0755
++	- $(FIND) $(TARGET_DIR) -type f -perm +0100 -not -name 'ntpclient' -print0 | $(XARGS) -0 chmod 0755
+ 	- $(FIND) $(TARGET_DIR) -type d -print0 | $(XARGS) -0 chmod 0755
+ 	$(INSTALL_DIR) $(TARGET_DIR)/tmp
+ 	chmod 0777 $(TARGET_DIR)/tmp

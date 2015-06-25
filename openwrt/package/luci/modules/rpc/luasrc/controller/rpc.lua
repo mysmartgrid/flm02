@@ -26,9 +26,11 @@ function index()
 		local auth = luci.http.formvalue("auth", true)
 		if auth then
 			local sdat = luci.sauth.read(auth)
-			user = loadstring(sdat)().user
-			if user and luci.util.contains(accs, user) then
-				return user, auth
+			if sdat then
+				user = loadstring(sdat)().user
+				if user and luci.util.contains(accs, user) then
+					return user, auth
+				end
 			end
 		end
 		luci.http.status(403, "Forbidden")
@@ -44,6 +46,7 @@ function index()
 	entry({"rpc", "fs"}, call("rpc_fs"))
 	entry({"rpc", "sys"}, call("rpc_sys"))
 	entry({"rpc", "ipkg"}, call("rpc_ipkg"))
+	entry({"rpc", "flukso"}, call("rpc_flukso"))
 	entry({"rpc", "auth"}, call("rpc_auth")).sysauth = false
 end
 
@@ -177,3 +180,14 @@ function rpc_ipkg()
 	http.prepare_content("application/json")
 	ltn12.pump.all(jsonrpc.handle(ipkg, http.source()), http.write)
 end
+
+function rpc_flukso()
+	local flukso  = require "luci.jsonrpcbind.flukso"
+	local jsonrpc = require "luci.jsonrpc"
+	local http    = require "luci.http"
+	local ltn12   = require "luci.ltn12"
+	
+	http.prepare_content("application/json")
+	ltn12.pump.all(jsonrpc.handle(flukso, http.source()), http.write)
+end
+

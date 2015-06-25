@@ -20,6 +20,10 @@ div.dashicon a {
 	font-weight: bold;
 }
 
+div.di_wizard a {
+	background-image: url(icons/wizard.png);
+}
+
 div.di_system a {
 	background-image: url(icons/system.png);
 }
@@ -38,6 +42,10 @@ div.di_syslog a {
 
 div.di_sensor a {
 	background-image: url(icons/sensor.png);
+}
+
+div.di_reg a {
+	background-image: url(icons/registration.png);
 }
 
 }

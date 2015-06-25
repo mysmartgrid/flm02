@@ -116,15 +116,15 @@
 	#define TXEN			TXEN0
 	#define UBRRL			UBRR0L
 	#define UBRRH			UBRR0H
-	#define SIG_UART_TRANS		SIG_USART_TRANS
-	#define SIG_UART_RECV		SIG_USART_RECV
-	#define SIG_UART_DATA		SIG_USART_DATA
+	#define SIG_UART_TRANS		USART_TXC_vect
+	#define SIG_UART_RECV		USART_RXC_vect
+	#define SIG_UART_DATA		USART_UDRE_vect
 #endif
 // compatibility with mega169 processors
 #if	defined(__AVR_ATmega169__)
-	#define SIG_UART_TRANS		SIG_USART_TRANS
-	#define SIG_UART_RECV		SIG_USART_RECV
-	#define SIG_UART_DATA		SIG_USART_DATA
+	#define SIG_UART_TRANS		USART_TXC_vect
+	#define SIG_UART_RECV		USART_RXC_vect
+	#define SIG_UART_DATA		USART_UDRE_vect
 #endif
 // compatibility with dual-uart processors
 // (if you need to use both uarts, please use the uart2 library)
@@ -132,9 +132,9 @@
 	#define UDR					UDR0
 	#define UCR					UCSR0B
 	#define UBRRL				UBRR0
-	#define SIG_UART_TRANS		SIG_UART0_TRANS
-	#define SIG_UART_RECV		SIG_UART0_RECV
-	#define SIG_UART_DATA		SIG_UART0_DATA
+	#define SIG_UART_TRANS		USART0_TXC_vect
+	#define SIG_UART_RECV		USART0_RXC_vect
+	#define SIG_UART_DATA		USART0_UDRE_vect
 #endif
 #if defined(__AVR_ATmega128__)
 #ifdef UART_USE_UART1
@@ -142,17 +142,17 @@
 	#define UCR					UCSR1B
 	#define UBRRL				UBRR1L
 	#define UBRRH				UBRR1H
-	#define SIG_UART_TRANS		SIG_UART1_TRANS
-	#define SIG_UART_RECV		SIG_UART1_RECV
-	#define SIG_UART_DATA		SIG_UART1_DATA
+	#define SIG_UART_TRANS		USART1_TXC_vect
+	#define SIG_UART_RECV		USART1_RXC_vect
+	#define SIG_UART_DATA		USART1_UDRE_vect
 #else
 	#define UDR					UDR0
 	#define UCR					UCSR0B
 	#define UBRRL				UBRR0L
 	#define UBRRH				UBRR0H
-	#define SIG_UART_TRANS		SIG_UART0_TRANS
-	#define SIG_UART_RECV		SIG_UART0_RECV
-	#define SIG_UART_DATA		SIG_UART0_DATA
+	#define SIG_UART_TRANS		USART0_TXC_vect
+	#define SIG_UART_RECV		USART0_RXC_vect
+	#define SIG_UART_DATA		USART0_UDRE_vect
 #endif
 #endif
 

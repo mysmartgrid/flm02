@@ -8,12 +8,14 @@ config defaults
 
 config zone
 	option name		lan
+	option network	'lan'
 	option input	ACCEPT 
 	option output	ACCEPT 
 	option forward	REJECT
 
 config zone
 	option name		wan
+	option network	'wan'
 	option input	REJECT
 	option output	ACCEPT 
 	option forward	REJECT
@@ -27,32 +29,79 @@ config forwarding
 # We need to accept udp packets on port 68,
 # see https://dev.openwrt.org/ticket/4108
 config rule
+	option name		Allow-DHCP-Renew
 	option src		wan
 	option proto		udp
 	option dest_port	68
 	option target		ACCEPT
-	option family	ipv4
+	option family		ipv4
 
-#Allow ping
+# Allow IPv4 ping
 config rule
+	option name		Allow-Ping
 	option src		wan
 	option proto		icmp
 	option icmp_type	echo-request
+	option family		ipv4
 	option target		ACCEPT
+
+# Allow DHCPv6 replies
+# see https://dev.openwrt.org/ticket/10381
+config rule
+	option name		Allow-DHCPv6
+	option src		wan
+	option proto		udp
+	option src_ip		fe80::/10
+	option src_port		547
+	option dest_ip		fe80::/10
+	option dest_port	546
+	option family		ipv6
+	option target		ACCEPT
+
+# Allow essential incoming IPv6 ICMP traffic
+config rule
+	option name		Allow-ICMPv6-Input
+	option src		wan
+	option proto	icmp
+	option limit		1000/sec
+	option family		ipv6
+	option target		ACCEPT
+
+#Allow access to local ssh server on the wan itf
+config rule
+	option src              wan
+	option proto            tcp
+	option dest_port        22
+	option target           ACCEPT
+
+#Allow access to luci interface on the wan itf
+config rule
+	option src              wan
+	option proto            tcp
+	option dest_port        80
+	option target           ACCEPT
 
 #Allow access to local REST API on the wan itf
 config rule
-	option src		wan
-	option proto		tcp
-	option dest_port	8080
-	option target		ACCEPT
+	option src              wan
+	option proto            tcp
+	option dest_port        8080
+	option target           ACCEPT
 
 #Open up UDP port 5353 on the wan for avahi
 config rule
-	option src		wan
-	option proto		udp
-	option dest_port	5353
-	option target		ACCEPT
+	option src              wan
+	option proto            udp
+	option dest_port        5353
+	option target           ACCEPT
+
+#Open up UDP port 61616 on the wan for hexabus
+config rule
+	option src              wan
+	option proto            udp
+	option dest_port        61616
+	option family           ipv6
+	option target           ACCEPT
 
 # include a file with users custom iptables rules
 config include

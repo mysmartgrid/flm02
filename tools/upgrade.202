@@ -1,0 +1,23 @@
+#!/bin/sh
+
+awk 'FNR==1{print "src/gz packages http://openwrt.mysmartgrid.de/flm02/atheros/packages"};FNR>1' /etc/opkg.conf > opkg.new
+mv opkg.new /etc/opkg.conf
+
+opkg update
+if [ $? -eq 0 ];
+then
+	opkg upgrade `opkg list_installed | sed 's/ - .*//'`
+
+	if [ $? -eq 0 ];
+	then
+		echo "update successfull"
+		if [ -f /etc/config/firewall-opkg ];
+		then
+			#update firewall rules
+			mv /etc/config/firewall /etc/config/firewall-old
+			mv /etc/config/firewall-opkg /etc/config/firewall
+		fi
+		reboot
+	fi
+fi
+

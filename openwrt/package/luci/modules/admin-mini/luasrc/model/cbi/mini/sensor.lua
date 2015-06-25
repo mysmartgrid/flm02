@@ -36,7 +36,7 @@ s = m:section(NamedSection, "fsync", "settings", "Status")
 s:option(DummyValue, "_systime", translate("m_i_systemtime")).value =
  os.date("%c")
 
-local home = string.match(FLUKSO.daemon.wan_base_url, "%a+://([%w%.]+)/")
+local home = string.match(FLUKSO.daemon.wan_base_url, "%a+://([%w%.-]+):?%d*/")
 s:option(DummyValue, "_pingtest", translate("flm_ping_test")).value =
  PING_STRING[luci.sys.net.pingtest(home)]
 
@@ -117,9 +117,17 @@ for i = 1, MAX_SENSORS do
 		func:depends("enable", "1")
 		func.rmempty = true
 
-		constant = s:option(Value, "constant", translate("flm_constant"))
-		constant.rmempty = false
-		constant.description = translate("flm_const_descr")
+		--constant = s:option(Value, "constant", translate("flm_constant"))
+		--constant.rmempty = false
+		--constant.description = translate("flm_const_descr")
+		imppkwh = s:option(Value, "imppkwh", translate("flm_imppkwh"))
+		imppkwh:depends("type", "electricity")
+		imppkwh.rmempty = true
+
+		lpimp = s:option(Value, "lpimp", translate("flm_lpimp"))
+		lpimp:depends("type", "gas")
+		lpimp:depends("type", "water")
+		lpimp.rmempty = true
 	end
 end
 
