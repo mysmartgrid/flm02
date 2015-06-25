@@ -1,0 +1,10 @@
+--- package/busybox/files/cron	2013-09-03 09:49:29.545231500 +0200
++++ package/busybox/files/cron	2013-09-03 09:49:39.681231278 +0200
+@@ -7,7 +7,6 @@
+ 
+ start () {
+ 	loglevel=$(uci_get "system.@system[0].cronloglevel")
+-	[ -z "$(ls /etc/crontabs/)" ] && exit 1
+ 	mkdir -p /var/spool/cron
+ 	ln -s /etc/crontabs /var/spool/cron/ 2>/dev/null
+ 	service_start /usr/sbin/crond -c /etc/crontabs -l ${loglevel:-5}

@@ -1,24 +1,19 @@
 #!/bin/bash
 
 # script to flash the flukso
-DOWNLOAD_URL=http://openwrt.mysmartgrid.de/flm02/atheros/
 
 # flash command
-AP51FLASH=/homes/krueger/Project/MySmartGrid/ap51-flash-64
+PREFIX="${PREFIX-flm02.2.9}"
+AP51FLASH="${AP51FLASH-${PREFIX}/tools/ap51-flash}"
+IMAGEPATH="${IMAGEPATH-${PREFIX}/bin/atheros}"
+DEVICE="${DEVICE-eth0}"
+
 
 # kernel
-#ATHEROS_KERNEL=2.0.2-1/openwrt-atheros-vmlinux-jswizard.lzma
-#ATHEROS_KERNEL=2.0.3-1/openwrt-atheros-vmlinux.lzma
-ATHEROS_KERNEL=2.0.4-2/openwrt-atheros-vmlinux.lzma
+ATHEROS_KERNEL="${IMAGEPATH}/openwrt-atheros-vmlinux.lzma"
 
 # root image
-#ATHEROS_IMAGE=openwrt-atheros-root-jswizard.squashfs
-#ATHEROS_IMAGE=2.0.2-1/openwrt-atheros-root-no_wizard.squashfs
-#ATHEROS_IMAGE=2.0.3-1/openwrt-atheros-root.squashfs
-ATHEROS_IMAGE=2.0.4-2/openwrt-atheros-root.squashfs
-
-# device
-DEVICE=eth0
+ATHEROS_IMAGE="${IMAGEPATH}/openwrt-atheros-root.squashfs"
 
 # WebAPI Url 
 URL="http://192.168.255.1/cgi-bin/luci/"
@@ -27,20 +22,11 @@ URL_S="${URL}/sensor"
 URL_R="${URL}/registration"
 
 #
-verbose=0
+VERBOSE="${VERBOSE-0}"
+TIMEOUT="${TIMEOUT-120}"
 flukso_serial=$1
 install_date=`date +%Y%m%d`
 logfile="flukso_install.log"
-
-# download image from openwrt.mysmartgrid.de
-download_firmware() {
-    echo "Downloading firmware from ${DOWNLOAD_URL}"
-    ATHEROS_KERNEL=/tmp/openwrt-atheros-vmlinux.lzma
-    ATHEROS_IMAGE=/tmp/openwrt-atheros-root.squashfs
-    wget -O ${ATHEROS_KERNEL} ${DOWNLOAD_URL}/openwrt-atheros-vmlinux.lzma
-    wget -O ${ATHEROS_IMAGE} ${DOWNLOAD_URL}/openwrt-atheros-root.squashfs
-}
-
 
 # flash flukso
 flash_flukso() {
@@ -50,32 +36,28 @@ flash_flukso() {
 }
 
 flukso_alive() {
-    echo "waiting  90sec for flukso to come up."
-
-    # wait for flukso to reboot
-    sleep 90
-    #ifconfig eth0 192.168.255.11
+	read -t ${TIMEOUT} -p "Waiting ${TIMEOUT}s for flukso to come up. (Press any key to continue immediatly)"
 
     # check if web-api is running
     c=1
     max=10
     while [ ${c} -le ${max} ];
     do
-	echo "Test ${c}/${max}; call returned: $rc"
-	sleep 5
-	c=`expr $c + 1`
-	curl --head --url ${URL_W}
-	rc=$?
-	if [ ${rc} -eq 0 ]; then
-	    break
-	fi
+      echo "Test ${c}/${max};"
+      sleep 5
+      c=`expr $c + 1`
+      flukso_login
+      if [ "x${json_authkey}" != "x" ]; then
+        echo "flusko_alive: \"${json_authkey}\""
+        break
+      fi
     done
     if [ ${c} -ge ${max} ]; then
-	echo "Failed either to flash the flukso or the flukso is not coming up."
-	rc=1
+      echo "Failed either to flash the flukso or the flukso is not coming up."
+      rc=1
     else
-	echo "Flukso is flashed and running"
-	rc=0
+      echo "Flukso is flashed and running"
+      rc=0
     fi
 }
 
@@ -168,7 +150,7 @@ parse_value () {
     varname="obj"
   fi
   dummy="json_${varname}=${value}"
-  if [ "${verbose}" = "1" ]; then
+  if [ "${VERBOSE}" = "1" ]; then
     #echo " ==== ${varname}"
     echo ${dummy}
     #printf "[%s]\t%s\n" "$jpath" "$value"
@@ -192,38 +174,40 @@ parse () {
 
 
 json_split() {
-    local answer=$1
-    local n="json"
-    k=`echo ${answer} | sed -e 's%{%{ %g' -e 's%:%: %g' -e 's%,%, %g' -e 's%}% }%g'`
-    echo "================ split ==================="
-    verbose=0
-    dummy=`echo ${answer} | tokenize | parse`
-    for i in ${dummy}
+    local answer="$1"
+    [ "${VERBOSE}" -gt 0 ] && echo "================ split ==================="
+    if [ "${VERBOSE}" -gt 0 ]; then
+        echo "${answer}" | tokenize
+    fi
+    dummy=`echo "${answer}" | tokenize | parse`
+    for i in "${dummy}"
     do
       eval "$i"
-      echo "line:  $i"
+      [ "${VERBOSE}" -gt 0 ] && echo "line:  $i"
     done
-}
-
-## send a curl call to flusko
-flukso_luci_send() {
-    local auth_url=$1
-    local post=$2
-    echo curl -X POST -d ${post} $auth_url
-    answer=`curl -X POST -d "${post}" $auth_url 2> /dev/null`
-    echo $answer
-    json_split ${answer}
 }
 
 flukso_login() {
     echo "Flukso login"
     local auth_url="${URL}rpc/auth"
     local post='{"method": "login", "params": ["root", "root"], "id": 100}'
-    flukso_luci_send ${auth_url} "${post}"
+    # curl -X POST -d '{"method": "login", "params": ["root", "root"], "id": 100}' --url $auth_url
+    echo curl -X POST -d "${post}" $auth_url
+    local answer=`curl -X POST -d "${post}" $auth_url 2> /dev/null`
+    local curl_res=$?
 
     #json_authkey=`echo ${answer} | tokenize | parse`
-    json_authkey=${json_result}
-    echo "Key: ${json_authkey}"
+    if [[ ${curl_res} -eq 0 && "x${answer}" != "x" ]]; then
+        json_split "${answer}"
+        if [ "x${json_result}" != "x" ]; then
+            json_authkey="${json_result}"
+            echo "Key: ${json_authkey}"
+        fi
+    fi
+
+    if [ "x${json_authkey}" == "x" ]; then
+        echo "Authentication failed: ${answer}"
+    fi
 # answer has the form
 #{"id":100,"result":"8552914869c03c730594841636897987","error":null}
 }
@@ -232,20 +216,53 @@ flukso_uci() {
     local authkey=$1
     echo "Flukso System Values"
     local auth_url="${URL}/rpc/uci?auth=${authkey}"
-    local post='{"method": "foreach", "params": ["system", "system"], "id": 100}'
-    flukso_luci_send ${auth_url} "${post}"
+    local post='{"method": "foreach", "params": ["system", "system"], "id": 101}'
+    echo curl -X POST -d ${post} $auth_url
+    flukso_device="0123456789abcdef0123456789abcdef"
+    local counter=0
+    while [[ ( "${flukso_device}" = "0123456789abcdef0123456789abcdef" || "x${flukso_device}" = "x" ) && $counter -lt 25 ]]; do
+      sleep 5;
+      echo "Try $counter"
+      answer=`curl -X POST -d "${post}" $auth_url 2> /dev/null`
+      json_split ${answer}
+      flukso_device="${json_result_device}"
+      flukso_version="${json_result_version}"
+      flukso_key="${json_result_key}"
+      counter=$(($counter + 1))
+    done
+
+    if [ "x${flukso_serial}" != "x" ]; then
+        local setserialpost="{\"method\": \"set\", \"params\": [\"system\", \"${json_result_name}\", \"serial\", \"${flukso_serial}\"], \"id\": 102}"
+        echo curl -X POST -d "${setserialpost}" $auth_url
+        answer=`curl -X POST -d "${setserialpost}" $auth_url 2> /dev/null`
+        json_split "${answer}"
+        [ "${VERBOSE}" -gt 0 ] && echo "${answer}"
+        if [[ "${json_result}" != "true" ]]; then
+            echo "Error setting serial: ${json_errormessage}"
+        fi
+
+        local commitserialpost='{"method": "commit", "params": ["system"], "id":103}'
+        echo curl -X POST -d "${commitserialpost}" $auth_url
+        answer=`curl -X POST -d "${commitserialpost}" $auth_url 2> /dev/null`
+        json_split "${answer}"
+        [ "${VERBOSE}" -gt 0 ] && echo "${answer}"
+        if [[ "${json_result}" != "true" ]]; then
+            echo "Error committing changes: ${json_errormessage}"
+        fi
+    fi
 }
 
 ##### MAIN
-download_firmware
 flash_flukso
 flukso_alive
-sleep 60
-flukso_login
+if [ -z "${json_authkey}" ]; then
+	echo "Authorization failed."
+	exit 1
+fi
 flukso_uci ${json_authkey}
 
 echo "Flusko is running"
-echo "${flukso_serial};${install_date};${json_result_device};${json_result_version};${json_result_key}" | tee -a ${logfile}
+echo "${flukso_serial};${install_date};${flukso_device};${flukso_version};${flukso_key}" | tee -a ${logfile}
 exit ${rc}
 
 #curl -X POST -d '{"method": "login", "params": ["root", "root"], "id": 100}' http://192.168.255.1/cgi-bin/luci/rpc/auth

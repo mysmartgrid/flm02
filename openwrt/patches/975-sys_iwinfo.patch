@@ -1,0 +1,41 @@
+--- feeds/luci/modules/luci-base/luasrc/sys.lua
++++ feeds/luci/modules/luci-base/luasrc/sys.lua
+@@ -867,6 +867,38 @@
+ end
+ 
+ 
++--- Alternative for obtaining wireless info, especially useful for json-rpc calls
++-- @param ifname String containing the interface name
++-- @param function Vararg listing all function calls to be executed
++-- @return Object with function call results
++function wifi.iwinfo(ifname, ...)
++	local stat, iwinfo = pcall(require, "iwinfo")
++
++	if stat and ifname and iwinfo.type(ifname) then
++		local output = {}
++		local t = iwinfo.type(ifname)
++		local x = iwinfo[t]
++
++		-- f: function | fn: function name
++		if select("#", ...) == 0 then
++			for fn, f in pairs(x) do
++				output[fn] = (type(f) == "function") and f(ifname) or nil
++			end
++		else
++			for i, fn in ipairs{...} do
++				output[fn] = (type(x[fn]) == "function") and x[fn](ifname) or nil
++			end
++		end
++
++		-- workaround for scanlist returning empty list when called for the first time
++		if output.scanlist and #output.scanlist == 0 then
++			output.scanlist = x.scanlist(ifname)
++		end
++
++		return output
++	end
++end
++
+ init = {}
+ init.dir = "/etc/init.d/"
+ 

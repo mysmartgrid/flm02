@@ -31,10 +31,12 @@ local dbg        = require 'dbg'
 local nixio      = require 'nixio'
 nixio.fs         = require 'nixio.fs'
 local uci        = require 'luci.model.uci'.cursor()
-local luci       = require 'luci'
+local luci       = {}
 luci.sys         = require 'luci.sys'
 luci.json        = require 'luci.json'
+luci.util        = require 'luci.util'
 local httpclient = require 'luci.httpclient'
+local api        = require 'flukso.api'
 
 -- character table string
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
@@ -74,30 +76,42 @@ local FLUKSO		= uci:get_all('flukso')
 
 -- WAN settings
 local WAN_ENABLED	= (FLUKSO.daemon.enable_wan_branch == '1')
-
-local WAN_BASE_URL	= FLUKSO.daemon.wan_base_url .. 'device/'
-local WAN_KEY		= '0123456789abcdef0123456789abcdef'
-uci:foreach('system', 'system', function(x) WAN_KEY = x.key end) -- quirky but it works
-
-local DEVICE		= '0123456789abcdef0123456789abcdef'
-uci:foreach('system', 'system', function(x) DEVICE = x.device end)
+local UPGRADE_ENABLED = (FLUKSO.daemon.enable_remote_upgrade == '1')
 
 local UPGRADE_URL	= FLUKSO.daemon.upgrade_url
 local DOWNLOAD_URL      = FLUKSO.daemon.wan_base_url .. 'firmware/'
-
--- https header helpers
-local FLUKSO_VERSION	= '000'
-uci:foreach('system', 'system', function(x) FLUKSO_VERSION = x.version end)
+local SENSOR_URL	= FLUKSO.daemon.wan_base_url .. 'sensor/'
 
 local SSL_NOT_YET_VALID = -150
 local SSL_EXPIRED       = -151
 
-local USER_AGENT	= 'Fluksometer v' .. FLUKSO_VERSION
-local CACERT		= FLUKSO.daemon.cacert
-
 -- gzipped syslog tmp file
 local SYSLOG_TMP	= '/tmp/syslog.gz'
 local SYSLOG_GZIP	= 'logread | gzip > ' .. SYSLOG_TMP
+
+local function print_table(t)
+	if t ~= nil then
+		for k,v in pairs(t) do
+			if (type(v) == "table") then
+				print(k)
+				print_table(v)
+			else
+				print(k,v)
+			end
+		end
+	end
+end
+
+local function debug(value)
+	local debug = true
+	if (debug) then
+		if (type(value) == 'table') then
+			print_table(value)
+		else
+			print(value)
+		end
+	end
+end
 
 -- collect relevant monitoring points
 local function collect_mp()
@@ -107,7 +121,11 @@ local function collect_mp()
 	-- monitor.version = tonumber(FLUKSO_VERSION)
 	monitor.time = os.time()
 	monitor.uptime  = math.floor(luci.sys.uptime())
-	system, model, monitor.memtotal, monitor.memcached, monitor.membuffers, monitor.memfree = luci.sys.sysinfo()
+	local sysinfo = nixio.sysinfo()
+	monitor.memtotal = sysinfo.totalram
+	monitor.memcached = sysinfo.sharedram
+	monitor.membuffers = sysinfo.bufferram
+	monitor.memfree = sysinfo.freeram
 
 	os.execute(SYSLOG_GZIP)
 	io.input(SYSLOG_TMP)
@@ -115,7 +133,57 @@ local function collect_mp()
 
 	monitor.syslog = nixio.bin.b64encode(syslog_gz)
 
+--	local defaultroute = luci.sys.net.defaultroute()
+--	if defaultroute then
+--		local device = defaultroute.device
+--		monitor.ip = luci.util.exec("ifconfig " .. device):match("inet addr:([%d\.]*) ")
+--		monitor.port = uci:get('uhttpd', 'restful', 'listen_http')[1]:match(":([%d]*)")
+--	end
+
 	return monitor
+end
+
+-- collect the parts of the network configuration that changed since the last run
+local function collect_config()
+	if uci:get("flukso", "daemon", "configchanged") == '0' then
+		return
+	end
+
+	local LAN_CONFIG = uci:get_all("network", "lan")
+	local WAN_CONFIG = uci:get_all("network", "wan")
+	local wifidevs = {}
+	uci:foreach("wireless", "wifi-iface", function(section) table.insert(wifidevs, section[".name"]) end)
+
+	local config = {}
+	config.lan = {}
+	config.lan.enabled = (LAN_CONFIG.proto ~= "none") and 1 or 0
+	config.lan.protocol = (LAN_CONFIG.proto ~= "none") and LAN_CONFIG.proto or undefined
+	config.lan.ip = LAN_CONFIG.ipaddr
+	config.lan.netmask = LAN_CONFIG.netmask
+	config.lan.gateway = LAN_CONFIG.gateway
+	config.lan.nameserver = LAN_CONFIG.dns
+	config.wifi = {}
+	config.wifi.essid = uci:get("wireless", wifidevs[1], "ssid")
+	local enc = uci:get("wireless", wifidevs[1], "encryption")
+	if enc == "none" then
+		config.wifi.enc = "open"
+	elseif enc == "wep" then
+		config.wifi.enc = "wep"
+	elseif enc == "psk" then
+		config.wifi.enc = "wpa"
+	elseif enc == "psk2" then
+		config.wifi.enc = "wpa2"
+	end
+	config.wifi.psk = uci:get("wireless", wifidevs[1], "key")
+	config.wifi.enabled = (WAN_CONFIG.proto ~= "none") and 1 or 0
+	config.wifi.protocol = (WAN_CONFIG.proto ~= "none") and WAN_CONFIG.proto or undefined
+	config.wifi.ip = WAN_CONFIG.ipaddr
+	config.wifi.netmask = WAN_CONFIG.netmask
+	config.wifi.gateway = WAN_CONFIG.gateway
+	config.wifi.nameserver = WAN_CONFIG.dns
+	local c = {}
+	c.network = config
+	return c
 end
 
 -- collect relevant firmware informations
@@ -160,7 +228,7 @@ local function download_upgrade(upgrade)
    hash:update(options.body)
    options.headers['X-Digest'] = hash:final()
 
-   print('cacert: ', CACERT)
+   debug('cacert: ', CACERT)
 
    local httpclient = require 'luci.httpclient'
    local http_persist = httpclient.create_persistent()
@@ -181,6 +249,128 @@ local function download_upgrade(upgrade)
    end
 end
 
+local function get_sensor(sensor, idmap)
+   debug("get_sensor(" .. sensor .. ", _)")
+   local headers = {}
+   headers['X-Version'] = '1.0'
+   headers['User-Agent'] = USER_AGENT
+   headers['Connection'] = 'close'
+
+   local options = {}
+   options.sndtimeo = 5
+   options.rcvtimeo = 5
+   -- We don't enable peer cert verification so we can still update/upgrade
+   -- the Fluksometer via the heartbeat call even when the cacert has expired.
+   -- Disabling validation does mean that the server has to include an hmac
+   -- digest in the reply that the Fluksometer needs to verify, this to prevent
+   -- man-in-the-middle attacks.
+   options.tls_context_set_verify = 'none'
+   options.cacert = CACERT
+   options.method  = 'GET'
+   options.headers = headers
+
+   --local data = {}
+   --data.key = WAN_KEY
+   --options.body = luci.json.encode(data)
+
+   local hash = nixio.crypto.hmac('sha1', WAN_KEY)
+   --hash:update(options.body)
+   options.headers['X-Digest'] = hash:final()
+
+   local httpclient = require 'luci.httpclient'
+   local http_persist = httpclient.create_persistent()
+   local url = SENSOR_URL .. sensor
+   local response_json, code, call_info = http_persist(url, options)
+
+   if code == 200 then
+      debug("Sensor response: " .. response_json)
+      local response = luci.json.decode(response_json)[1]
+      if response == nil then
+        return 1
+      end
+
+      if response.config["function"] ~= "undefined" then
+        debug("Sensor " .. idmap[sensor] .. " enabled as " .. response.config["function"])
+
+        uci:set("flukso", idmap[sensor], "enable", 1)
+        uci:set("flukso", idmap[sensor], "function", response.config["function"])
+        --uci:set("flukso", idmap[sensor], "unit", response.config["unit"]) --not needed
+        if response.config["class"] == "analog" then
+          uci:set("flukso", idmap[sensor], "class", response.config["class"])
+          uci:set("flukso", idmap[sensor], "voltage", response.config["voltage"])
+          uci:set("flukso", idmap[sensor], "current", response.config["current"])
+        elseif response.config["class"] == "pulse" then
+          uci:set("flukso", idmap[sensor], "class", response.config["class"])
+          uci:set("flukso", idmap[sensor], "constant", response.config["constant"])
+        else
+          print("Invalid response.")
+          return 1
+        end
+        -- we do not want to enable reconfiguring of sensor ports. Aggregation can happen in the
+        -- presentation layer.
+        --if response.config["port"] ~= nil then
+        --  uci:set_list("flukso", idmap[sensor], "phase", {response.config["port"]})
+        --end
+      else
+        debug("Sensor " .. idmap[sensor] .. " disabled.")
+        uci:set("flukso", idmap[sensor], "enable", 0)
+      end
+      uci:save("flukso")
+      uci:commit("flukso")
+
+      return 0
+   else
+      print("error, code=" .. code)
+      print("error, call_info")
+      print_table(call_info)
+      return 1
+   end
+end
+
+-- Register sensor at the server
+local function register_sensors(http_persist, options)
+	local MAX_PROV_SENSORS		= tonumber(FLUKSO.main.max_provisioned_sensors)
+	for i = 1, MAX_PROV_SENSORS do
+		if FLUKSO[tostring(i)] ~= nil and FLUKSO[tostring(i)].id then
+			local sensor_id = FLUKSO[tostring(i)].id
+
+			options.body = sensor_json(FLUKSO, tostring(i))
+			options.headers['Content-Length'] = tostring(#options.body)
+
+			local hash = nixio.crypto.hmac('sha1', WAN_KEY)
+			hash:update(options.body)
+			options.headers['X-Digest'] = hash:final()
+
+			local url = SENSOR_BASE_URL .. sensor_id
+			local response, code, call_info = http_persist(url, options)
+
+			local level
+
+			if code == 200 or code == 204 then
+				level = 'info'
+			else
+				level = 'err'
+				err = true
+			end
+
+			nixio.syslog(level, string.format('%s %s: %s', options.method, url, code))
+			print(string.format('%s %s: %s', options.method, url, code))
+
+			-- if available, send additional error info to the syslog
+			if type(call_info) == 'string' then
+				nixio.syslog('err', call_info)
+				print(call_info)
+			elseif type(call_info) == 'table'  then
+				local auth_error = call_info.headers['WWW-Authenticate']
+
+				if auth_error then
+					nixio.syslog('err', string.format('WWW-Authenticate: %s', auth_error))
+					print(string.format('WWW-Authenticate: %s', auth_error))
+				end
+			end
+		end
+	end
+end
 
 -- terminate when WAN reporting is not set
 if not WAN_ENABLED then
@@ -193,7 +383,20 @@ nixio.openlog('heartbeat', 'pid')
 local monitor = collect_mp()
 monitor.firmware = collect_firmware()
 monitor.type = "flukso2"
+
+local config = collect_config()
+debug(config)
+if FLUKSO.daemon.wan_registered ~= '1' then
+  monitor.key = WAN_KEY
+else
+  if config ~= nil then
+    monitor.config = config
+  end
+end
+
 local monitor_json = luci.json.encode(monitor)
+
+debug("Json: " .. monitor_json)
 
 
 -- phone home
@@ -222,13 +425,36 @@ hash:update(options.body)
 options.headers['X-Digest'] = hash:final()
 
 local http_persist = httpclient.create_persistent()
-local url = WAN_BASE_URL .. DEVICE
+local url = DEVICE_BASE_URL .. DEVICE
 local response_json, code, call_info = http_persist(url, options)
 
 if code == 200 then
-	nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
+  nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
+  uci:set('flukso', 'daemon', 'configchanged', 0)
+  if FLUKSO.daemon.wan_registered ~= '1' then
+    FLUKSO.daemon.wan_registered = 1
+    uci:set('flukso', 'daemon', 'wan_registered', 1)
+    uci:save("flukso")
+    uci:commit("flukso")
+    -- when we just registered the device we also have to inform all known sensors
+    register_sensors(http_persist, options)
+  end
+  debug(FLUKSO.daemon)
+elseif code == 481 then
+  nixio.syslog('info', string.format('%s %s: %s', options.method, url, code))
 else
-	nixio.syslog('err', string.format('%s %s: %s', options.method, url, code))
+  nixio.syslog('err', string.format('%s %s: %s', options.method, url, code))
+
+        print('failed, code=', code)
+        if type(call_info) == 'table' then
+                print('failed, info=', print_table(call_info))
+        elseif type(call_info) == 'string' then
+                print('failed, info=', print(call_info))
+        end
+	if code == 404 then
+		os.execute('/usr/bin/fsync')
+	end
+        print('failed, response=', response_json)
 
 	-- SSL_EXPIRED: The certificate presented by the server is expired
 	-- SSL_NOT_YET_VALID: The certificate presented by the server will be valid in the future but is not yet valid
@@ -236,8 +462,8 @@ else
 	-- in all these cases we call ntpclient to synchronize our local time
 	if code == SSL_NOT_YET_VALID or code == SSL_EXPIRED then
 	nixio.syslog('info', 'trying to set correct time')
-	local output = io.popen('ntpclient -c 1 -s -h pool.ntp.org')
-	nixio.syslog('info', 'output of ntpclient: ' .. output:read('*all'))
+	local output = io.popen('ntpd -n -q -d -p pool.ntp.org')
+	nixio.syslog('info', 'output of ntpd: ' .. output:read('*all'))
 output:close()
 	end
 
@@ -263,6 +489,7 @@ if call_info.headers['X-Digest'] ~= hash:final() then
 	os.exit(4)
 end
 
+debug("Response_json: " .. response_json)
 local response = luci.json.decode(response_json)
 
 if response.support then
@@ -270,9 +497,7 @@ if response.support then
 	md5 = nixio.crypto.hmac('md5', support.devicekey)
 	hash = md5:final()
 
-	for i, v in pairs(support) do
-		print(i, v)
-	end
+	debug(support)
 
 	if not FLUKSO.support or FLUKSO.support.hash ~= hash then
 		uci:set("flukso", "support", "mysmartgrid")
@@ -285,6 +510,7 @@ if response.support then
 		uci:set("flukso", "support", "hostkey", support.hostkey)
 		uci:set("flukso", "support", "techkey", support.techkey)
 
+		uci:save("flukso")
 		uci:commit("flukso")
 
 		os.execute("mkdir -p /root/.ssh")
@@ -302,9 +528,144 @@ else
 	os.execute("/etc/init.d/reverse-ssh disable")
 
 	uci:delete("flukso", "support")
+	uci:save("flukso")
 	uci:commit("flukso")
 
 	os.remove("/root/.ssh/id_dss")
+end
+
+debug("Response:")
+debug(response.config)
+-- TODO: sanity checks
+if response.config then
+	uci:set("flukso", "daemon", "configchanged", 1)
+	uci:save("flukso")
+	uci:commit("flukso")
+	local config = response.config
+	if config.network then
+		debug("network found")
+		local network = config.network
+		if network.lan then
+			if network.lan.enabled > 0 then
+				debug("lan enabled")
+				if network.lan.protocol == 'static' then
+					debug("lan static")
+					--parse further settings
+					uci:set("network", "lan", "proto", "static")
+					uci:set("network", "lan", "ipaddr", network.lan.ip)
+					uci:set("network", "lan", "netmask", network.lan.netmask)
+					uci:set("network", "lan", "gateway", network.lan.gateway)
+					uci:set("network", "lan", "dns", network.lan.nameserver)
+				elseif network.lan.protocol == 'dhcp' then
+					debug("lan dhcp")
+					--set protocol dhcp and remove the other fields
+					uci:set("network", "lan", "proto", "dhcp")
+					uci:delete("network", "lan", "ipaddr")
+					uci:delete("network", "lan", "netmask")
+					uci:delete("network", "lan", "gateway")
+					uci:delete("network", "lan", "dns")
+				else
+					debug("lan protocol " .. network.lan.protocol .. " unknown")
+					--unknown protocol
+					uci:set("network", "lan", "proto", "none")
+					uci:delete("network", "lan", "ipaddr")
+					uci:delete("network", "lan", "netmask")
+					uci:delete("network", "lan", "gateway")
+					uci:delete("network", "lan", "dns")
+				end
+			else
+				debug("lan disabled")
+				--disable lan
+				uci:set("network", "lan", "proto", "none")
+				uci:delete("network", "lan", "ipaddr")
+				uci:delete("network", "lan", "netmask")
+				uci:delete("network", "lan", "gateway")
+				uci:delete("network", "lan", "dns")
+			end
+			uci:save("network")
+			uci:commit("network")
+		end
+		if network.wifi then
+			debug("wifi found")
+			local wifidevs = {}
+			uci:foreach("wireless", "wifi-iface", function(section) table.insert(wifidevs, section[".name"]) end)
+			if network.wifi.enabled > 0 then
+				debug("wifi enabled")
+				uci:set("wireless", "radio0", "disabled", 0)
+				--set essid
+				uci:set("wireless", wifidevs[1], "ssid", network.wifi.essid)
+				--handle enc
+				if network.wifi.enc == 'open' then
+					uci:set("wireless", wifidevs[1], "encryption", "none")
+					uci:delete("wireless", wifidevs[1], "key")
+				elseif network.wifi.enc == 'wep' then
+					uci:set("wireless", wifidevs[1], "encryption", "wep")
+					uci:set("wireless", wifidevs[1], "key", network.wifi.psk)
+				elseif network.wifi.enc == 'wpa' then
+					uci:set("wireless", wifidevs[1], "encryption", "psk")
+					uci:set("wireless", wifidevs[1], "key", network.wifi.psk)
+				elseif network.wifi.enc == 'wpa2' then
+					uci:set("wireless", wifidevs[1], "encryption", "psk2")
+					uci:set("wireless", wifidevs[1], "key", network.wifi.psk)
+				else
+					--don't know what to do here
+				end
+				if network.wifi.protocol == 'static' then
+					--parse further settings
+					uci:set("network", "wan", "proto", "static")
+					uci:set("network", "wan", "ipaddr", network.wifi.ip)
+					uci:set("network", "wan", "netmask", network.wifi.netmask)
+					uci:set("network", "wan", "gateway", network.wifi.gateway)
+					uci:set("network", "wan", "dns", network.wifi.nameserver)
+				elseif network.wifi.protocol == 'dhcp' then
+					--set protocol dhcp and ignore the rest
+					uci:set("network", "wan", "proto", "dhcp")
+					uci:delete("network", "wan", "ipaddr")
+					uci:delete("network", "wan", "netmask")
+					uci:delete("network", "wan", "gateway")
+					uci:delete("network", "wan", "dns")
+				else
+					--unknown protocol
+					uci:set("network", "wan", "proto", "none")
+					uci:delete("network", "wan", "ipaddr")
+					uci:delete("network", "wan", "netmask")
+					uci:delete("network", "wan", "gateway")
+					uci:delete("network", "wan", "dns")
+				end
+			else
+				debug("wifi disabled")
+				--disable wifi
+				uci:set("network", "wan", "proto", "none")
+				uci:delete("network", "wan", "ipaddr")
+				uci:delete("network", "wan", "netmask")
+				uci:delete("network", "wan", "gateway")
+				uci:delete("network", "wan", "dns")
+				uci:set("wireless", "radio0", "disabled", 1)
+				uci:delete("wireless", wifidevs[1], "ssid")
+				uci:delete("wireless", wifidevs[1], "key")
+				uci:delete("wireless", wifidevs[1], "encryption")
+			end
+			uci:save("network")
+			uci:save("wireless")
+			uci:commit("network")
+			uci:commit("wireless")
+		end
+		uci:apply({"network", "wireless"})
+	end
+	if config.sensors then
+		local sensormap = {}
+		uci:foreach("flukso", "sensor", function(x) sensormap[x['id']] = x['.name'] end)
+		--for each sensor pull configuration via seperate API call -- do we want some kind of worker queue for this task?
+		--afterwards call fsync to update the configuration (also on the sensor board) and inform the server of the new configuration
+		for _, sensor in ipairs(config.sensors) do
+			debug(sensor)
+			if get_sensor(sensor, sensormap) > 0 then -- something went wrong, try again next time
+				nixio.syslog('warning', string.format('Fetching settings for sensor %s failed.', sensor))
+				print("Fetching setting for sensor " .. sensor .. " failed.")
+			end
+		end
+		os.execute('/usr/bin/fsync')
+	end
 end
 
 -- check whether we have to reset or upgrade

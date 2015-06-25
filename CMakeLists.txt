@@ -5,6 +5,12 @@ if(POLICY CMP0011)
   cmake_policy(SET CMP0011 NEW)
 endif(POLICY CMP0011)
 
+if (NOT EXISTS "${CMAKE_SOURCE_DIR}/avr/b/rfm12/README.txt")
+	message(SEND_ERROR "RFM12 source seem to be missing. Make sure you ran
+	'git submodule init && git submodule update'
+in your source directory")
+endif()
+
 file(STRINGS openwrt/package/msg-flukso/Makefile VERSION
   REGEX "PKG_VERSION:=.*")
 #VERSION=$(grep PKG_VERSION:= package/msg-flukso/Makefile | sed 's/.*:=[0-9]\.//')
@@ -50,7 +56,13 @@ add_custom_target(image ALL
   BUILD_LOG=1 make
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${FLM_BUILD_DIR}/"
   COMMENT ""
-  DEPENDS openwrt_patch
+  DEPENDS openwrt_update
+)
+
+add_custom_target(clean
+  BUILD_LOG=1 make clean
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${FLM_BUILD_DIR}/"
+  COMMENT ""
 )
 
 ### print some output for the user

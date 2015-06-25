@@ -1,0 +1,18 @@
+--- package/base-files/Makefile	2014-05-16 14:50:37.428766591 +0200
++++ package/base-files/Makefile	2014-05-16 14:50:14.124767321 +0200
+@@ -48,6 +48,7 @@
+ /etc/config/
+ /etc/dropbear/
+ /etc/crontabs/
++/etc/cron.d/
+ $(call $(TARGET)/conffiles)
+ endef
+ 
+@@ -115,6 +116,7 @@
+ 	mkdir -p $(1)/CONTROL
+ 	mkdir -p $(1)/dev
+ 	mkdir -p $(1)/etc/crontabs
++	mkdir -p $(1)/etc/cron.d
+ 	mkdir -p $(1)/etc/rc.d
+ 	mkdir -p $(1)/overlay
+ 	mkdir -p $(1)/lib/firmware

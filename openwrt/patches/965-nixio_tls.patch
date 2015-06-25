@@ -1,0 +1,55 @@
+--- feeds/luci/luci.mk
++++ feeds/luci/luci.mk
+@@ -106,6 +110,29 @@ ifeq ($(PKG_NAME),luci-base)
+  endef
+ endif
+ 
++ifeq ($(PKG_NAME),luci-lib-nixio)
++  define Package/luci-lib-nixio/config
++    choice
++      prompt "TLS Provider"
++      default PACKAGE_luci-lib-nixio_notls
++
++      config PACKAGE_luci-lib-nixio_notls
++        bool "Disabled"
++
++      config PACKAGE_luci-lib-nixio_axtls
++        bool "Builtin (axTLS)"
++
++      config PACKAGE_luci-lib-nixio_cyassl
++        bool "CyaSSL"
++        select PACKAGE_libcyassl
++
++      config PACKAGE_luci-lib-nixio_openssl
++        bool "OpenSSL"
++        select PACKAGE_libopenssl
++    endchoice
++  endef
++endif
++
+ define Build/Prepare
+ 	for d in luasrc htdocs root src; do \
+ 	  if [ -d ./$$$$d ]; then \
+@@ -123,6 +158,21 @@ ifneq ($(wildcard ${CURDIR}/src/Makefile),)
+  MAKE_PATH := src/
+  MAKE_VARS += FPIC="$(FPIC)" LUCI_VERSION="$(PKG_VERSION)"
+ 
++ ifeq ($(PKG_NAME),luci-lib-nixio)
++   ifneq ($(CONFIG_PACKAGE_luci-lib-nixio_axtls),)
++     MAKE_VARS += NIXIO_TLS=axtls
++   endif
++
++   ifneq ($(CONFIG_PACKAGE_luci-lib-nixio_openssl),)
++     MAKE_VARS += NIXIO_TLS=openssl
++   endif
++
++   ifneq ($(CONFIG_PACKAGE_luci-lib-nixio_cyassl),)
++     MAKE_VARS += NIXIO_TLS=cyassl
++     LUCI_CFLAGS+=-I$(STAGING_DIR)/usr/include/cyassl
++   endif
++  endif
++
+  define Build/Compile
+ 	$(call Build/Compile/Default,clean compile)
+  endef
+

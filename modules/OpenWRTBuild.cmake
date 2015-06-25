@@ -8,6 +8,8 @@ set(ENV{http_proxy} "http://squid.itwm.fhg.de:3128/")
 set(_openwrt_url "svn://svn.openwrt.org/openwrt/")
 #set(_openwrt_url "svn://localhost/openwrt/")
 
+option(openwrt_update_feeds "Update OpenWRT package feeds from upstream repositories" ON)
+
 macro(openwrt_checkout_system _target _workdir _url _output)
   message(STATUS "  checkout ${_url}")
   add_custom_command(
@@ -36,21 +38,17 @@ endmacro()
 #
 #
 function(openwrt_checkout _dest)
-  openwrt_checkout_system(openwrt_checkout ${_dest} branches/backfire Makefile ${_dest})
-
-  openwrt_checkout_package(openwrt_package_ntpd ${_dest}/package branches/packages_10.03.1/net/ntpd ntpd package/ntpd/Makefile)
+  openwrt_checkout_system(openwrt_checkout ${_dest} branches/attitude_adjustment Makefile ${_dest})
 
   add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/package.done
-    COMMAND touch  ${CMAKE_BINARY_DIR}/package.done
-    DEPENDS
-    ${CMAKE_BINARY_DIR}/${_dest}/package/ntpd/Makefile
+    OUTPUT ${CMAKE_BINARY_DIR}/checkout.done
+    COMMAND touch  ${CMAKE_BINARY_DIR}/checkout.done
+    DEPENDS openwrt_checkout
   )
-  add_custom_target(openwrt_package
-    DEPENDS  ${CMAKE_BINARY_DIR}/package.done
+  add_custom_target(openwrt_system_checkout
+    DEPENDS  ${CMAKE_BINARY_DIR}/checkout.done
   )
-  add_dependencies(openwrt_package openwrt_checkout)
-  message(STATUS "   * add checkout-target openwrt_package")
+  message(STATUS "   * add checkout-target openwrt_system_checkout")
 
 endfunction(openwrt_checkout)
 
@@ -58,7 +56,8 @@ function(openwrt_configure _dest)
   message(STATUS "  openwrt configuring")
   file(WRITE ${CMAKE_BINARY_DIR}/${_dest}/feeds.conf
 "src-link msgflukso ${CMAKE_SOURCE_DIR}/openwrt/package
-src-svn packages svn://svn.openwrt.org/openwrt/branches/packages_10.03.2 svn://svn.openwrt.org/openwrt/packages
+src-git packages https://github.com/openwrt/packages.git
+src-git luci http://git.openwrt.org/project/luci.git
 ")
 
 
@@ -69,7 +68,7 @@ src-svn packages svn://svn.openwrt.org/openwrt/branches/packages_10.03.2 svn://s
     COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/feeds.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "Update feeds"
-    DEPENDS ${CMAKE_BINARY_DIR}/package.done
+    DEPENDS ${CMAKE_BINARY_DIR}/checkout.done
     )
 
   add_custom_command(
@@ -93,23 +92,17 @@ function(openwrt_patch _dest)
 
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/copy_patches.done
-    # add patches to the toolchain
-    COMMAND ${CMAKE_COMMAND} -E copy patches/990-add_timerfd_support.patch ${CMAKE_BINARY_DIR}/${_dest}/toolchain/uClibc/patches-0.9.30.1
-    # add patches to the linux atheros target
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"300-set_AR2315_RESET_GPIO_to_6.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"310-hotplug_button_jiffies_calc.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"400-spi_gpio_support.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"410-spi_gpio_enable_cs_line.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    COMMAND ${CMAKE_COMMAND} -E copy patches/"420-tune_spi_bitbanging_for_avr.patch" ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-2.6.30
-    # backport loglevel fix to busybox v1.15.3-2
-    # see: https://bugs.busybox.net/show_bug.cgi?id=681
-    COMMAND ${CMAKE_COMMAND} -E copy patches/820-fix_crond_loglevel.patch ${CMAKE_BINARY_DIR}/${_dest}/package/busybox/patches
+    # add patches to the atheros target
+    COMMAND ${CMAKE_COMMAND} -E copy patches/300-set_AR2315_RESET_GPIO_to_6.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/310-register_gpio_leds.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/320-flm_spi_platform_support.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/330-export_spi_rst_gpio_to_userspace.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/340-tune_spi_bitbanging_for_avr.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+    COMMAND ${CMAKE_COMMAND} -E copy patches/500-early_printk_disable.patch ${CMAKE_BINARY_DIR}/${_dest}/target/linux/atheros/patches-3.3
+
     # patch the default OpenWRT Lua package
-    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/lua/patches/400-luaposix_5.1.4-embedded.patch
-    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/lua/patches/500-eglibc_config.patch
     COMMAND ${CMAKE_COMMAND} -E copy patches/600-lua-tablecreate.patch ${CMAKE_BINARY_DIR}/${_dest}/package/lua/patches
-    # patch squashfs to support setuid
-    COMMAND ${CMAKE_COMMAND} -E copy patches/900-squashfs-mode.patch ${CMAKE_BINARY_DIR}/${_dest}/tools/squashfs4/patches
+
     # copy flash utility to the tools dir
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/tools/ap51-flash ${CMAKE_BINARY_DIR}/${_dest}/tools
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/copy_patches.done
@@ -121,15 +114,29 @@ function(openwrt_patch _dest)
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/apply_patches.done
     # patch files of the OpenWRT build system
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"900-disable_console.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"900-setuid-ntpclient.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"910-set_ttyS0_baud_to_115200.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"911-enable_ipv6_router_pref.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"920-add-make-flash-option.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"921-add-make-publish-option.patch"
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/"950-crond.patch"
-    # we don't need rdate, relying on ntpclient instead
-    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/package/base-files/files/etc/hotplug.d/iface/40-rdate
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/900-disable_console.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/910-redirect-console-to-devnull.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/915-kernel_posix_mqueue_support.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/920-add-make-flash-option.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/921-add-make-publish-option.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/925-add_mac_address_to_radio0.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/930-boot_crond_without_crontabs.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/940-wpa_supd_hook.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/950-ntpd_supd_hook.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/960-remove_default_banner.patch
+
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/965-nixio_tls.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/970-nixio_timerfd.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/971-nixio_spi.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/972-nixio_numexp.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/973-nixio_binary.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/974-httpclient_create_persistent.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/975-sys_iwinfo.patch
+
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/976-rpc.patch
+
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/990-crond.patch
+
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/apply_patches.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "apply patches"
@@ -141,6 +148,40 @@ function(openwrt_patch _dest)
   )
   message(STATUS "   * add checkout-target openwrt_patch")
 endfunction(openwrt_patch)
+
+function(openwrt_update _dest)
+  message(STATUS "   openwrt updating")
+
+  add_custom_target(openwrt_system_update
+    COMMAND svn up
+    DEPENDS openwrt_patch
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
+    COMMENT "update OpenWRT sources"
+  )
+  if(${openwrt_update_feeds} STREQUAL "ON")
+    set(_openwrt_feeds_update_options "")
+  else()
+    set(_openwrt_feeds_update_options "-i")
+  endif()
+  message("Openwrt Feeds Update Command: ./scripts/feeds update ${_openwrt_feeds_update_options}")
+  add_custom_target(openwrt_feeds_update
+    COMMAND ./scripts/feeds update ${_openwrt_feeds_update_options}
+    DEPENDS openwrt_system_update
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
+    COMMENT "update feeds"
+  )
+  add_custom_target(openwrt_config_update
+    COMMAND make oldconfig
+    DEPENDS openwrt_feeds_update
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
+    COMMENT "update .config"
+  )
+
+  add_custom_target(openwrt_update
+    DEPENDS openwrt_config_update)
+
+  message(STATUS "   * add target openwrt_update")
+endfunction(openwrt_update)
 
 function(openwrt_host)
   set(_modulesDir ${CMAKE_BINARY_DIR}/${_dest}/staging_dir/host/Modules)
@@ -155,4 +196,5 @@ macro(openwrt_env _dest)
   openwrt_checkout(${_dest})
   openwrt_configure(${_dest})
   openwrt_patch(${_dest})
+  openwrt_update(${_dest})
 endmacro(openwrt_env)
