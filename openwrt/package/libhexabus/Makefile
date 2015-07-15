@@ -3,7 +3,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libhexabus
-PKG_VERSION:=0.4
+PKG_VERSION:=0.6
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -72,6 +72,7 @@ define Build/Configure
 			-DCMAKE_STRIP=: \
 			-DCMAKE_INSTALL_PREFIX=/usr \
 			-DWITHOUT_CPACK=TRUE \
+			-DWITHOUT_HEXAJUICE=TRUE \
 			$(CMAKE_OPTIONS) \
 		.. \
 	)

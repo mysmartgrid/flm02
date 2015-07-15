@@ -16,11 +16,11 @@ start()
 	fi
 
 	LANADDR="";
-	for x in `ip -6 a show scope global "${laninterface}" | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
+	for x in `ip -6 a show scope global permanent "${laninterface}" | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
 		do LANADDR="${LANADDR}-a $x ";
 	done;
 	WANADDR="";
-	for x in `ip -6 a show scope global "${waninterface}" | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
+	for x in `ip -6 a show scope global permanent "${waninterface}" | sed "s/.*inet6 \([^ \/]*\).*/\1/;tx;d;:x"`;
 		do WANADDR="${WANADDR}-a $x ";
 	done;
 	ADDR="";

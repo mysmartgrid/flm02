@@ -1,0 +1,123 @@
+--- feeds/luci/libs/luci-lib-nixio/src/nixio.c
++++ feeds/luci/libs/luci-lib-nixio/src/nixio.c
+@@ -143,6 +143,7 @@
+ 	nixio_open_bin(L);
+ 	nixio_open_fs(L);
+ 	nixio_open_user(L);
++	nixio_open_spi(L);
+ 
+ #ifndef NO_TLS
+ 	nixio_open_tls_crypto(L);
+--- feeds/luci/libs/luci-lib-nixio/src/nixio.h
++++ feeds/luci/libs/luci-lib-nixio/src/nixio.h
+@@ -121,6 +121,7 @@
+ void nixio_open_bin(lua_State *L);
+ void nixio_open_fs(lua_State *L);
+ void nixio_open_user(lua_State *L);
++void nixio_open_spi(lua_State *L);
+ 
+ #ifndef NO_TLS
+ void nixio_open_tls_crypto(lua_State *L);
+--- feeds/luci/libs/luci-lib-nixio/src/spi.c
++++ feeds/luci/libs/luci-lib-nixio/src/spi.c
+@@ -0,0 +1,89 @@
++/*
++ * nixio - Linux I/O library for lua
++ *
++ *   Copyright (C) 2011 Bart Van Der Meerssche <bart.vandermeerssche@flukso.net>
++ *
++ *  Licensed under the Apache License, Version 2.0 (the "License");
++ *  you may not use this file except in compliance with the License.
++ *  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ *  Unless required by applicable law or agreed to in writing, software
++ *  distributed under the License is distributed on an "AS IS" BASIS,
++ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *  See the License for the specific language governing permissions and
++ *  limitations under the License.
++ */
++
++#include "nixio.h"
++#include <errno.h>
++#include <unistd.h>
++#include <sys/types.h>
++#include <sys/ioctl.h>
++#include <linux/spi/spidev.h>
++
++/* Defined in linux/spi/spidev.h, but this doesn't seem to propagate to the openwrt staging dir */
++/* Read / Write SPI device default delay us */
++#define SPI_IOC_RD_DELAY_US		_IOR(SPI_IOC_MAGIC, 5, __u32)
++#define SPI_IOC_WR_DELAY_US		_IOW(SPI_IOC_MAGIC, 5, __u32)
++
++
++static int nixio_spi_setspeed(lua_State *L) {
++	int fd = nixio__checkfd(L, 1);
++	ulong speed_hz = luaL_checkinteger(L, 2);
++	uint delay_usecs = luaL_checkinteger(L, 3);
++
++	if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed_hz) < 0) {
++		return nixio__perror(L);
++	} else if (ioctl(fd, SPI_IOC_WR_DELAY_US, &delay_usecs) < 0) {
++		return nixio__perror(L);
++	}
++
++	return 0;
++}
++
++/* not really needed anymore since this is now coded into the spi_bitbang kmod */
++static int nixio_spi_read(lua_State *L) {
++	int fd = nixio__checkfd(L, 1);
++	char buffer[NIXIO_BUFFERSIZE];
++	int readc;
++	size_t len =0;
++	char last = 0;
++
++	for (size_t i = 0; i < NIXIO_BUFFERSIZE; i++) {
++		do {
++			readc = read(fd, buffer + i, 1);
++		} while (readc == -1 && errno == EINTR);
++
++		if (readc < 0) {
++			return nixio__perror(L);
++		}
++
++		if (last) {
++			break;
++		}
++
++		if (buffer[i] == 0x00) {
++			len = i;
++			last = 1; /* one last pass through the for loop to sync the state machine */
++
++		}
++	}
++
++	lua_pushlstring(L, buffer, len);
++	return 1;
++}
++
++/* module table */
++static const luaL_reg R[] = {
++	{"setspeed",		nixio_spi_setspeed},
++	{"read",		nixio_spi_read},
++	{NULL,			NULL}
++};
++
++void nixio_open_spi(lua_State *L) {
++	lua_newtable(L);
++	luaL_register(L, NULL, R);
++	lua_setfield(L, -2, "spi");
++}
+--- feeds/luci/libs/luci-lib-nixio/src/Makefile
++++ feeds/luci/libs/luci-lib-nixio/src/Makefile
+@@ -22,7 +22,7 @@
+ 
+ NIXIO_OBJ = nixio.o socket.o sockopt.o bind.o address.o \
+ 	    protoent.o poll.o io.o file.o splice.o process.o \
+-	    syslog.o bit.o binary.o fs.o user.o \
++	    syslog.o bit.o binary.o fs.o user.o spi.o \
+ 	    $(if $(NIXIO_TLS),tls-crypto.o tls-context.o tls-socket.o,)
+ 
+ ifeq ($(NIXIO_TLS),axtls)
