@@ -107,11 +107,6 @@ start()
 		load_config
 		set_hw_version
 		program_sensor_board
-		if [ -e /etc/init.d/6relayd ]
-		then
-			/etc/init.d/6relayd stop
-			/etc/init.d/6relayd disable
-		fi
 	fi
 
 	chmod 666 /dev/spidev1.0
