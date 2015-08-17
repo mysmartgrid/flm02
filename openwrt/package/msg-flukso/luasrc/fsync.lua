@@ -309,7 +309,7 @@ local function set_meterconst(ctrl)
 				real = 1000/real;
 			  end
 			else
-					real = tonumber(flukso[tostring(i)].lpimp or "0")
+					real = tonumber(flukso[tostring(i)].constant or "0")
 			end
 			local meterconst = math.floor(real)
 			local fraction = math.floor((real % 1) * 1000)

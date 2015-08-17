@@ -302,6 +302,7 @@ local function get_sensor(sensor, idmap)
         elseif response.config["class"] == "pulse" then
           uci:set("flukso", idmap[sensor], "class", response.config["class"])
           uci:set("flukso", idmap[sensor], "constant", response.config["constant"])
+          uci:set("flukso", idmap[sensor], "imppkwh", response.config["constant"])
         else
           print("Invalid response.")
           return 1
