@@ -35,7 +35,7 @@ config mysmartgrid events
 #	option type electricity|water
 #	option class analog|pulse|uart
 #	option port 1..6
-#	option imppkwh [<imp/kWh>]
+#	option constant [<imp/kWh>]
 #	option lpimp [<L/imp>]
 #	option voltage [<volts>]
 #	option current [<amps>]
@@ -72,7 +72,7 @@ config sensor 4
 	option type electricity
 	option class pulse
 	option port 4
-	option imppkwh 1000
+	option constant 1000
 	option enable 0
 
 config sensor 5
@@ -80,7 +80,7 @@ config sensor 5
 	option type electricity
 	option class pulse
 	option port 5
-	option imppkwh 1000
+	option constant 1000
 	option enable 0
 
 config sensor 6

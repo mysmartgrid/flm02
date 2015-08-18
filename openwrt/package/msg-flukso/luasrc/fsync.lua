@@ -304,7 +304,7 @@ local function set_meterconst(ctrl)
 		elseif flukso[tostring(i)]['class'] == 'pulse' then
 			local real = 0
 			if flukso[tostring(i)]['type'] == 'electricity' then
-					real = tonumber(flukso[tostring(i)].imppkwh or "0")
+					real = tonumber(flukso[tostring(i)].constant or "0")
 			  if real ~= 0 then
 				real = 1000/real;
 			  end
