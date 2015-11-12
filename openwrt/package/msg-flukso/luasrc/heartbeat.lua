@@ -541,6 +541,10 @@ if response.config then
 	uci:set("flukso", "daemon", "configchanged", 1)
 	uci:save("flukso")
 	uci:commit("flukso")
+	local system = uci:get_first('system','system')
+	uci:set("system", system, "firstconfig", 0)
+	uci:save("system")
+	uci:commit("system")
 	local config = response.config
 	if config.network then
 		debug("network found")
