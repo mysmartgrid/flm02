@@ -496,7 +496,7 @@ local function phone_home()
 	local data = {}
 	data.key = WAN_KEY
 	data.firmware = collect_firmware()
-	data.type = "flukso2"
+	data.type = "amperix1"
 
 	options.headers['Connection'] = 'keep-alive'
 	options.body = luci.json.encode( data )

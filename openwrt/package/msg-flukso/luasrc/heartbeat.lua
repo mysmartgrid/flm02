@@ -382,7 +382,7 @@ nixio.openlog('heartbeat', 'pid')
 
 local monitor = collect_mp()
 monitor.firmware = collect_firmware()
-monitor.type = "flukso2"
+monitor.type = "amperix1"
 
 local config = collect_config()
 debug(config)
