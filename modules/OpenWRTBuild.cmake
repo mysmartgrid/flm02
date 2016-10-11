@@ -3,10 +3,8 @@
 #  Configure and build OpenWRT environement
 #
 
-set(ENV{http_proxy} "http://squid.itwm.fhg.de:3128/")
-
-set(_openwrt_url "svn://svn.openwrt.org/openwrt/")
-#set(_openwrt_url "svn://localhost/openwrt/")
+set(_openwrt_url "git://git.openwrt.org/12.09/openwrt.git")
+set(_package_url "git://git.openwrt.org/12.09/packages.git")
 
 option(openwrt_update_feeds "Update OpenWRT package feeds from upstream repositories" ON)
 
@@ -14,8 +12,9 @@ macro(openwrt_checkout_system _target _workdir _url _output)
   message(STATUS "  checkout ${_url}")
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/${_dest}/${_output}
-    COMMAND svn co ${_openwrt_url}/${_url} .
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_workdir}
+    COMMAND git clone ${_openwrt_url}/ ${_workdir}
+    COMMAND cp ${CMAKE_BINARY_DIR}/feeds.conf ${_workdir}/
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/
     COMMENT "Checkout openwrt sources ${_url}"
     )
   add_custom_target(${_target} DEPENDS ${CMAKE_BINARY_DIR}/${_dest}/${_output})
@@ -26,7 +25,7 @@ macro(openwrt_checkout_package _target _workdir _url _destdir _output )
   message(STATUS "  checkout ${_url}")
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/${_dest}/${_output}
-    COMMAND svn co ${_openwrt_url}/${_url} ${_destdir}
+    COMMAND git clone ${_package_url}/${_url} ${_destdir}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_workdir}
     DEPENDS ${CMAKE_BINARY_DIR}/${_dest}/Makefile
     COMMENT "Checkout openwrt sources ${_url}"
@@ -54,7 +53,7 @@ endfunction(openwrt_checkout)
 
 function(openwrt_configure _dest)
   message(STATUS "  openwrt configuring")
-  file(WRITE ${CMAKE_BINARY_DIR}/${_dest}/feeds.conf
+  file(WRITE ${CMAKE_BINARY_DIR}/feeds.conf
 "src-link msgflukso ${CMAKE_SOURCE_DIR}/openwrt/package
 src-git packages https://github.com/openwrt/packages.git
 src-git luci http://git.openwrt.org/project/luci.git
@@ -153,7 +152,7 @@ function(openwrt_update _dest)
   message(STATUS "   openwrt updating")
 
   add_custom_target(openwrt_system_update
-    COMMAND svn up
+    COMMAND git pull
     DEPENDS openwrt_patch
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
     COMMENT "update OpenWRT sources"
@@ -192,8 +191,8 @@ function(openwrt_host)
 endfunction(openwrt_host)
 
 macro(openwrt_env _dest)
-  file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest})
   openwrt_checkout(${_dest})
+  #file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest})
   openwrt_configure(${_dest})
   openwrt_patch(${_dest})
   openwrt_update(${_dest})
