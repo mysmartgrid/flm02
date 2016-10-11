@@ -12,6 +12,22 @@ set_version()
 	logger 'copying flukso package version into system uci file at firstboot'
 }
 
+init_cron()
+{
+	interval=$1
+
+	EVENTS=/usr/bin/events
+	HEARTBEAT=/usr/bin/heartbeat
+	FCHECK=/usr/bin/fcheck
+	MINUTE=$(date '+%M')
+
+	# Configure cron
+	#if [ ! -f /etc/cron.d/fluksod ];
+	#then
+		echo -e "$MINUTE * * * * $EVENTS\n*/${interval} * * * * $HEARTBEAT 0\n*/15 * * * * $FCHECK" > /etc/cron.d/fluksod
+	#fi
+}
+
 load_config()
 {
 	MODEL_HEX=$(hexdump -v -e '1/1 "%.2x"' -s $((0x11800)) -n 6 /dev/mtd6)
@@ -100,6 +116,7 @@ set_ttyS0_C()
 start()
 {
 	FIRSTBOOT=$(uci get system.@system[0].firstboot)
+	FIRSTCONFIG=$(uci get system.@system[0].firstconfig)
 
 	if [ $FIRSTBOOT -eq '1' ]
 	then
@@ -150,20 +167,18 @@ start()
 		uci commit
 	fi
 
-	EVENTS=/usr/bin/events
-	HEARTBEAT=/usr/bin/heartbeat
-	FCHECK=/usr/bin/fcheck
-	MINUTE=$(date '+%M')
+	if [ $FIRSTCONFIG -eq '1' ]
+	then
+		init_cron 1
+	else
+		init_cron 10
+	fi
 
 	# Tell the server we've had a reset
 	$HEARTBEAT 1 >&- 2>&- <&-
 
 	# Configure cron
-	if [ ! -f /etc/cron.d/fluksod ];
-	then
-		echo -e "$MINUTE * * * * $EVENTS\n*/10 * * * * $HEARTBEAT 0\n*/15 * * * * $FCHECK" > /etc/cron.d/fluksod
-		cat /etc/cron.d/* > /etc/crontabs/root
-	fi
+	cat /etc/cron.d/* > /etc/crontabs/root
 }
 
 stop()

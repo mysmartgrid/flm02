@@ -249,6 +249,80 @@ local function download_upgrade(upgrade)
    end
 end
 
+local function check_network()
+   debug("Check network configuration...")
+   -- send a heartbeat
+   local monitor = collect_mp()
+   monitor.firmware = collect_firmware()
+   monitor.type = "amperix1"
+
+   local config = collect_config()
+   if FLUKSO.daemon.wan_registered ~= '1' then
+      monitor.key = WAN_KEY
+   else
+      if config ~= nil then
+	 monitor.config = config
+      end
+   end
+
+   local monitor_json = luci.json.encode(monitor)
+
+   local headers = {}
+   headers['Content-Type'] = 'application/json'
+   headers['X-Version'] = '1.0'
+   headers['User-Agent'] = USER_AGENT
+   headers['Connection'] = 'close'
+   local options = {}
+   options.sndtimeo = 5
+   options.rcvtimeo = 5
+   options.tls_context_set_verify = 'peer'
+   options.cacert = CACERT
+   options.method  = 'POST'
+   options.headers = headers
+   options.body = luci.json.encode(monitor)
+
+   local hash = nixio.crypto.hmac('sha1', WAN_KEY)
+   hash:update(options.body)
+   options.headers['X-Digest'] = hash:final()
+
+   local http_persist = httpclient.create_persistent()
+   local url = DEVICE_BASE_URL .. DEVICE
+   local response_json, code, call_info = http_persist(url, options)
+   debug("httprequest returned " .. code)
+   local retval=true
+   if code == 200 then
+      -- network is working
+      debug("Network ok.")
+   else
+      -- network is not working. Reset config
+      debug("Network failed. Need to reset.")
+      retval=false
+   end
+   return retval
+end
+
+local function reset_network()
+   debug("Reseting network configuration...")
+   local mac = uci:get("wireless", "radio0", "macaddr")
+   os.execute('netstat -rn')
+   os.execute('cp /rom/etc/config/firewall /etc/config/')
+   os.execute('cp /rom/etc/config/network /etc/config/')
+   os.execute('cp /rom/etc/config/wireless /etc/config/')
+   uci:commit("wireless")
+   if mac ~= nil then 
+      debug("Macaddr is: ".. mac)
+      uci:set("wireless", "radio0", "macaddr", mac)
+      uci:commit("wireless")
+   else
+      debug("Macaddr was not found!")
+   end
+   uci:commit("network")
+   uci:commit("wireless")
+   uci:apply({"network", "wireless"})
+   os.execute('netstat -rn')
+   debug("Reseting network configuration done.")
+end
+
 local function get_sensor(sensor, idmap)
    debug("get_sensor(" .. sensor .. ", _)")
    local headers = {}
@@ -382,7 +456,7 @@ nixio.openlog('heartbeat', 'pid')
 
 local monitor = collect_mp()
 monitor.firmware = collect_firmware()
-monitor.type = "flukso2"
+monitor.type = "amperix1"
 
 local config = collect_config()
 debug(config)
@@ -541,6 +615,10 @@ if response.config then
 	uci:set("flukso", "daemon", "configchanged", 1)
 	uci:save("flukso")
 	uci:commit("flukso")
+	local system = uci:get_first('system','system')
+	uci:set("system", system, "firstconfig", 0)
+	uci:save("system")
+	uci:commit("system")
 	local config = response.config
 	if config.network then
 		debug("network found")
@@ -651,6 +729,13 @@ if response.config then
 			uci:commit("wireless")
 		end
 		uci:apply({"network", "wireless"})
+		if( check_network() ) then
+		   os.execute('/usr/bin/event 107')
+		else
+		   reset_network()
+		   os.execute('/usr/bin/event 108')
+		   os.exit(1)
+		end
 	end
 	if config.sensors then
 		local sensormap = {}
