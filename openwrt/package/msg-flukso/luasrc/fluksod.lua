@@ -88,6 +88,7 @@ local LAN_ENABLED       = (FLUKSO.daemon.enable_lan_branch == '1')
 local LAN_INTERVAL      = 0
 local LAN_POLISH_CUTOFF	= 60
 local LAN_PUBLISH_PATH	= DAEMON_PATH .. '/sensor'
+local FIFO_PUBLISH_PATH = DAEMON_PATH .. '/fifo'
 
 local LAN_FACTOR = {
 	['electricity']     =      3.6e6, -- 1 Wh/ms = 3.6e6 W
@@ -155,15 +156,23 @@ local function dispatch(wan_child, lan_child)
 				nixio.fs.unlink(file)
 			end
 
+			nixio.fs.mkdirr(FIFO_PUBLISH_PATH)
+			for file in nixio.fs.dir(FIFO_PUBLISH_PATH) do
+			   nixio.fs.unlink(file)
+			end
+
 			local function create_file(sensor_id)
 				local file = LAN_PUBLISH_PATH .. '/' .. sensor_id
 				
 				nixio.fs.unlink(file)
 				fd = nixio.open(file, O_RDWR_CREAT)
 				fd:close()
+
+				local fifofile = FIFO_PUBLISH_PATH .. '/' .. sensor_id
+				nixio.fs.mkfifo(fifofile, 666)
 			end
 
-			uci:foreach('flukso', 'sensor', function(x) if x.enabled then create_file(x.id) end end)
+			uci:foreach('flukso', 'sensor', function(x) if x.enable then create_file(x.id) end end)
 		end
 
 		local function tolua(num)
@@ -460,6 +469,15 @@ local function publish(child)
 				
 				nixio.fs.writefile(tmpfile, json)
 				nixio.fs.move(tmpfile, file)
+
+				local fifofile = FIFO_PUBLISH_PATH .. '/' .. sensor_id
+				if nixio.fs.stat(fifofile, "type") == "fifo" then
+				   fp = nixio.open(fifofile, nixio.open_flags("nonblock", "wronly"))
+				   if fp ~= nil then
+				      fp:write(json)
+				      fp:close()
+				   end
+				end
 			end
 
 			resume(child, measurements)
