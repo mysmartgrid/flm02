@@ -13,7 +13,6 @@ macro(openwrt_checkout_system _target _workdir _url _output)
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/${_dest}/${_output}
     COMMAND git clone ${_openwrt_url}/ ${_workdir}
-    COMMAND cp ${CMAKE_BINARY_DIR}/feeds.conf ${_workdir}/
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/
     COMMENT "Checkout openwrt sources ${_url}"
     )
@@ -62,7 +61,8 @@ src-git luci http://git.openwrt.org/project/luci.git
 
   add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/feeds.done
-    COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds update
+    COMMAND cp ../feeds.conf ${CMAKE_BINARY_DIR}/${_dest}/
+    COMMAND    ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds update
     COMMAND ${CMAKE_BINARY_DIR}/${_dest}/scripts/feeds install -a -p msgflukso
     COMMAND ${CMAKE_COMMAND} -E touch  ${CMAKE_BINARY_DIR}/feeds.done
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${_dest}
@@ -133,6 +133,7 @@ function(openwrt_patch _dest)
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/975-sys_iwinfo.patch
 
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/976-rpc.patch
+    COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/980-luci.patch
 
     COMMAND patch -N -p0 < ${CMAKE_SOURCE_DIR}/openwrt/patches/990-crond.patch
 

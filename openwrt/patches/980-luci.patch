@@ -1,0 +1,23 @@
+*** feeds/luci/modules/luci-base/Makefile.orig	2016-10-13 14:35:49.042344000 +0200
+--- feeds/luci/modules/luci-base/Makefile	2016-10-13 14:36:56.330344000 +0200
+***************
+*** 37,45 ****
+  endef
+  
+  define Host/Install
+! 	$(INSTALL_DIR) $(1)/bin
+! 	$(INSTALL_BIN) src/po2lmo $(1)/bin/po2lmo
+! 	$(INSTALL_BIN) $(HOST_BUILD_DIR)/bin/LuaSrcDiet.lua $(1)/bin/LuaSrcDiet
+  endef
+  
+  $(eval $(call HostBuild))
+--- 37,45 ----
+  endef
+  
+  define Host/Install
+! 	$(INSTALL_DIR) $(HOST_BUILD_DIR)/bin
+! 	$(INSTALL_BIN) src/po2lmo $(HOST_BUILD_DIR)/bin/po2lmo
+! 	$(INSTALL_BIN) $(HOST_BUILD_DIR)/bin/LuaSrcDiet.lua $(HOST_BUILD_DIR)/bin/LuaSrcDiet
+  endef
+  
+  $(eval $(call HostBuild))
