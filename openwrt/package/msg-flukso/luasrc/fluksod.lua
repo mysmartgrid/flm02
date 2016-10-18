@@ -475,6 +475,7 @@ local function publish(child)
 				   fp = nixio.open(fifofile, nixio.open_flags("nonblock", "wronly"))
 				   if fp ~= nil then
 				      fp:write(json)
+				      fp:write("\n")
 				      fp:close()
 				   end
 				end
