@@ -36,6 +36,8 @@ define Build/Prepare
 	( cd $(PKG_BUILD_DIR); cmake $(PKG_SOURCE) )
 	sh -c 'if [ -d $(PKG_SRCDIR) ]; then cd $(PKG_SRCDIR); git pull --rebase; cd ..; else git clone http://$(PKG_SRC_URL).git -b msgampc $(PKG_SRCDIR); fi' \;
 	echo "===> Build/Prepare"
+	$(CP) msgampc.init $(PKG_BUILD_DIR)
+	$(CP) ./config/* $(PKG_BUILD_DIR)/
 	$(Build/Patch)
 endef
 
@@ -62,11 +64,11 @@ define Build/Install
 endef
 
 define Package/msgampc/install
-#	$(INSTALL_DIR) $(1)/etc/config
-#	$(INSTALL_DATA) $(PKG_BUILD_DIR)/hexabus.uci $(1)/etc/config/hexabus
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/msgampc.uci $(1)/etc/config/msgampc
 
-#	$(INSTALL_DIR) $(1)/etc/init.d
-#	$(INSTALL_BIN) $(PKG_BUILD_DIR)/msgampc.init $(1)/etc/init.d/msgampc
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/msgampc.init $(1)/etc/init.d/msgampc
 
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/msgampc $(1)/usr/bin/

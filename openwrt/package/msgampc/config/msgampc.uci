@@ -1,0 +1,4 @@
+config settings main
+       option enabled   0
+       option api       'ws://192.168.9.85:8080/ws/device'
+       option regdevapi 'http://192.168.9.85:8080/api/regdev/v1'
